@@ -9,6 +9,9 @@ import {
 } from '@/data/escola/mutations'
 import type { DisciplinaFormValues } from '@/schemas/disciplina'
 import Modal from '@/components/Modal'
+import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
+import { TableSkeleton } from '@/components/PageSkeleton'
 
 function DisciplinaForm({
   defaultNome,
@@ -144,23 +147,19 @@ export default function Disciplinas() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">
-            Disciplinas
-          </h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Gerir disciplinas da escola.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-        >
-          Nova disciplina
-        </button>
-      </div>
+      <PageHeader
+        title="Disciplinas"
+        subtitle="Gerir disciplinas da escola."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Nova disciplina
+          </button>
+        }
+      />
 
       <div className="mb-4">
         <input
@@ -187,17 +186,25 @@ export default function Disciplinas() {
 
       <div className="card overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            A carregar...
-          </div>
+          <TableSkeleton rows={5} />
         ) : error ? (
           <div className="p-8 text-center text-red-600">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            {filter ? 'Nenhuma disciplina encontrada.' : 'Nenhuma disciplina registada.'}
-          </div>
+          <EmptyState
+            title={filter ? 'Nenhuma disciplina encontrada' : 'Nenhuma disciplina registada'}
+            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em "Nova disciplina" para começar.'}
+            action={!filter ? (
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+              >
+                Nova disciplina
+              </button>
+            ) : undefined}
+          />
         ) : (
           <table className="min-w-full divide-y divide-studio-border">
             <thead className="bg-studio-muted">
@@ -220,14 +227,14 @@ export default function Disciplinas() {
                     <button
                       type="button"
                       onClick={() => handleEdit(d.id)}
-                      className="text-studio-brand hover:underline mr-3"
+                      className="link-action link-action-primary mr-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
                     >
                       Editar
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(d.id, d.nome)}
-                      className="text-red-600 hover:underline"
+                      className="link-action link-action-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1"
                     >
                       Eliminar
                     </button>

@@ -22,6 +22,10 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--studio-bg), 0 0 0 4px var(--studio-brand);
+}
 
 .btn-secondary {
   background-color: #fff;
@@ -35,6 +39,10 @@
 }
 .btn-secondary:hover {
   background-color: var(--gibbon-bg-soft);
+}
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--studio-bg), 0 0 0 4px var(--studio-border);
 }
 
 /* ----- Cards / superfícies ----- */
@@ -74,6 +82,11 @@
   outline: none;
   border-color: var(--studio-brand);
   box-shadow: 0 0 0 1px var(--studio-brand);
+}
+.input:focus-visible {
+  outline: none;
+  border-color: var(--studio-brand);
+  box-shadow: 0 0 0 2px var(--studio-brand);
 }
 
 .label {

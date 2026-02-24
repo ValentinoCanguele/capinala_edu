@@ -107,7 +107,7 @@
 - Login, Layout, Dashboard, Alunos, Turmas, Notas, Frequencia, Boletim, Horarios, Comunicados, Disciplinas, AnosLetivos, Salas, Auditoria.
 
 ### components/
-- AlunoForm, TurmaForm — react-hook-form + zod; Modal — diálogo reutilizável; PageSkeleton, TableSkeleton — estados de carregamento.
+- AlunoForm, TurmaForm — react-hook-form + zod; Modal — diálogo reutilizável; PageSkeleton, TableSkeleton, StatCardSkeleton — estados de carregamento; EmptyState — estado vazio; PageHeader — título e ações de página.
 
 ## Base de dados (migrations/)
 

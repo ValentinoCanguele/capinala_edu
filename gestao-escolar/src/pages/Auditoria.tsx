@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { useAuditLog, useAlertas } from '@/data/escola/queries'
 import { useResolveAlerta } from '@/data/escola/mutations'
 import { TableSkeleton } from '@/components/PageSkeleton'
+import EmptyState from '@/components/EmptyState'
 
 const ENTIDADES = [
   { value: '', label: 'Todas' },
@@ -142,9 +143,10 @@ export default function Auditoria() {
             {(logError as Error).message}
           </div>
         ) : log.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            Nenhuma entrada no log de auditoria.
-          </div>
+          <EmptyState
+            title="Nenhuma entrada no log"
+            description="O log de auditoria mostra as ações realizadas na escola. Ainda não há registos para os filtros selecionados."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-studio-border">

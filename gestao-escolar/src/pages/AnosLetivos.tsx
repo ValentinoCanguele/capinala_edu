@@ -8,6 +8,8 @@ import {
 } from '@/data/escola/mutations'
 import type { AnoLetivoFormValues } from '@/schemas/anoLetivo'
 import Modal from '@/components/Modal'
+import EmptyState from '@/components/EmptyState'
+import { TableSkeleton } from '@/components/PageSkeleton'
 
 function AnoLetivoForm({
   defaultValues,
@@ -212,19 +214,25 @@ export default function AnosLetivos() {
 
       <div className="card overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            A carregar...
-          </div>
+          <TableSkeleton rows={5} />
         ) : error ? (
           <div className="p-8 text-center text-red-600">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            {filter
-              ? 'Nenhum ano letivo encontrado.'
-              : 'Nenhum ano letivo registado.'}
-          </div>
+          <EmptyState
+            title={filter ? 'Nenhum ano letivo encontrado' : 'Nenhum ano letivo registado'}
+            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em "Novo ano letivo" para começar.'}
+            action={!filter ? (
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+              >
+                Novo ano letivo
+              </button>
+            ) : undefined}
+          />
         ) : (
           <table className="min-w-full divide-y divide-studio-border">
             <thead className="bg-studio-muted">

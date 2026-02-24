@@ -9,6 +9,7 @@ import {
 } from '@/data/escola/mutations'
 import type { SalaFormValues } from '@/schemas/sala'
 import Modal from '@/components/Modal'
+import EmptyState from '@/components/EmptyState'
 
 function SalaForm({
   defaultValues,
@@ -214,9 +215,19 @@ export default function Salas() {
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            {filter ? 'Nenhuma sala encontrada.' : 'Nenhuma sala registada.'}
-          </div>
+          <EmptyState
+            title={filter ? 'Nenhuma sala encontrada' : 'Nenhuma sala registada'}
+            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em "Nova sala" para começar.'}
+            action={!filter ? (
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+              >
+                Nova sala
+              </button>
+            ) : undefined}
+          />
         ) : (
           <table className="min-w-full divide-y divide-studio-border">
             <thead className="bg-studio-muted">
