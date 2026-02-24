@@ -1,0 +1,74 @@
+/**
+ * Tema Gestão Escolar — variáveis (aliases do tema central).
+ * Fonte única: theme/styles/vars.css.
+ * Estes aliases --gibbon-* são usados pelo Tailwind e por components.css.
+ */
+@import '../../theme/styles/vars.css';
+
+:root {
+  /* Brand (mapeado do tema central) */
+  --gibbon-brand-1: var(--vp-c-brand-1);
+  --gibbon-brand-2: var(--vp-c-brand-2);
+  --gibbon-brand-3: var(--vp-c-brand-3);
+  --gibbon-brand-soft: var(--vp-c-brand-soft);
+
+  /* Neutros */
+  --gibbon-gray-1: var(--vp-c-gray-1);
+  --gibbon-gray-2: var(--vp-c-gray-2);
+  --gibbon-gray-3: var(--vp-c-gray-3);
+  --gibbon-gray-soft: var(--vp-c-gray-soft);
+  --gibbon-bg: var(--vp-c-bg);
+  --gibbon-bg-alt: var(--vp-c-bg-alt);
+  --gibbon-bg-soft: var(--vp-c-bg-soft);
+  --gibbon-text-1: var(--vp-c-text-1);
+  --gibbon-text-2: var(--vp-c-text-2);
+  --gibbon-text-3: var(--vp-c-text-3);
+  --gibbon-border: var(--vp-c-border);
+  --gibbon-divider: var(--vp-c-divider);
+
+  /* Semânticos */
+  --gibbon-warning: var(--vp-c-warning-3);
+  --gibbon-warning-soft: var(--vp-c-warning-soft);
+  --gibbon-danger: var(--vp-c-danger-1);
+  --gibbon-danger-soft: var(--vp-c-danger-soft);
+
+  /* Componentes (espessura, raio) */
+  --gibbon-radius: 0.375rem;
+  --gibbon-radius-lg: 0.5rem;
+
+  /* Supabase Studio – semânticos para layout e UI (modo claro: sidebar escura) */
+  --studio-bg: var(--vp-c-bg);
+  --studio-bg-alt: var(--vp-c-bg-alt);
+  --studio-bg-muted: var(--vp-c-bg-soft);
+  --studio-sidebar-bg: #1c1c1c;
+  --studio-sidebar-text: #ededed;
+  --studio-sidebar-text-muted: #8b8b8b;
+  --studio-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --studio-sidebar-active: rgba(62, 207, 142, 0.15);
+  --studio-border: var(--vp-c-border);
+  --studio-foreground: var(--vp-c-text-1);
+  --studio-foreground-light: var(--vp-c-text-2);
+  --studio-foreground-lighter: var(--vp-c-text-3);
+  --studio-brand: #3ecf8e;
+  --studio-brand-hover: #2eb67d;
+  --studio-second-bar-bg: rgba(0, 0, 0, 0.03);
+}
+
+/* Tema escuro – aplicado quando .dark no html */
+.dark {
+  --studio-bg: #1c1c1c;
+  --studio-bg-alt: #161618;
+  --studio-bg-muted: #202127;
+  --studio-sidebar-bg: #0d0d0e;
+  --studio-sidebar-text: #ededed;
+  --studio-sidebar-text-muted: #8b8b8b;
+  --studio-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --studio-sidebar-active: rgba(62, 207, 142, 0.2);
+  --studio-border: #2e2e32;
+  --studio-foreground: #ededed;
+  --studio-foreground-light: #b4b4b8;
+  --studio-foreground-lighter: #6e6e73;
+  --studio-brand: #3ecf8e;
+  --studio-brand-hover: #4dd99e;
+  --studio-second-bar-bg: rgba(255, 255, 255, 0.03);
+}

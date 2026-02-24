@@ -1,0 +1,41 @@
+---
+description: Base imutável do módulo Escola – arquitetura e frontend Supabase; só evoluir lógica e funções
+alwaysApply: true
+---
+
+# Base imutável – Módulo Escola
+
+## Princípio
+
+A base do sistema escolar é **imutável**: não deve ser distorcida nem alterada em espírito. O projeto é construído sobre esta base. Pode-se **avançar em lógica e funções**, mas o **frontend permanece igual ao do Supabase Studio**.
+
+## Referência canónica
+
+- **Estrutura e funções**: Consultar sempre `docs/ANALISE-ARQUIVOS-E-FUNCOES.md` como índice e descrição de todos os arquivos e funções do módulo Escola.
+- **Contrato do projeto**: `docs/BASE-PROJETO-ESCOLA.md` define o compromisso de imutabilidade e evolução permitida.
+
+## O que NÃO mudar (imutável)
+
+- **Frontend**: Igual ao Supabase Studio.
+  - Componentes de `packages/ui` (estilo shadcn/ui); sem introduzir novos sistemas de UI.
+  - Estilo: Tailwind com classes do projeto (bg, bg-muted, text-foreground, etc.); páginas com PageLayout; formulários com react-hook-form + zod e FormItemLayout; Sheets/Cards conforme studio-ui.
+  - Estrutura de páginas: `apps/studio/pages/project/[ref]/escola/`; componentes em `apps/studio/components/interfaces/Escola/`.
+- **Camadas**: A divisão em 4 camadas permanece:
+  1. `lib/escola/` – lógica, schemas, regras, serviços, API helpers.
+  2. `pages/api/escola/` – rotas HTTP.
+  3. `data/escola/` – React Query (queries/mutations).
+  4. `components/interfaces/Escola/` – UI (listas, formulários, relatórios).
+- **Nomenclatura e convenções**: Manter padrões já descritos em ANALISE (ex.: schemas Zod, requireAuth, apiWrapper, escolaApiPost, etc.).
+
+## O que PODE evoluir
+
+- **Lógica e regras**: Novas funções em `lib/escola/` (regras, validacao, services, schemas).
+- **APIs**: Novas rotas em `pages/api/escola/` ou novos métodos; manter padrão requireAuth + parseBody + serviços.
+- **Dados**: Novos hooks em `data/escola/` (queries/mutations) que chamem as APIs ou o cliente Supabase.
+- **Funcionalidades de UI**: Novos componentes ou páginas em `components/interfaces/Escola/` **usando sempre** o mesmo sistema de componentes e estilo do Studio (ui, ui-patterns, PageLayout, Sheets, Forms).
+
+## Ao adicionar ou alterar
+
+- Respeitar a lista de arquivos e funções em `docs/ANALISE-ARQUIVOS-E-FUNCOES.md`; ao criar novos ficheiros/funções, documentá-los no mesmo estilo nesse documento (ou num anexo aprovado).
+- Nunca substituir o paradigma de UI por outro (ex.: outro design system ou stack de componentes).
+- Seguir as regras existentes: `studio-ui.mdc`, `studio-best-practices.mdc`, `e2e-testing.mdc` quando aplicável.

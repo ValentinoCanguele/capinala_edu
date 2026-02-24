@@ -1,0 +1,51 @@
+/**
+ * Timeline (vitepress-markdown-timeline).
+ * Partilhado: VitePress (.vp-doc) e Gibbon PHP (.gibbon-doc).
+ */
+
+.vp-doc .timeline-dot,
+.gibbon-doc .timeline-dot {
+  color: var(--vp-c-text-2);
+}
+
+.vp-doc .timeline-dot::before,
+.gibbon-doc .timeline-dot::before {
+  border-width: 2px;
+}
+
+.vp-doc .timeline-dot:first-of-type,
+.gibbon-doc .timeline-dot:first-of-type {
+  margin-top: 2rem;
+}
+
+.vp-doc .timeline-dot:last-of-type,
+.gibbon-doc .timeline-dot:last-of-type {
+  padding-bottom: 0;
+  margin-bottom: 2rem;
+}
+
+.vp-doc .timeline-dot-title,
+.gibbon-doc .timeline-dot-title {
+  font-weight: 600 !important;
+  margin-left: 5px;
+}
+
+.timeline-indicator {
+  display: none;
+}
+
+.timeline-progress + .timeline-dot::before {
+  border-color: #37eb90;
+}
+
+.timeline-planned + .timeline-dot::before {
+  border-color: #46d6ff;
+}
+
+.timeline-consideration + .timeline-dot::before {
+  border-color: #ffb21b;
+}
+
+.timeline-not-possible + .timeline-dot::before {
+  border-color: #ea253c;
+}

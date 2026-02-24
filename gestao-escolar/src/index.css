@@ -1,0 +1,23 @@
+@import './theme/index.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-studio-bg-alt text-studio-foreground antialiased;
+}
+
+/* Second bar: scroll horizontal discreto */
+.second-bar-nav {
+  scrollbar-width: thin;
+}
+.second-bar-nav::-webkit-scrollbar {
+  height: 6px;
+}
+.second-bar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.second-bar-nav::-webkit-scrollbar-thumb {
+  @apply bg-studio-border rounded-full;
+}

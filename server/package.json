@@ -1,0 +1,29 @@
+{
+  "name": "gestao-escolar-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8082",
+    "build": "next build",
+    "start": "next start -p 8082",
+    "lint": "next lint",
+    "db:migrate": "node scripts/run-migrations.js",
+    "test": "npx vitest run"
+  },
+  "dependencies": {
+    "jose": "^5.2.0",
+    "next": "^14.2.0",
+    "pg": "^8.11.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.10.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "~5.6.0",
+    "vitest": "^1.0.0"
+  }
+}

@@ -1,0 +1,6 @@
+/**
+ * Tema Gestão Escolar — entrada única.
+ * Importar apenas este ficheiro (ex.: em src/index.css).
+ */
+@import './variables.css';
+@import './components.css';

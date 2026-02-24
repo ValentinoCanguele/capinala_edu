@@ -1,0 +1,17 @@
+# Postgres para desenvolvimento local da Gestão Escolar
+# Uso: docker compose up -d
+# Depois: cd server && npm run db:migrate
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gestao
+      POSTGRES_PASSWORD: gestao
+      POSTGRES_DB: gestao_escolar
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_gestao_data:/var/lib/postgresql/data
+
+volumes:
+  pg_gestao_data:

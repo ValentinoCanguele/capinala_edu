@@ -1,0 +1,174 @@
+/**
+ * Tema Gestão Escolar — classes de componentes.
+ * Botões, cards, inputs e alertas em harmonia com as variáveis.
+ * Use estas classes ou as equivalentes Tailwind (brand/gibbon).
+ */
+
+/* ----- Botões ----- */
+.btn-primary {
+  background-color: var(--gibbon-brand-3);
+  color: #fff;
+  border: none;
+  border-radius: var(--gibbon-radius);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.btn-primary:hover {
+  background-color: var(--gibbon-brand-2);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #fff;
+  color: var(--gibbon-text-2);
+  border: 1px solid var(--gibbon-border);
+  border-radius: var(--gibbon-radius);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.btn-secondary:hover {
+  background-color: var(--gibbon-bg-soft);
+}
+
+/* ----- Cards / superfícies ----- */
+.card {
+  background-color: var(--gibbon-bg);
+  border: 1px solid var(--gibbon-border);
+  border-radius: var(--gibbon-radius-lg);
+  overflow: hidden;
+}
+
+.card-interactive {
+  background-color: var(--gibbon-bg);
+  border: 1px solid var(--gibbon-border);
+  border-radius: var(--gibbon-radius-lg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card-interactive:hover {
+  border-color: var(--gibbon-brand-1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* ----- Formulários (compatível Studio) ----- */
+.input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--studio-foreground);
+  background-color: var(--studio-bg);
+  border: 1px solid var(--studio-border);
+  border-radius: var(--gibbon-radius);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input::placeholder {
+  color: var(--studio-foreground-lighter);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--studio-brand);
+  box-shadow: 0 0 0 1px var(--studio-brand);
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gibbon-text-1);
+  margin-bottom: 0.25rem;
+}
+
+/* ----- Tabelas ----- */
+.table-wrap {
+  background-color: var(--gibbon-bg);
+  border: 1px solid var(--gibbon-border);
+  border-radius: var(--gibbon-radius-lg);
+  overflow: hidden;
+}
+.table-header {
+  background-color: var(--gibbon-bg-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gibbon-text-3);
+  text-transform: uppercase;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+.table-header:last-child {
+  text-align: right;
+}
+.table-cell {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--gibbon-text-1);
+  border-top: 1px solid var(--gibbon-divider);
+}
+.table-row:hover {
+  background-color: var(--gibbon-bg-soft);
+}
+
+/* ----- Alertas / mensagens ----- */
+.alert-info {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--gibbon-text-2);
+  background-color: var(--gibbon-brand-soft);
+  border: 1px solid var(--gibbon-brand-3);
+  border-radius: var(--gibbon-radius);
+}
+.alert-warning {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--gibbon-warning);
+  background-color: var(--gibbon-warning-soft);
+  border: 1px solid var(--gibbon-warning);
+  border-radius: var(--gibbon-radius);
+}
+
+.alert-danger {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--gibbon-danger);
+  background-color: var(--gibbon-danger-soft);
+  border: 1px solid var(--gibbon-danger);
+  border-radius: var(--gibbon-radius);
+}
+
+/* ----- Second Bar (tabs contextuais – estilo Supabase Studio) ----- */
+.second-bar-nav a {
+  color: var(--studio-foreground-light);
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.second-bar-nav a:hover {
+  color: var(--studio-foreground);
+}
+.second-bar-nav a[aria-current="page"] {
+  color: var(--studio-brand);
+  border-bottom-color: var(--studio-brand);
+}
+
+/* ----- Links de ação (Editar / Eliminar) ----- */
+.link-action {
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+.link-action-primary {
+  color: var(--gibbon-brand-1);
+}
+.link-action-primary:hover {
+  color: var(--gibbon-brand-2);
+}
+.link-action-danger {
+  color: var(--gibbon-danger);
+}
+.link-action-danger:hover {
+  opacity: 0.8;
+}

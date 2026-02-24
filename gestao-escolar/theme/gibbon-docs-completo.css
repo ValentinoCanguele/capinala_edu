@@ -1,0 +1,41 @@
+/**
+ * Gibbon Docs — CSS standalone para usar no Gibbon (PHP).
+ * Importa todo o tema centralizado em styles/ e adiciona classes específicas do Gibbon.
+ * Um único ficheiro para incluir no layout do Gibbon = mesmo visual da documentação.
+ */
+
+@import "styles/vars.css";
+@import "styles/options-boxes.css";
+@import "styles/custom-block.css";
+@import "styles/timeline.css";
+@import "styles/doc-shared.css";
+
+/* ========== Componentes Gibbon (PHP) ========== */
+
+/* Logo na nav */
+.gibbon-docs-logo {
+  height: var(--vp-nav-logo-height);
+  margin-top: -0.625rem;
+  margin-right: 0.75rem;
+  margin-left: -1.25rem;
+}
+
+/* Botão primário (estilo docs) */
+.gibbon-docs-btn-brand {
+  display: inline-block;
+  border: 1px solid var(--vp-button-brand-border);
+  border-radius: 8px;
+  padding: 0 20px;
+  line-height: 38px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vp-button-brand-text);
+  background-color: var(--vp-button-brand-bg);
+  transition: border-color 0.25s, color 0.25s, background-color 0.25s;
+}
+
+.gibbon-docs-btn-brand:hover {
+  border-color: var(--vp-button-brand-hover-border);
+  color: var(--vp-button-brand-hover-text);
+  background-color: var(--vp-button-brand-hover-bg);
+}
