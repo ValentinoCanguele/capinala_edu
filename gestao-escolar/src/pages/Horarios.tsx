@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useHorarios, useTurmas, useDisciplinas, useSalas, useAnosLetivos } from '@/data/escola/queries'
 import { useCreateHorario, useDeleteHorario } from '@/data/escola/mutations'
+import PageHeader from '@/components/PageHeader'
+import EmptyState from '@/components/EmptyState'
 
 const DIAS = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 
@@ -89,29 +91,29 @@ export default function Horarios() {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <div>
-                    <h2 className="text-2xl font-semibold text-studio-foreground">Horários</h2>
-                    <p className="text-studio-foreground-light text-sm mt-0.5">
-                        Gestão de horários por turma. Conflitos de professor/sala são validados automaticamente.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => { setSearchParams({}); setFormOpen(true) }}
-                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-                >
-                    Novo horário
-                </button>
-            </div>
+            <PageHeader
+                title="Horários"
+                subtitle="Gestão de horários por turma. Conflitos de professor/sala são validados automaticamente."
+                actions={
+                    <button
+                        type="button"
+                        onClick={() => { setSearchParams({}); setFormOpen(true) }}
+                        className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                    >
+                        Novo horário
+                    </button>
+                }
+            />
 
             {/* Filtro por turma */}
             <div className="mb-6">
-                <label className="label">Filtrar por turma</label>
+                <label htmlFor="hor-turma" className="label">Filtrar por turma</label>
                 <select
+                    id="hor-turma"
                     value={turmaId}
                     onChange={(e) => setTurmaId(e.target.value)}
                     className="input min-w-[200px]"
+                    aria-label="Filtrar horários por turma"
                 >
                     <option value="">Todas as turmas</option>
                     {turmas.map((t) => (
@@ -137,12 +139,14 @@ export default function Horarios() {
                         </h3>
                         <form onSubmit={handleSubmit} className="space-y-3">
                             <div>
-                                <label className="label">Turma *</label>
+                                <label htmlFor="hor-turma" className="label">Turma *</label>
                                 <select
+                                    id="hor-turma"
                                     value={form.turmaId}
                                     onChange={(e) => setForm({ ...form, turmaId: e.target.value })}
                                     className="input w-full"
                                     required
+                                    aria-label="Turma"
                                 >
                                     <option value="">Selecionar</option>
                                     {turmas.map((t) => (
@@ -153,12 +157,14 @@ export default function Horarios() {
                                 </select>
                             </div>
                             <div>
-                                <label className="label">Disciplina *</label>
+                                <label htmlFor="hor-disciplina" className="label">Disciplina *</label>
                                 <select
+                                    id="hor-disciplina"
                                     value={form.disciplinaId}
                                     onChange={(e) => setForm({ ...form, disciplinaId: e.target.value })}
                                     className="input w-full"
                                     required
+                                    aria-label="Disciplina"
                                 >
                                     <option value="">Selecionar</option>
                                     {disciplinas.map((d) => (
@@ -169,11 +175,13 @@ export default function Horarios() {
                                 </select>
                             </div>
                             <div>
-                                <label className="label">Sala</label>
+                                <label htmlFor="hor-sala" className="label">Sala</label>
                                 <select
+                                    id="hor-sala"
                                     value={form.salaId}
                                     onChange={(e) => setForm({ ...form, salaId: e.target.value })}
                                     className="input w-full"
+                                    aria-label="Sala (opcional)"
                                 >
                                     <option value="">Nenhuma</option>
                                     {salas.map((s) => (
@@ -184,12 +192,14 @@ export default function Horarios() {
                                 </select>
                             </div>
                             <div>
-                                <label className="label">Ano Letivo *</label>
+                                <label htmlFor="hor-ano" className="label">Ano Letivo *</label>
                                 <select
+                                    id="hor-ano"
                                     value={form.anoLetivoId}
                                     onChange={(e) => setForm({ ...form, anoLetivoId: e.target.value })}
                                     className="input w-full"
                                     required
+                                    aria-label="Ano letivo"
                                 >
                                     <option value="">Selecionar</option>
                                     {anosLetivos.map((a) => (
@@ -201,11 +211,13 @@ export default function Horarios() {
                             </div>
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label className="label">Dia *</label>
+                                    <label htmlFor="hor-dia" className="label">Dia *</label>
                                     <select
+                                        id="hor-dia"
                                         value={form.diaSemana}
                                         onChange={(e) => setForm({ ...form, diaSemana: Number(e.target.value) })}
                                         className="input w-full"
+                                        aria-label="Dia da semana"
                                     >
                                         {[1, 2, 3, 4, 5, 6].map((d) => (
                                             <option key={d} value={d}>
@@ -215,23 +227,27 @@ export default function Horarios() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="label">Início *</label>
+                                    <label htmlFor="hor-inicio" className="label">Início *</label>
                                     <input
+                                        id="hor-inicio"
                                         type="time"
                                         value={form.horaInicio}
                                         onChange={(e) => setForm({ ...form, horaInicio: e.target.value })}
                                         className="input w-full"
                                         required
+                                        aria-label="Hora de início"
                                     />
                                 </div>
                                 <div>
-                                    <label className="label">Fim *</label>
+                                    <label htmlFor="hor-fim" className="label">Fim *</label>
                                     <input
+                                        id="hor-fim"
                                         type="time"
                                         value={form.horaFim}
                                         onChange={(e) => setForm({ ...form, horaFim: e.target.value })}
                                         className="input w-full"
                                         required
+                                        aria-label="Hora de fim"
                                     />
                                 </div>
                             </div>
@@ -239,14 +255,14 @@ export default function Horarios() {
                                 <button
                                     type="button"
                                     onClick={handleCloseForm}
-                                    className="px-4 py-2 text-sm rounded-md text-studio-foreground-light hover:bg-studio-muted"
+                                    className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={createHorario.isPending}
-                                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
                                 >
                                     {createHorario.isPending ? 'A guardar...' : 'Guardar'}
                                 </button>
@@ -259,10 +275,22 @@ export default function Horarios() {
             {/* Tabela de horários agrupada por dia */}
             <div className="space-y-4">
                 {isLoading ? (
-                    <div className="card p-8 text-center text-studio-foreground-lighter">A carregar...</div>
+                    <div className="card p-8 text-center text-studio-foreground-lighter" role="status" aria-live="polite">A carregar...</div>
                 ) : filtered.length === 0 ? (
-                    <div className="card p-8 text-center text-studio-foreground-lighter">
-                        Nenhum horário registado. Clique em "Novo horário" para começar.
+                    <div className="card">
+                        <EmptyState
+                            title="Nenhum horário registado"
+                            description="Clique em «Novo horário» para criar um slot."
+                            action={
+                                <button
+                                    type="button"
+                                    onClick={() => { setSearchParams({}); setFormOpen(true) }}
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                                >
+                                    Novo horário
+                                </button>
+                            }
+                        />
                     </div>
                 ) : (
                     [1, 2, 3, 4, 5, 6].map((dia) => {
@@ -273,7 +301,13 @@ export default function Horarios() {
                                 <div className="px-4 py-2 bg-studio-muted border-b border-studio-border">
                                     <h3 className="text-sm font-semibold text-studio-foreground">{DIAS[dia]}</h3>
                                 </div>
-                                <table className="min-w-full divide-y divide-studio-border">
+                                <table
+                                    className="min-w-full divide-y divide-studio-border"
+                                    aria-label={`Horários ${DIAS[dia]}`}
+                                >
+                                    <caption className="sr-only">
+                                        Slots de {DIAS[dia]}: hora, disciplina, turma, professor, sala
+                                    </caption>
                                     <thead className="bg-studio-muted/50">
                                         <tr>
                                             <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Hora</th>
@@ -298,7 +332,7 @@ export default function Horarios() {
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDelete(h.id)}
-                                                        className="text-red-600 hover:underline text-sm"
+                                                        className="link-action link-action-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1 text-sm"
                                                     >
                                                         Eliminar
                                                     </button>

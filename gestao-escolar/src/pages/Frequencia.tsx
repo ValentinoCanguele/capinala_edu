@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useTurmas, useDisciplinas, useTurmaAlunos, useFrequencia } from '@/data/escola/queries'
 import { TableSkeleton } from '@/components/PageSkeleton'
+import PageHeader from '@/components/PageHeader'
 import { useCreateAula, useSaveFrequencia } from '@/data/escola/mutations'
 
 type Status = 'presente' | 'falta' | 'justificada'
@@ -88,14 +89,10 @@ export default function Frequencia() {
   if (vistaRelatorio) {
     return (
       <div>
-        <div className="mb-4">
-          <h2 className="text-2xl font-semibold text-studio-foreground">
-            Relatório de frequência
-          </h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Visão consolidada de presenças e faltas por turma ou período.
-          </p>
-        </div>
+        <PageHeader
+          title="Relatório de frequência"
+          subtitle="Visão consolidada de presenças e faltas por turma ou período."
+        />
         <div className="card p-8 text-center">
           <p className="text-studio-foreground-light">
             O relatório de frequência estará disponível em breve. Poderá filtrar por ano letivo, turma e período.
@@ -107,20 +104,20 @@ export default function Frequencia() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold text-studio-foreground">Frequência</h2>
-        <p className="text-studio-foreground-light text-sm mt-0.5">
-          Chamada por turma, data e disciplina.
-        </p>
-      </div>
+      <PageHeader
+        title="Frequência"
+        subtitle="Chamada por turma, data e disciplina."
+      />
 
       <div className="flex flex-wrap gap-4 mb-6">
         <div>
-          <label className="label">Turma</label>
+          <label htmlFor="freq-turma" className="label">Turma</label>
           <select
+            id="freq-turma"
             value={turmaId}
             onChange={(e) => setTurmaId(e.target.value)}
             className="input min-w-[140px]"
+            aria-label="Selecionar turma"
           >
             <option value="">Selecionar</option>
             {turmas.map((t) => (
@@ -131,20 +128,24 @@ export default function Frequencia() {
           </select>
         </div>
         <div>
-          <label className="label">Data</label>
+          <label htmlFor="freq-data" className="label">Data</label>
           <input
+            id="freq-data"
             type="date"
             value={dataAula}
             onChange={(e) => setDataAula(e.target.value)}
             className="input min-w-[140px]"
+            aria-label="Data da aula"
           />
         </div>
         <div>
-          <label className="label">Disciplina</label>
+          <label htmlFor="freq-disc" className="label">Disciplina</label>
           <select
+            id="freq-disc"
             value={disciplinaId}
             onChange={(e) => setDisciplinaId(e.target.value)}
             className="input min-w-[160px]"
+            aria-label="Selecionar disciplina"
           >
             <option value="">Selecionar</option>
             {disciplinas.map((d) => (
@@ -160,7 +161,7 @@ export default function Frequencia() {
               type="button"
               onClick={handleSave}
               disabled={saveFrequencia.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {saveFrequencia.isPending ? 'A guardar...' : 'Guardar frequência'}
             </button>
@@ -180,7 +181,13 @@ export default function Frequencia() {
             Esta turma não tem alunos matriculados.
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table
+            className="min-w-full divide-y divide-studio-border"
+            aria-label="Presenças por aluno"
+          >
+            <caption className="sr-only">
+              Lista de alunos com estado de presença (presente, falta, justificada)
+            </caption>
             <thead className="bg-studio-muted">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">

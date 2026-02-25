@@ -1,8 +1,11 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import { useDashboardStats } from '@/data/escola/queries'
 import { StatCardSkeleton } from '@/components/PageSkeleton'
+import EmptyState from '@/components/EmptyState'
 
-const navCards = [
+const NAV_CARDS_BASE = [
   { to: '/alunos', title: 'Alunos', description: 'Cadastro e listagem de alunos' },
   { to: '/turmas', title: 'Turmas', description: 'Turmas e matrículas' },
   { to: '/notas', title: 'Notas', description: 'Lançamento de notas' },
@@ -13,8 +16,14 @@ const navCards = [
   { to: '/disciplinas', title: 'Disciplinas', description: 'Gerir disciplinas' },
   { to: '/anos-letivos', title: 'Anos letivos', description: 'Gerir anos letivos' },
   { to: '/salas', title: 'Salas', description: 'Gerir salas e capacidade' },
+  { to: '/financas', title: 'Finanças', description: 'Lançamentos, parcelas e relatórios (Kz)' },
   { to: '/auditoria', title: 'Auditoria', description: 'Log de ações e alertas' },
 ]
+const NAV_CARD_DEFINICOES = {
+  to: '/definicoes/modulos',
+  title: 'Definições',
+  description: 'Módulos e configurações do sistema',
+}
 
 function StatCard({ label, value, unit }: { label: string; value: string | number | null; unit?: string }) {
   return (
@@ -31,7 +40,15 @@ function StatCard({ label, value, unit }: { label: string; value: string | numbe
 }
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const { data: stats, isLoading } = useDashboardStats()
+  const navCards = useMemo(
+    () =>
+      user?.papel === 'admin'
+        ? [...NAV_CARDS_BASE, NAV_CARD_DEFINICOES]
+        : NAV_CARDS_BASE,
+    [user?.papel]
+  )
 
   return (
     <div className="max-w-5xl">
@@ -56,9 +73,11 @@ export default function Dashboard() {
             <StatCard label="Presença" value={stats.taxaPresenca} unit="%" />
           </div>
         ) : (
-          <div className="rounded-lg border border-studio-border bg-studio-bg p-8 text-center text-studio-foreground-light text-sm">
-            Sem dados de estatísticas disponíveis.
-          </div>
+          <EmptyState
+            title="Sem dados de estatísticas"
+            description="As estatísticas do painel serão exibidas quando existirem alunos, turmas e notas."
+            className="rounded-lg border border-studio-border bg-studio-bg"
+          />
         )}
       </div>
 
@@ -67,7 +86,8 @@ export default function Dashboard() {
         <div className="mb-8">
           <h2 className="text-sm font-semibold text-studio-foreground mb-3">Alunos por turma</h2>
           <div className="card overflow-hidden">
-            <table className="min-w-full divide-y divide-studio-border">
+            <table className="min-w-full divide-y divide-studio-border" aria-label="Alunos por turma">
+              <caption className="sr-only">Número de alunos por turma</caption>
               <thead className="bg-studio-muted">
                 <tr>
                   <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Turma</th>
@@ -89,7 +109,7 @@ export default function Dashboard() {
 
       {/* Navegação rápida */}
       <h2 className="text-sm font-semibold text-studio-foreground mb-3">Acesso rápido</h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="navigation" aria-label="Acesso rápido aos módulos">
         {navCards.map(({ to, title, description }) => (
           <Link
             key={to}

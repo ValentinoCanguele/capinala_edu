@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useAlunos, useAnosLetivos, useBoletim } from '@/data/escola/queries'
+import PageHeader from '@/components/PageHeader'
+import EmptyState from '@/components/EmptyState'
 
 export default function Boletim() {
   const [alunoId, setAlunoId] = useState('')
@@ -13,20 +15,20 @@ export default function Boletim() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold text-studio-foreground">Boletim</h2>
-        <p className="text-studio-foreground-light text-sm mt-0.5">
-          Consultar notas e médias por aluno e ano letivo.
-        </p>
-      </div>
+      <PageHeader
+        title="Boletim"
+        subtitle="Consultar notas e médias por aluno e ano letivo."
+      />
 
       <div className="flex flex-wrap gap-6 mb-6">
         <div>
-          <label className="label">Aluno</label>
+          <label htmlFor="bol-aluno" className="label">Aluno</label>
           <select
+            id="bol-aluno"
             value={alunoId}
             onChange={(e) => setAlunoId(e.target.value)}
             className="input min-w-[200px]"
+            aria-label="Selecionar aluno para boletim"
           >
             <option value="">Selecionar aluno</option>
             {alunos.map((a) => (
@@ -37,11 +39,13 @@ export default function Boletim() {
           </select>
         </div>
         <div>
-          <label className="label">Ano letivo (opcional)</label>
+          <label htmlFor="bol-ano" className="label">Ano letivo (opcional)</label>
           <select
+            id="bol-ano"
             value={anoLetivoId}
             onChange={(e) => setAnoLetivoId(e.target.value)}
             className="input min-w-[160px]"
+            aria-label="Selecionar ano letivo"
           >
             <option value="">Todos / atual</option>
             {anosLetivos.map((a) => (
@@ -59,15 +63,16 @@ export default function Boletim() {
             Selecione um aluno.
           </div>
         ) : isLoading ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">A carregar...</div>
+          <div className="p-8 text-center text-studio-foreground-lighter" role="status" aria-live="polite">A carregar...</div>
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600" role="alert">
             {(error as Error).message}
           </div>
         ) : !boletim ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            Sem dados de boletim.
-          </div>
+          <EmptyState
+            title="Sem dados de boletim"
+            description="Não existem notas ou médias para o aluno e ano letivo selecionados."
+          />
         ) : (
           <div className="p-6">
             <h3 className="text-lg font-semibold text-studio-foreground mb-4">

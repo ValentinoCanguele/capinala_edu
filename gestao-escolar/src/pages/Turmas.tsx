@@ -12,6 +12,9 @@ import {
 import type { TurmaFormValues } from '@/schemas/turma'
 import TurmaForm from '@/components/TurmaForm'
 import Modal from '@/components/Modal'
+import EmptyState from '@/components/EmptyState'
+import ListResultSummary from '@/components/ListResultSummary'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 export default function Turmas() {
@@ -128,17 +131,19 @@ export default function Turmas() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">Turmas</h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Listagem e cadastro. Dados da API /api/escola/turmas.
-          </p>
-        </div>
-        <button type="button" onClick={handleCreate} className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover">
-          Nova turma
-        </button>
-      </div>
+      <PageHeader
+        title="Turmas"
+        subtitle="Listagem e cadastro de turmas e matrículas."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Nova turma
+          </button>
+        }
+      />
 
       <Modal
         open={formOpen}
@@ -169,11 +174,13 @@ export default function Turmas() {
         <div className="space-y-4">
           <div className="flex gap-2 flex-wrap items-end">
             <div className="flex-1 min-w-[200px]">
-              <label className="label">Adicionar aluno</label>
+              <label htmlFor="gerir-turma-adicionar-aluno" className="label">Adicionar aluno</label>
               <select
+                id="gerir-turma-adicionar-aluno"
                 value={alunoToAdd}
                 onChange={(e) => setAlunoToAdd(e.target.value)}
                 className="input w-full"
+                aria-label="Selecionar aluno para adicionar à turma"
               >
                 <option value="">Selecionar aluno</option>
                 {alunosForaDaTurma.map((a) => (
@@ -187,7 +194,7 @@ export default function Turmas() {
               type="button"
               onClick={handleAddAluno}
               disabled={!alunoToAdd || addMatricula.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+              className="btn-primary disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
             >
               {addMatricula.isPending ? 'A adicionar...' : 'Adicionar'}
             </button>
@@ -197,9 +204,13 @@ export default function Turmas() {
               Alunos na turma ({turmaAlunos.length})
             </h4>
             {alunosLoading ? (
-              <div className="py-4 text-studio-foreground-lighter text-sm">A carregar...</div>
+              <div className="py-4 text-studio-foreground-lighter text-sm" role="status" aria-live="polite">A carregar...</div>
             ) : turmaAlunos.length === 0 ? (
-              <p className="text-studio-foreground-light text-sm">Nenhum aluno. Use o campo acima para adicionar.</p>
+              <EmptyState
+                title="Nenhum aluno na turma"
+                description="Use o campo «Adicionar aluno» acima para matricular alunos."
+                className="py-8"
+              />
             ) : (
               <ul className="border border-studio-border rounded-lg divide-y divide-studio-border max-h-64 overflow-y-auto">
                 {turmaAlunos.map((a) => (
@@ -212,7 +223,7 @@ export default function Turmas() {
                       type="button"
                       onClick={() => handleRemoveAluno(a.alunoId)}
                       disabled={removeMatricula.isPending}
-                      className="text-red-600 hover:underline text-sm"
+                      className="link-action link-action-danger text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1"
                     >
                       Remover
                     </button>
@@ -224,19 +235,45 @@ export default function Turmas() {
         </div>
       </Modal>
 
-      <div className="bg-studio-bg border border-studio-border rounded-lg overflow-hidden">
+      <div className="mb-4">
+        <ListResultSummary
+          count={turmas.length}
+          label="turma"
+          hasFilter={false}
+          onClearFilter={() => {}}
+          isLoading={isLoading}
+        />
+      </div>
+
+      <div className="card overflow-hidden">
         {isLoading ? (
           <TableSkeleton rows={6} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : turmas.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            Nenhuma turma registada.
-          </div>
+          <EmptyState
+            title="Nenhuma turma registada"
+            description="Clique em «Nova turma» para criar a primeira."
+            action={
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+              >
+                Nova turma
+              </button>
+            }
+          />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table
+            className="min-w-full divide-y divide-studio-border"
+            aria-label="Lista de turmas"
+          >
+            <caption className="sr-only">
+              Turmas com nome, ano letivo, número de alunos e ações
+            </caption>
             <thead className="bg-studio-muted">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
@@ -265,21 +302,21 @@ export default function Turmas() {
                     <button
                       type="button"
                       onClick={() => setGerirTurmaId(t.id)}
-                      className="text-studio-foreground-light hover:underline mr-3"
+                      className="link-action link-action-primary mr-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
                     >
                       Gerir alunos
                     </button>
                     <button
                       type="button"
                       onClick={() => handleEdit(t.id)}
-                      className="text-studio-brand hover:underline mr-3"
+                      className="link-action link-action-primary mr-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
                     >
                       Editar
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(t.id)}
-                      className="text-red-600 hover:underline"
+                      className="link-action link-action-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1"
                     >
                       Eliminar
                     </button>

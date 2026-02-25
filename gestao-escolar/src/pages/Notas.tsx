@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTurmas, usePeriodos, useNotas, useTurmaAlunos } from '@/data/escola/queries'
 import { TableSkeleton } from '@/components/PageSkeleton'
+import PageHeader from '@/components/PageHeader'
 import { useSaveNotasBatch, useEnsurePeriodos } from '@/data/escola/mutations'
 
 const BIMESTRES = [1, 2, 3, 4] as const
@@ -76,12 +77,10 @@ export default function Notas() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold text-studio-foreground">Notas</h2>
-        <p className="text-studio-foreground-light text-sm mt-0.5">
-          Lançamento por turma e bimestre (0–10). Dados da API /api/escola/notas.
-        </p>
-      </div>
+      <PageHeader
+        title="Notas"
+        subtitle="Lançamento por turma e bimestre (escala 0–10)."
+      />
 
       <div className="flex flex-wrap gap-4 mb-6">
         <div>
@@ -96,6 +95,7 @@ export default function Notas() {
               setLocalRows([])
             }}
             className="input min-w-[140px]"
+            aria-label="Selecionar turma para lançamento de notas"
           >
             <option value="">Selecionar turma</option>
             {turmas.map((t) => (
@@ -117,6 +117,7 @@ export default function Notas() {
               setLocalRows([])
             }}
             className="input min-w-[120px]"
+            aria-label="Selecionar bimestre"
           >
             <option value="">Selecionar</option>
             {BIMESTRES.map((b) => (
@@ -132,7 +133,7 @@ export default function Notas() {
               type="button"
               onClick={handleSave}
               disabled={saveNotas.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {saveNotas.isPending ? 'A guardar...' : 'Guardar notas'}
             </button>
@@ -152,7 +153,13 @@ export default function Notas() {
             Esta turma não tem alunos. Adicione alunos à turma em Turmas.
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table
+            className="min-w-full divide-y divide-studio-border"
+            aria-label="Notas por aluno"
+          >
+            <caption className="sr-only">
+              Lista de alunos da turma com campo de nota (0–10)
+            </caption>
             <thead className="bg-studio-muted">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">

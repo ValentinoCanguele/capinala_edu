@@ -14,6 +14,14 @@ import Disciplinas from './pages/Disciplinas'
 import AnosLetivos from './pages/AnosLetivos'
 import Salas from './pages/Salas'
 import Auditoria from './pages/Auditoria'
+import Financas from './pages/Financas'
+import FinancasDashboard from './pages/FinancasDashboard'
+import FinancasLancamentos from './pages/FinancasLancamentos'
+import FinancasCategorias from './pages/FinancasCategorias'
+import FinancasConfiguracao from './pages/FinancasConfiguracao'
+import FinancasParcelas from './pages/FinancasParcelas'
+import FinancasRelatorios from './pages/FinancasRelatorios'
+import Modulos from './pages/Modulos'
 import Login from './pages/Login'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -57,6 +65,15 @@ export default function App() {
         <Route path="anos-letivos" element={<AnosLetivos />} />
         <Route path="salas" element={<Salas />} />
         <Route path="auditoria" element={<Auditoria />} />
+        <Route path="definicoes/modulos" element={<Modulos />} />
+        <Route path="financas" element={<Financas />}>
+          <Route index element={<FinancasDashboard />} />
+          <Route path="categorias" element={<FinancasCategorias />} />
+          <Route path="lancamentos" element={<FinancasLancamentos />} />
+          <Route path="parcelas" element={<FinancasParcelas />} />
+          <Route path="configuracao" element={<FinancasConfiguracao />} />
+          <Route path="relatorios" element={<FinancasRelatorios />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

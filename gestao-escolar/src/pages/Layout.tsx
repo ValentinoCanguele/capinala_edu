@@ -20,6 +20,7 @@ import {
   Calendar,
   DoorOpen,
   History,
+  Banknote,
   Sun,
   Moon,
   LogOut,
@@ -28,6 +29,7 @@ import {
   ChevronDown,
   HelpCircle,
   Bell,
+  Settings,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
@@ -37,6 +39,7 @@ import {
   isSecondBarItemActive,
   getActiveSecondBarLabel,
 } from '@/layout/secondBarConfig'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const SIDEBAR_COLLAPSED_KEY = 'gestao-escolar-sidebar-collapsed'
 const SIDEBAR_WIDTH_EXPANDED = 'w-56'
@@ -55,8 +58,32 @@ const navItems = [
   { to: '/disciplinas', label: 'Disciplinas', icon: BookMarked },
   { to: '/anos-letivos', label: 'Anos letivos', icon: Calendar },
   { to: '/salas', label: 'Salas', icon: DoorOpen },
+  { to: '/financas', label: 'Finanças', icon: Banknote },
   { to: '/auditoria', label: 'Auditoria', icon: History },
+  { to: '/definicoes/modulos', label: 'Definições', icon: Settings },
 ]
+
+const SEGMENT_LABELS: Record<string, string> = {
+  alunos: 'Alunos',
+  turmas: 'Turmas',
+  notas: 'Notas',
+  frequencia: 'Frequência',
+  boletim: 'Boletim',
+  horarios: 'Horários',
+  comunicados: 'Comunicados',
+  disciplinas: 'Disciplinas',
+  'anos-letivos': 'Anos letivos',
+  salas: 'Salas',
+  financas: 'Finanças',
+  categorias: 'Categorias',
+  lancamentos: 'Lançamentos',
+  configuracao: 'Configuração',
+  parcelas: 'Parcelas',
+  relatorios: 'Relatórios',
+  auditoria: 'Auditoria',
+  definicoes: 'Definições',
+  modulos: 'Módulos',
+}
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   const segments = pathname.split('/').filter(Boolean)
@@ -64,31 +91,7 @@ function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   let acc = ''
   for (const seg of segments) {
     acc += `/${seg}`
-    const label =
-      seg === 'alunos'
-        ? 'Alunos'
-        : seg === 'turmas'
-          ? 'Turmas'
-          : seg === 'notas'
-            ? 'Notas'
-            : seg === 'frequencia'
-              ? 'Frequência'
-              : seg === 'boletim'
-                ? 'Boletim'
-                : seg === 'horarios'
-                  ? 'Horários'
-                  : seg === 'comunicados'
-                    ? 'Comunicados'
-                    : seg === 'disciplinas'
-                      ? 'Disciplinas'
-                      : seg === 'anos-letivos'
-                        ? 'Anos letivos'
-                        : seg === 'salas'
-                          ? 'Salas'
-                          : seg === 'auditoria'
-                            ? 'Auditoria'
-                            : seg
-    crumbs.push({ label, href: acc })
+    crumbs.push({ label: SEGMENT_LABELS[seg] ?? seg, href: acc })
   }
   return crumbs
 }
@@ -256,6 +259,7 @@ export default function Layout() {
             to="/"
             className="flex-shrink-0 flex items-center gap-2 rounded-md py-1.5 pr-2 -ml-1 hover:bg-studio-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
             title="Ir para início"
+            aria-label="Ir para início"
           >
             {!logoError ? (
               <img src={LOGO_URL} alt="" className="w-7 h-7 rounded object-contain" onError={() => setLogoError(true)} />
@@ -264,7 +268,6 @@ export default function Layout() {
                 <Home className="w-4 h-4 text-studio-brand" />
               </div>
             )}
-            <span className="hidden md:inline text-sm font-medium text-studio-foreground">Início</span>
           </Link>
           <span className="flex-shrink-0 w-px h-5 bg-studio-border" aria-hidden />
           {/* Breadcrumbs */}
@@ -345,15 +348,17 @@ export default function Layout() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setHelpOpen(false); /* TODO: link documentação */ }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                    onClick={() => setHelpOpen(false)}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-inset rounded"
+                    aria-label="Fechar e ir para documentação (em breve)"
                   >
                     Documentação
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setHelpOpen(false); /* TODO: link acerca */ }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                    onClick={() => setHelpOpen(false)}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-inset rounded"
+                    aria-label="Fechar e ver acerca (em breve)"
                   >
                     Acerca
                   </button>
@@ -452,7 +457,9 @@ export default function Layout() {
         )}
 
         <div className="flex-1 p-4 sm:p-6 overflow-auto">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
     </div>

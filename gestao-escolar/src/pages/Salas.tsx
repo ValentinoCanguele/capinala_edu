@@ -10,6 +10,9 @@ import {
 import type { SalaFormValues } from '@/schemas/sala'
 import Modal from '@/components/Modal'
 import EmptyState from '@/components/EmptyState'
+import ListResultSummary from '@/components/ListResultSummary'
+import PageHeader from '@/components/PageHeader'
+import { TableSkeleton } from '@/components/PageSkeleton'
 
 function SalaForm({
   defaultValues,
@@ -69,11 +72,11 @@ function SalaForm({
           placeholder="Nº de lugares"
         />
       </div>
-      <div className="flex gap-2 justify-end pt-2">
-        <button type="button" onClick={onCancel} className="btn-secondary">
+      <div className="flex gap-2 justify-end pt-4 mt-4 border-t border-studio-border">
+        <button type="button" onClick={onCancel} className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2">
           Cancelar
         </button>
-        <button type="submit" className="btn-primary" disabled={isLoading}>
+        <button type="submit" className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50" disabled={isLoading}>
           {isLoading ? 'A guardar...' : 'Guardar'}
         </button>
       </div>
@@ -82,6 +85,7 @@ function SalaForm({
 }
 
 export default function Salas() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
@@ -90,6 +94,12 @@ export default function Salas() {
   const createSala = useCreateSala()
   const updateSala = useUpdateSala()
   const deleteSala = useDeleteSala()
+
+  const handleCloseModal = () => {
+    setModalOpen(false)
+    setEditingId(null)
+    if (searchParams.get('acao') === 'novo') setSearchParams({})
+  }
 
   const filtered = useMemo(
     () =>
@@ -106,7 +116,7 @@ export default function Salas() {
   const handleCreate = () => {
     setEditingId(null)
     setModalOpen(true)
-    setSearchParams({})
+    setSearchParams({}, { replace: true })
   }
 
   const handleEdit = (id: string) => {
@@ -157,31 +167,36 @@ export default function Salas() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">
-            Salas
-          </h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Gerir salas e capacidade para horários.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-        >
-          Nova sala
-        </button>
-      </div>
+      <PageHeader
+        title="Salas"
+        subtitle="Gerir salas e capacidade para horários."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Nova sala
+          </button>
+        }
+      />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-4">
         <input
           type="search"
           placeholder="Pesquisar por nome..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="input max-w-xs"
+          aria-label="Pesquisar salas por nome"
+        />
+        <ListResultSummary
+          count={filtered.length}
+          total={salas.length}
+          label="sala"
+          hasFilter={filter.length > 0}
+          onClearFilter={() => setFilter('')}
+          isLoading={isLoading}
         />
       </div>
 
@@ -207,11 +222,9 @@ export default function Salas() {
 
       <div className="card overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            A carregar...
-          </div>
+          <TableSkeleton rows={5} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
@@ -229,7 +242,8 @@ export default function Salas() {
             ) : undefined}
           />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de salas">
+            <caption className="sr-only">Salas com nome, capacidade e ações</caption>
             <thead className="bg-studio-muted">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
@@ -256,14 +270,14 @@ export default function Salas() {
                     <button
                       type="button"
                       onClick={() => handleEdit(s.id)}
-                      className="text-studio-brand hover:underline mr-3"
+                      className="link-action link-action-primary mr-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
                     >
                       Editar
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(s.id, s.nome)}
-                      className="text-red-600 hover:underline"
+                      className="link-action link-action-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1"
                     >
                       Eliminar
                     </button>

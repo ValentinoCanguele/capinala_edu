@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useComunicados, useTurmas } from '@/data/escola/queries'
 import { useCreateComunicado, useUpdateComunicado, useDeleteComunicado } from '@/data/escola/mutations'
+import PageHeader from '@/components/PageHeader'
+import EmptyState from '@/components/EmptyState'
 
 export default function Comunicados() {
     const [searchParams, setSearchParams] = useSearchParams()
@@ -123,21 +125,19 @@ export default function Comunicados() {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <div>
-                    <h2 className="text-2xl font-semibold text-studio-foreground">Comunicados</h2>
-                    <p className="text-studio-foreground-light text-sm mt-0.5">
-                        Avisos e comunicados internos da escola.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={handleOpenCreate}
-                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-                >
-                    Novo comunicado
-                </button>
-            </div>
+            <PageHeader
+                title="Comunicados"
+                subtitle="Avisos e comunicados internos da escola."
+                actions={
+                    <button
+                        type="button"
+                        onClick={handleOpenCreate}
+                        className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                    >
+                        Novo comunicado
+                    </button>
+                }
+            />
 
             {/* Modal criar/editar */}
             {formOpen && (
@@ -154,30 +154,35 @@ export default function Comunicados() {
                         </h3>
                         <form onSubmit={handleSubmit} className="space-y-3">
                             <div>
-                                <label className="label">Título *</label>
+                                <label htmlFor="com-titulo" className="label">Título *</label>
                                 <input
+                                    id="com-titulo"
                                     type="text"
                                     value={form.titulo}
                                     onChange={(e) => setForm({ ...form, titulo: e.target.value })}
                                     className="input w-full"
                                     placeholder="Título do comunicado"
                                     required
+                                    aria-label="Título do comunicado"
                                 />
                             </div>
                             <div>
-                                <label className="label">Conteúdo *</label>
+                                <label htmlFor="com-conteudo" className="label">Conteúdo *</label>
                                 <textarea
+                                    id="com-conteudo"
                                     value={form.conteudo}
                                     onChange={(e) => setForm({ ...form, conteudo: e.target.value })}
                                     className="input w-full min-h-[120px]"
                                     placeholder="Escreva o comunicado..."
                                     required
+                                    aria-label="Conteúdo do comunicado"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="label">Destinatário</label>
+                                    <label htmlFor="com-destinatario" className="label">Destinatário</label>
                                     <select
+                                        id="com-destinatario"
                                         value={form.destinatarioTipo}
                                         onChange={(e) =>
                                             setForm({
@@ -187,6 +192,7 @@ export default function Comunicados() {
                                             })
                                         }
                                         className="input w-full"
+                                        aria-label="Destinatário do comunicado"
                                     >
                                         <option value="todos">Todos</option>
                                         <option value="turma">Turma específica</option>
@@ -194,11 +200,13 @@ export default function Comunicados() {
                                 </div>
                                 {form.destinatarioTipo === 'turma' && (
                                     <div>
-                                        <label className="label">Turma</label>
+                                        <label htmlFor="com-turma" className="label">Turma</label>
                                         <select
+                                            id="com-turma"
                                             value={form.turmaId}
                                             onChange={(e) => setForm({ ...form, turmaId: e.target.value })}
                                             className="input w-full"
+                                            aria-label="Turma destinatária"
                                         >
                                             <option value="">Selecionar</option>
                                             {turmas.map((t) => (
@@ -214,14 +222,14 @@ export default function Comunicados() {
                                 <button
                                     type="button"
                                     onClick={handleCloseForm}
-                                    className="px-4 py-2 text-sm rounded-md text-studio-foreground-light hover:bg-studio-muted"
+                                    className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={createComunicado.isPending || updateComunicado.isPending}
-                                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
                                 >
                                     {createComunicado.isPending || updateComunicado.isPending
                                         ? 'A guardar...'
@@ -238,10 +246,22 @@ export default function Comunicados() {
             {/* Lista de comunicados */}
             <div className="space-y-3">
                 {isLoading ? (
-                    <div className="card p-8 text-center text-studio-foreground-lighter">A carregar...</div>
+                    <div className="card p-8 text-center text-studio-foreground-lighter" role="status" aria-live="polite">A carregar...</div>
                 ) : comunicados.length === 0 ? (
-                    <div className="card p-8 text-center text-studio-foreground-lighter">
-                        Nenhum comunicado publicado.
+                    <div className="card">
+                        <EmptyState
+                            title="Nenhum comunicado publicado"
+                            description="Clique em «Novo comunicado» para publicar um aviso."
+                            action={
+                                <button
+                                    type="button"
+                                    onClick={handleOpenCreate}
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                                >
+                                    Novo comunicado
+                                </button>
+                            }
+                        />
                     </div>
                 ) : (
                     comunicados.map((c) => (
@@ -278,14 +298,14 @@ export default function Comunicados() {
                                     <button
                                         type="button"
                                         onClick={() => handleOpenEdit(c.id)}
-                                        className="text-studio-brand hover:underline text-sm"
+                                        className="link-action link-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
                                     >
                                         Editar
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => handleDelete(c.id)}
-                                        className="text-red-600 hover:underline text-sm"
+                                        className="link-action link-action-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1"
                                     >
                                         Eliminar
                                     </button>

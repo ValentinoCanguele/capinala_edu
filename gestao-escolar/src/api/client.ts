@@ -1,10 +1,13 @@
 /**
  * Cliente para as APIs do módulo escola (Studio).
  * Em dev o Vite faz proxy de /api para o Studio (porta 8082).
+ * Em 401 (não autorizado) limpa o token e emite evento para o AuthContext atualizar.
  */
-import { getAuthHeader } from '@/lib/auth'
+import { getAuthHeader, clearToken } from '@/lib/auth'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+
+const AUTH_UNAUTHORIZED_EVENT = 'auth:unauthorized'
 
 export type ApiError = { message: string }
 
@@ -22,6 +25,13 @@ async function request<T>(
     },
     credentials: 'include',
   })
+  if (res.status === 401) {
+    clearToken()
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(AUTH_UNAUTHORIZED_EVENT))
+    }
+    return { error: { message: 'Sessão expirada. Inicie sessão novamente.' } }
+  }
   const json = await res.json().catch(() => ({}))
   if (!res.ok) {
     return { error: json?.error ?? { message: res.statusText } }

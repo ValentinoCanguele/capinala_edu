@@ -1,40 +1,12 @@
-# Dependencies
+# Apenas o estritamente necessário — todo o resto do projeto é incluído no upload
+
+# Dependências (instaláveis com npm install; muito grandes)
 node_modules/
 
-# Environment (nunca commitar segredos)
+# Segredos — NUNCA commitar
 .env
 .env.local
 .env.*.local
-*.local
 
-# Build / output
-dist/
+# Build Next.js (regenerável)
 .next/
-out/
-build/
-*.tsbuildinfo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs e cache
-*.log
-npm-debug.log*
-.npm
-.cache
-.parcel-cache
-.vite
-
-# IDE (opcional; descomente se não quiser commitar)
-# .idea/
-# .vscode/
-
-# Test / coverage
-coverage/
-.nyc_output/
-
-# Misc
-*.swp
-*.swo
-*~

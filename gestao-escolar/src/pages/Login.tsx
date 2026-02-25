@@ -52,7 +52,7 @@ export default function Login() {
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 rounded-lg text-sm bg-red-500/10 text-red-600 border border-red-500/20 flex items-center gap-2">
+              <div className="p-3 rounded-lg text-sm bg-red-500/10 text-red-600 border border-red-500/20 flex items-center gap-2" role="alert">
                 {error}
               </div>
             )}
@@ -93,7 +93,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
             >
               <LogIn className="w-4 h-4" />
               {loading ? 'A entrar...' : 'Entrar'}

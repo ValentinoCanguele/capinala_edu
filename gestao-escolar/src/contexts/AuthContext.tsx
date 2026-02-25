@@ -42,19 +42,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
       return
     }
-    const { data, error } = await api.get<UserInfo>(`${ESCOLA_API}/meu-papel`)
-    if (error || !data) {
+    try {
+      const { data, error } = await api.get<UserInfo>(`${ESCOLA_API}/meu-papel`)
+      if (error || !data) {
+        clearToken()
+        setUser(null)
+      } else {
+        setUser(data)
+      }
+    } catch {
       clearToken()
       setUser(null)
-    } else {
-      setUser(data)
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
 
   useEffect(() => {
     loadUser()
   }, [loadUser])
+
+  useEffect(() => {
+    const onUnauthorized = () => setUser(null)
+    window.addEventListener('auth:unauthorized', onUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', onUnauthorized)
+  }, [])
 
   const login = useCallback(
     async (email: string, password: string): Promise<{ error?: string }> => {

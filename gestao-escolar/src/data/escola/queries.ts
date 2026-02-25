@@ -68,6 +68,57 @@ const queryKeys = {
   dashboardStats: ['escola', 'dashboard-stats'] as const,
   auditLog: (entidade?: string) => ['escola', 'audit', entidade] as const,
   alertas: ['escola', 'alertas'] as const,
+  categoriasFinancas: ['escola', 'financas', 'categorias'] as const,
+  categoriaFinanceira: (id: string) =>
+    ['escola', 'financas', 'categoria', id] as const,
+  configuracaoFinancas: ['escola', 'financas', 'configuracao'] as const,
+  lancamentos: (filtros: Record<string, unknown>) =>
+    ['escola', 'financas', 'lancamentos', filtros] as const,
+  parcelas: (filtros: Record<string, unknown>) =>
+    ['escola', 'financas', 'parcelas', filtros] as const,
+  parcela: (id: string) => ['escola', 'financas', 'parcela', id] as const,
+  pagamentos: (parcelaId: string) =>
+    ['escola', 'financas', 'pagamentos', parcelaId] as const,
+  dashboardFinancas: ['escola', 'financas', 'dashboard'] as const,
+  fluxoCaixa: (dataInicio: string, dataFim: string) =>
+    ['escola', 'financas', 'fluxoCaixa', dataInicio, dataFim] as const,
+  dre: (dataInicio: string, dataFim: string) =>
+    ['escola', 'financas', 'dre', dataInicio, dataFim] as const,
+  inadimplencia: (anoLetivoId?: string) =>
+    ['escola', 'financas', 'inadimplencia', anoLetivoId] as const,
+  modulos: ['escola', 'modulos'] as const,
+  modulosCatalogo: ['escola', 'modulos', 'catalogo'] as const,
+  modulo: (id: string) => ['escola', 'modulo', id] as const,
+}
+
+export interface Modulo {
+  id: string
+  chave: string
+  nome: string
+  descricao: string | null
+  ativo: boolean
+  ordem: number
+  config: Record<string, unknown>
+  permissoes: string[]
+  imagem: string | null
+  icone: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ModuloCatalogo {
+  chave: string
+  nome: string
+  descricao: string
+  imagem?: string | null
+  icone: string
+  ordemDefault: number
+  permissoesDefault: string[]
+}
+
+export interface ModulosComDisponiveis {
+  instalados: Modulo[]
+  disponiveis: ModuloCatalogo[]
 }
 
 export function useAlunos() {
@@ -396,6 +447,291 @@ export function useAlertas() {
       if (error) throw new Error(error.message)
       return data ?? []
     },
+  })
+}
+
+export interface CategoriaFinanceira {
+  id: string
+  nome: string
+  tipo: 'receita' | 'despesa'
+  ordem: number
+  ativo: boolean
+  createdAt: string
+}
+
+export function useCategoriasFinancas() {
+  return useQuery({
+    queryKey: queryKeys.categoriasFinancas,
+    queryFn: async (): Promise<CategoriaFinanceira[]> => {
+      const { data, error } = await api.get<CategoriaFinanceira[]>(
+        `${ESCOLA_API}/financas/categorias`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export interface ConfiguracaoFinancas {
+  multaPercentual: number
+  jurosMensalPercentual: number
+  parcelasParaBloqueio: number
+}
+
+export function useConfiguracaoFinancas() {
+  return useQuery({
+    queryKey: queryKeys.configuracaoFinancas,
+    queryFn: async (): Promise<ConfiguracaoFinancas> => {
+      const { data, error } = await api.get<ConfiguracaoFinancas>(
+        `${ESCOLA_API}/financas/configuracao`
+      )
+      if (error) throw new Error(error.message)
+      return data!
+    },
+  })
+}
+
+export interface LancamentoRow {
+  id: string
+  tipo: 'entrada' | 'saida'
+  data: string
+  valor: number
+  categoriaId: string
+  categoriaNome: string
+  descricao: string
+  formaPagamento: string
+  referencia: string
+  alunoId: string | null
+  centroCusto: string
+  anoLetivoId: string | null
+}
+
+export function useLancamentos(filtros: {
+  tipo?: 'entrada' | 'saida'
+  dataInicio?: string
+  dataFim?: string
+  categoriaId?: string
+  anoLetivoId?: string
+} = {}) {
+  return useQuery({
+    queryKey: queryKeys.lancamentos(filtros),
+    queryFn: async (): Promise<LancamentoRow[]> => {
+      const params = new URLSearchParams()
+      if (filtros.tipo) params.set('tipo', filtros.tipo)
+      if (filtros.dataInicio) params.set('dataInicio', filtros.dataInicio)
+      if (filtros.dataFim) params.set('dataFim', filtros.dataFim)
+      if (filtros.categoriaId) params.set('categoriaId', filtros.categoriaId)
+      if (filtros.anoLetivoId) params.set('anoLetivoId', filtros.anoLetivoId)
+      const qs = params.toString()
+      const { data, error } = await api.get<LancamentoRow[]>(
+        `${ESCOLA_API}/financas/lancamentos${qs ? `?${qs}` : ''}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export interface ParcelaRow {
+  id: string
+  alunoId: string
+  alunoNome: string
+  responsavelId: string | null
+  categoriaId: string
+  categoriaNome: string
+  valorOriginal: number
+  valorAtualizado: number
+  vencimento: string
+  status: string
+  descricao: string
+  anoLetivoId: string
+}
+
+export function useParcelas(filtros: {
+  anoLetivoId?: string
+  alunoId?: string
+  responsavelId?: string
+  status?: string
+  dataInicio?: string
+  dataFim?: string
+} = {}) {
+  return useQuery({
+    queryKey: queryKeys.parcelas(filtros),
+    queryFn: async (): Promise<ParcelaRow[]> => {
+      const params = new URLSearchParams()
+      if (filtros.anoLetivoId) params.set('anoLetivoId', filtros.anoLetivoId)
+      if (filtros.alunoId) params.set('alunoId', filtros.alunoId)
+      if (filtros.responsavelId) params.set('responsavelId', filtros.responsavelId)
+      if (filtros.status) params.set('status', filtros.status)
+      if (filtros.dataInicio) params.set('dataInicio', filtros.dataInicio)
+      if (filtros.dataFim) params.set('dataFim', filtros.dataFim)
+      const qs = params.toString()
+      const { data, error } = await api.get<ParcelaRow[]>(
+        `${ESCOLA_API}/financas/parcelas${qs ? `?${qs}` : ''}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export interface PagamentoRow {
+  id: string
+  parcelaId: string
+  dataPagamento: string
+  valor: number
+  formaPagamento: string
+  createdAt: string
+}
+
+export function usePagamentos(parcelaId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.pagamentos(parcelaId ?? ''),
+    queryFn: async (): Promise<PagamentoRow[]> => {
+      if (!parcelaId) return []
+      const { data, error } = await api.get<PagamentoRow[]>(
+        `${ESCOLA_API}/financas/parcelas/${parcelaId}/pagamentos`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+    enabled: !!parcelaId,
+  })
+}
+
+export interface DashboardFinancas {
+  receitasMes: number
+  despesasMes: number
+  saldoMes: number
+  totalInadimplencia: number
+  quantidadeInadimplentes: number
+  parcelasAVencer7Dias: number
+  parcelasVencidas: number
+  evolucaoMensal: { mes: string; receitas: number; despesas: number }[]
+}
+
+export function useDashboardFinancas() {
+  return useQuery({
+    queryKey: queryKeys.dashboardFinancas,
+    queryFn: async (): Promise<DashboardFinancas> => {
+      const { data, error } = await api.get<DashboardFinancas>(
+        `${ESCOLA_API}/financas/dashboard`
+      )
+      if (error) throw new Error(error.message)
+      return data!
+    },
+  })
+}
+
+export interface FluxoCaixaRow {
+  data: string
+  descricao: string
+  tipo: 'entrada' | 'saida'
+  valor: number
+  categoriaNome: string
+  saldoAcumulado: number
+}
+
+export function useFluxoCaixa(dataInicio: string, dataFim: string) {
+  return useQuery({
+    queryKey: queryKeys.fluxoCaixa(dataInicio, dataFim),
+    queryFn: async (): Promise<FluxoCaixaRow[]> => {
+      const { data, error } = await api.get<FluxoCaixaRow[]>(
+        `${ESCOLA_API}/financas/relatorios/fluxo-caixa?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+    enabled: !!dataInicio && !!dataFim,
+  })
+}
+
+export interface DRERow {
+  categoriaNome: string
+  tipo: string
+  total: number
+}
+
+export interface DREFinancas {
+  receitas: DRERow[]
+  despesas: DRERow[]
+  totalReceitas: number
+  totalDespesas: number
+  resultado: number
+}
+
+export function useDRE(dataInicio: string, dataFim: string) {
+  return useQuery({
+    queryKey: queryKeys.dre(dataInicio, dataFim),
+    queryFn: async (): Promise<DREFinancas> => {
+      const { data, error } = await api.get<DREFinancas>(
+        `${ESCOLA_API}/financas/relatorios/dre?dataInicio=${encodeURIComponent(dataInicio)}&dataFim=${encodeURIComponent(dataFim)}`
+      )
+      if (error) throw new Error(error.message)
+      return data!
+    },
+    enabled: !!dataInicio && !!dataFim,
+  })
+}
+
+export interface InadimplenteRow {
+  alunoId: string
+  alunoNome: string
+  parcelasAtrasadas: number
+  valorTotalAberto: number
+  diasAtraso: number
+}
+
+export function useInadimplencia(anoLetivoId?: string) {
+  return useQuery({
+    queryKey: queryKeys.inadimplencia(anoLetivoId),
+    queryFn: async (): Promise<InadimplenteRow[]> => {
+      const params = anoLetivoId
+        ? `?anoLetivoId=${encodeURIComponent(anoLetivoId)}`
+        : ''
+      const { data, error } = await api.get<InadimplenteRow[]>(
+        `${ESCOLA_API}/financas/relatorios/inadimplencia${params}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useModulos() {
+  return useQuery({
+    queryKey: queryKeys.modulos,
+    queryFn: async (): Promise<Modulo[]> => {
+      const { data, error } = await api.get<Modulo[]>(`${ESCOLA_API}/modulos`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useModulosComDisponiveis() {
+  return useQuery({
+    queryKey: queryKeys.modulosCatalogo,
+    queryFn: async (): Promise<ModulosComDisponiveis> => {
+      const { data, error } = await api.get<ModulosComDisponiveis>(
+        `${ESCOLA_API}/modulos?catalogo=1`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? { instalados: [], disponiveis: [] }
+    },
+  })
+}
+
+export function useModulo(id: string | null) {
+  return useQuery({
+    queryKey: queryKeys.modulo(id ?? ''),
+    queryFn: async (): Promise<Modulo | null> => {
+      if (!id) return null
+      const { data, error } = await api.get<Modulo>(`${ESCOLA_API}/modulos/${id}`)
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!id,
   })
 }
 

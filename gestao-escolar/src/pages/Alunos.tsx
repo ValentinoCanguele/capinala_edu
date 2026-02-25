@@ -10,6 +10,9 @@ import {
 import type { AlunoFormValues } from '@/schemas/aluno'
 import AlunoForm from '@/components/AlunoForm'
 import Modal from '@/components/Modal'
+import EmptyState from '@/components/EmptyState'
+import ListResultSummary from '@/components/ListResultSummary'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 export default function Alunos() {
@@ -96,25 +99,36 @@ export default function Alunos() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">Alunos</h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Listagem e cadastro. Dados da API /api/escola/alunos.
-          </p>
-        </div>
-        <button type="button" onClick={handleCreate} className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover">
-          Novo aluno
-        </button>
-      </div>
+      <PageHeader
+        title="Alunos"
+        subtitle="Listagem e cadastro de alunos da escola."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Novo aluno
+          </button>
+        }
+      />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-4">
         <input
           type="search"
           placeholder="Pesquisar por nome..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="input max-w-xs"
+          aria-label="Pesquisar alunos por nome"
+        />
+        <ListResultSummary
+          count={filteredAlunos.length}
+          total={alunos.length}
+          label="aluno"
+          hasFilter={filter.length > 0}
+          onClearFilter={() => setFilter('')}
+          isLoading={isLoading}
         />
       </div>
 
@@ -140,19 +154,32 @@ export default function Alunos() {
         />
       </Modal>
 
-      <div className="bg-studio-bg border border-studio-border rounded-lg overflow-hidden">
+      <div className="card overflow-hidden">
         {isLoading ? (
           <TableSkeleton rows={6} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filteredAlunos.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            {filter ? 'Nenhum aluno encontrado.' : 'Nenhum aluno registado.'}
-          </div>
+          <EmptyState
+            title={filter ? 'Nenhum aluno encontrado' : 'Nenhum aluno registado'}
+            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em «Novo aluno» para começar.'}
+            action={
+              !filter ? (
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                >
+                  Novo aluno
+                </button>
+              ) : undefined
+            }
+          />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de alunos">
+            <caption className="sr-only">Alunos com nome, email, data de nascimento e ações</caption>
             <thead className="bg-studio-muted">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
@@ -181,14 +208,14 @@ export default function Alunos() {
                     <button
                       type="button"
                       onClick={() => handleEdit(a.id)}
-                      className="text-studio-brand hover:underline mr-3"
+                      className="link-action link-action-primary mr-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
                     >
                       Editar
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(a.id)}
-                      className="text-red-600 hover:underline"
+                      className="link-action link-action-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1"
                     >
                       Eliminar
                     </button>

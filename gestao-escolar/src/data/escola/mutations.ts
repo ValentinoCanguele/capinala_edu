@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
-import { queryKeys } from './queries'
+import { queryKeys, type Modulo } from './queries'
 
 const ESCOLA_API = '/api/escola'
 
@@ -459,6 +459,329 @@ export function useResolveAlerta() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.alertas })
+    },
+  })
+}
+
+/* ── Finanças: categorias ── */
+
+export interface CategoriaFinanceiraInput {
+  nome: string
+  tipo: 'receita' | 'despesa'
+  ordem?: number
+  ativo?: boolean
+}
+
+export function useCreateCategoriaFinanceira() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: CategoriaFinanceiraInput) => {
+      const { data, error } = await api.post(
+        `${ESCOLA_API}/financas/categorias`,
+        body
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.categoriasFinancas }),
+  })
+}
+
+export function useUpdateCategoriaFinanceira() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...body
+    }: Partial<CategoriaFinanceiraInput> & { id: string }) => {
+      const { data, error } = await api.put(
+        `${ESCOLA_API}/financas/categorias/${id}`,
+        body
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.categoriasFinancas,
+      })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.categoriaFinanceira(id),
+      })
+    },
+  })
+}
+
+export function useDeleteCategoriaFinanceira() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.delete(
+        `${ESCOLA_API}/financas/categorias/${id}`
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.categoriasFinancas }),
+  })
+}
+
+/* ── Finanças: configuração ── */
+
+export interface ConfiguracaoFinancasInput {
+  multaPercentual?: number
+  jurosMensalPercentual?: number
+  parcelasParaBloqueio?: number
+}
+
+export function useUpdateConfiguracaoFinancas() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: ConfiguracaoFinancasInput) => {
+      const { data, error } = await api.put(
+        `${ESCOLA_API}/financas/configuracao`,
+        body
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.configuracaoFinancas,
+      }),
+  })
+}
+
+/* ── Finanças: lançamentos ── */
+
+export interface LancamentoInput {
+  tipo: 'entrada' | 'saida'
+  data: string
+  valor: number
+  categoriaId: string
+  descricao?: string
+  formaPagamento?: string
+  referencia?: string
+  anoLetivoId?: string
+  alunoId?: string
+  centroCusto?: string
+}
+
+export function useCreateLancamento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: LancamentoInput) => {
+      const { data, error } = await api.post(
+        `${ESCOLA_API}/financas/lancamentos`,
+        body
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'financas'] })
+    },
+  })
+}
+
+export function useUpdateLancamento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...body
+    }: Partial<LancamentoInput> & { id: string }) => {
+      const { data, error } = await api.put(
+        `${ESCOLA_API}/financas/lancamentos/${id}`,
+        body
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'financas'] })
+    },
+  })
+}
+
+export function useDeleteLancamento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.delete(
+        `${ESCOLA_API}/financas/lancamentos/${id}`
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'financas'] })
+    },
+  })
+}
+
+export interface ImportLancamentosCsvResult {
+  importados: number
+  erros: Array<{ linha: number; mensagem: string; dados?: string }>
+}
+
+export function useImportLancamentosCsv() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (csv: string) => {
+      const { data, error } = await api.post<ImportLancamentosCsvResult>(
+        `${ESCOLA_API}/financas/import/lancamentos`,
+        { csv }
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'financas'] })
+      queryClient.invalidateQueries({
+        queryKey: ['escola', 'financas', 'dashboard'],
+      })
+    },
+  })
+}
+
+/* ── Finanças: parcelas e pagamentos ── */
+
+export interface ParcelaInput {
+  anoLetivoId: string
+  alunoId: string
+  responsavelId?: string
+  categoriaId: string
+  valorOriginal: number
+  vencimento: string
+  descricao?: string
+}
+
+export function useCreateParcela() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: ParcelaInput) => {
+      const { data, error } = await api.post(
+        `${ESCOLA_API}/financas/parcelas`,
+        body
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'financas'] })
+    },
+  })
+}
+
+export interface GerarParcelasLoteInput {
+  anoLetivoId: string
+  turmaId: string
+  categoriaId: string
+  valorOriginal: number
+  primeiroVencimento: string
+  numeroParcelas: number
+  descricao?: string
+}
+
+export interface GerarParcelasLoteResult {
+  criadas: number
+  alunos: number
+}
+
+export function useGerarParcelasLote() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: GerarParcelasLoteInput) => {
+      const { data, error } = await api.post<GerarParcelasLoteResult>(
+        `${ESCOLA_API}/financas/parcelas/gerar-lote`,
+        body
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'financas'] })
+      queryClient.invalidateQueries({
+        queryKey: ['escola', 'financas', 'dashboard'],
+      })
+    },
+  })
+}
+
+export interface PagamentoInput {
+  parcelaId: string
+  dataPagamento: string
+  valor: number
+  formaPagamento?: string
+}
+
+export function useRegistrarPagamento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: PagamentoInput) => {
+      const { data, error } = await api.post(
+        `${ESCOLA_API}/financas/parcelas/${body.parcelaId}/pagamentos`,
+        {
+          dataPagamento: body.dataPagamento,
+          valor: body.valor,
+          formaPagamento: body.formaPagamento,
+        }
+      )
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { parcelaId }) => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'financas'] })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.pagamentos(parcelaId),
+      })
+    },
+  })
+}
+
+/* ── Módulos do sistema ── */
+
+export interface ModuloUpdateInput {
+  nome?: string
+  descricao?: string | null
+  ativo?: boolean
+  ordem?: number
+  config?: Record<string, unknown>
+  permissoes?: string[]
+  imagem?: string | null
+  icone?: string | null
+}
+
+export function useUpdateModulo() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...body }: ModuloUpdateInput & { id: string }) => {
+      const { data, error } = await api.patch(`${ESCOLA_API}/modulos/${id}`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulos })
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulosCatalogo })
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulo(id) })
+    },
+  })
+}
+
+export function useInstallModulo() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (chave: string) => {
+      const { data, error } = await api.post<Modulo>(`${ESCOLA_API}/modulos/instalar`, { chave })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulos })
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulosCatalogo })
     },
   })
 }

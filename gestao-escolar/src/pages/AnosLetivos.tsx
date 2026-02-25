@@ -9,6 +9,8 @@ import {
 import type { AnoLetivoFormValues } from '@/schemas/anoLetivo'
 import Modal from '@/components/Modal'
 import EmptyState from '@/components/EmptyState'
+import ListResultSummary from '@/components/ListResultSummary'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 function AnoLetivoForm({
@@ -77,11 +79,11 @@ function AnoLetivoForm({
           />
         </div>
       </div>
-      <div className="flex gap-2 justify-end pt-2">
-        <button type="button" onClick={onCancel} className="btn-secondary">
+      <div className="flex gap-2 justify-end pt-4 mt-4 border-t border-studio-border">
+        <button type="button" onClick={onCancel} className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2">
           Cancelar
         </button>
-        <button type="submit" className="btn-primary" disabled={isLoading}>
+        <button type="submit" className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50" disabled={isLoading}>
           {isLoading ? 'A guardar...' : 'Guardar'}
         </button>
       </div>
@@ -162,31 +164,36 @@ export default function AnosLetivos() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">
-            Anos letivos
-          </h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Gerir anos letivos e períodos.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-        >
-          Novo ano letivo
-        </button>
-      </div>
+      <PageHeader
+        title="Anos letivos"
+        subtitle="Gerir anos letivos e períodos."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Novo ano letivo
+          </button>
+        }
+      />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-4">
         <input
           type="search"
           placeholder="Pesquisar por nome..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="input max-w-xs"
+          aria-label="Pesquisar anos letivos por nome"
+        />
+        <ListResultSummary
+          count={filtered.length}
+          total={anos.length}
+          label="ano letivo"
+          hasFilter={filter.length > 0}
+          onClearFilter={() => setFilter('')}
+          isLoading={isLoading}
         />
       </div>
 
@@ -216,7 +223,7 @@ export default function AnosLetivos() {
         {isLoading ? (
           <TableSkeleton rows={5} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
@@ -234,7 +241,8 @@ export default function AnosLetivos() {
             ) : undefined}
           />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de anos letivos">
+            <caption className="sr-only">Anos letivos com nome, datas e ações</caption>
             <thead className="bg-studio-muted">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
@@ -267,7 +275,7 @@ export default function AnosLetivos() {
                     <button
                       type="button"
                       onClick={() => handleEdit(a.id)}
-                      className="text-studio-brand hover:underline"
+                      className="link-action link-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
                     >
                       Editar
                     </button>
