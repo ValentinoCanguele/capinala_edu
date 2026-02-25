@@ -2,37 +2,27 @@
 node_modules/
 
 # Environment (nunca commitar segredos)
-.env
-.env.local
-.env.*.local
-*.local
+
 
 # Build / output
-dist/
-.next/
-out/
-build/
 *.tsbuildinfo
 
 # OS
 .DS_Store
-Thumbs.db
 
 # Logs e cache
-*.log
-npm-debug.log*
-.npm
-.cache
-.parcel-cache
-.vite
+
 
 # IDE (opcional; descomente se não quiser commitar)
 # .idea/
 # .vscode/
 
 # Test / coverage
-coverage/
-.nyc_output/
+
+
+# Uploads (perfil, documentos)
+server/uploads/
+gestao-escolar/public/uploads/
 
 # Misc
 *.swp

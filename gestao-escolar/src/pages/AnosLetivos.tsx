@@ -9,6 +9,7 @@ import {
 import type { AnoLetivoFormValues } from '@/schemas/anoLetivo'
 import Modal from '@/components/Modal'
 import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 function AnoLetivoForm({
@@ -162,23 +163,19 @@ export default function AnosLetivos() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">
-            Anos letivos
-          </h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Gerir anos letivos e períodos.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-        >
-          Novo ano letivo
-        </button>
-      </div>
+      <PageHeader
+        title="Anos letivos"
+        subtitle="Gerir anos letivos e períodos."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Novo ano letivo
+          </button>
+        }
+      />
 
       <div className="mb-4">
         <input

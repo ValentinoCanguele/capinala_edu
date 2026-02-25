@@ -68,6 +68,20 @@ const queryKeys = {
   dashboardStats: ['escola', 'dashboard-stats'] as const,
   auditLog: (entidade?: string) => ['escola', 'audit', entidade] as const,
   alertas: ['escola', 'alertas'] as const,
+  frequenciaResumo: (turmaId: string, disciplinaId?: string) =>
+    ['escola', 'frequencia-resumo', turmaId, disciplinaId] as const,
+  relatorioFrequenciaTurma: (turmaId: string) =>
+    ['escola', 'relatorio-frequencia-turma', turmaId] as const,
+  perfil: ['escola', 'perfil'] as const,
+  meuAluno: ['escola', 'meu-aluno'] as const,
+  resumoFrequenciaAluno: (alunoId: string, anoLetivoId?: string) =>
+    ['escola', 'frequencia', 'resumo-aluno', alunoId, anoLetivoId] as const,
+  documentos: (pessoaId?: string, alunoId?: string) =>
+    ['escola', 'documentos', pessoaId, alunoId] as const,
+  usuarios: (escolaId?: string) => ['escola', 'usuarios', escolaId] as const,
+  usuario: (id: string) => ['escola', 'usuario', id] as const,
+  permissoes: ['escola', 'permissoes'] as const,
+  usuarioPermissoes: (userId: string) => ['escola', 'usuarios', userId, 'permissoes'] as const,
 }
 
 export function useAlunos() {
@@ -155,6 +169,201 @@ export function usePeriodos(anoLetivoId: string | null) {
   })
 }
 
+/* ── Meu papel / Meus filhos ── */
+
+export type Papel = 'admin' | 'direcao' | 'professor' | 'responsavel' | 'aluno'
+
+export interface MeuPapelResult {
+  papel: Papel
+  userId: string
+  pessoaId: string
+  escolaId: string | null
+}
+
+export function useMeuPapel() {
+  return useQuery({
+    queryKey: queryKeys.meuPapel,
+    queryFn: async (): Promise<MeuPapelResult> => {
+      const { data, error } = await api.get<MeuPapelResult>(`${ESCOLA_API}/meu-papel`)
+      if (error) throw new Error(error.message)
+      if (!data) throw new Error('Sem dados do utilizador')
+      return data
+    },
+  })
+}
+
+export interface MeusFilhosRow {
+  id: string
+  nome: string
+  email: string
+  dataNascimento: string
+}
+
+export interface PerfilResult {
+  id: string
+  nome: string
+  email: string
+  dataNascimento: string | null
+  telefone: string | null
+  bi: string | null
+  biEmitidoEm: string | null
+  biValidoAte: string | null
+  fotoUrl: string | null
+}
+
+export function usePerfil() {
+  return useQuery({
+    queryKey: queryKeys.perfil,
+    queryFn: async (): Promise<PerfilResult | null> => {
+      const { data, error } = await api.get<PerfilResult>(`${ESCOLA_API}/perfil`)
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+  })
+}
+
+export function useMeuAluno() {
+  return useQuery({
+    queryKey: queryKeys.meuAluno,
+    queryFn: async (): Promise<{ alunoId: string | null }> => {
+      const { data, error } = await api.get<{ alunoId: string | null }>(`${ESCOLA_API}/meu-aluno`)
+      if (error) throw new Error(error.message)
+      return data ?? { alunoId: null }
+    },
+  })
+}
+
+export interface ResumoFrequenciaAlunoResult {
+  alunoId: string
+  alunoNome: string
+  totais: ResumoFrequenciaRow
+  porTurma: (ResumoFrequenciaRow & { turmaId: string; turmaNome: string })[]
+}
+
+export function useResumoFrequenciaAluno(alunoId: string | null, anoLetivoId?: string) {
+  return useQuery({
+    queryKey: queryKeys.resumoFrequenciaAluno(alunoId ?? '', anoLetivoId),
+    queryFn: async (): Promise<ResumoFrequenciaAlunoResult | null> => {
+      if (!alunoId) return null
+      const params = new URLSearchParams({ alunoId })
+      if (anoLetivoId) params.set('anoLetivoId', anoLetivoId)
+      const { data, error } = await api.get<ResumoFrequenciaAlunoResult>(
+        `${ESCOLA_API}/frequencia/resumo-aluno?${params}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!alunoId,
+  })
+}
+
+export interface DocumentoRow {
+  id: string
+  titulo: string
+  nomeFicheiro: string
+  tipoMime: string | null
+  tamanho: number | null
+  createdAt: string
+  pessoaId: string | null
+  alunoId: string | null
+}
+
+export function useDocumentos(filters: { pessoaId?: string; alunoId?: string }) {
+  const { pessoaId, alunoId } = filters
+  return useQuery({
+    queryKey: queryKeys.documentos(pessoaId, alunoId),
+    queryFn: async (): Promise<DocumentoRow[]> => {
+      const params = new URLSearchParams()
+      if (pessoaId) params.set('pessoaId', pessoaId)
+      if (alunoId) params.set('alunoId', alunoId)
+      const { data, error } = await api.get<DocumentoRow[]>(
+        `${ESCOLA_API}/documentos?${params}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export interface UsuarioListItem {
+  id: string
+  userId: string
+  pessoaId: string
+  nome: string
+  email: string
+  papel: string
+  escolaId: string | null
+  escolaNome: string | null
+  bi: string | null
+  fotoUrl: string | null
+}
+
+export function useUsuarios(escolaId?: string | null) {
+  return useQuery({
+    queryKey: queryKeys.usuarios(escolaId ?? ''),
+    queryFn: async (): Promise<UsuarioListItem[]> => {
+      const params = escolaId ? `?escolaId=${encodeURIComponent(escolaId)}` : ''
+      const { data, error } = await api.get<UsuarioListItem[]>(`${ESCOLA_API}/usuarios${params}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useUsuario(id: string | null) {
+  return useQuery({
+    queryKey: queryKeys.usuario(id ?? ''),
+    queryFn: async (): Promise<(UsuarioListItem & { dataNascimento: string | null; telefone: string | null }) | null> => {
+      if (!id) return null
+      const { data, error } = await api.get<UsuarioListItem & { dataNascimento: string | null; telefone: string | null }>(`${ESCOLA_API}/usuarios/${id}`)
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!id,
+  })
+}
+
+export interface PermissaoItem {
+  id: string
+  codigo: string
+  descricao: string | null
+}
+
+export function usePermissoes() {
+  return useQuery({
+    queryKey: queryKeys.permissoes,
+    queryFn: async (): Promise<PermissaoItem[]> => {
+      const { data, error } = await api.get<PermissaoItem[]>(`${ESCOLA_API}/permissoes`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useUsuarioPermissoes(userId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.usuarioPermissoes(userId ?? ''),
+    queryFn: async (): Promise<{ codigos: string[] }> => {
+      if (!userId) return { codigos: [] }
+      const { data, error } = await api.get<{ codigos: string[] }>(`${ESCOLA_API}/usuarios/${userId}/permissoes`)
+      if (error) throw new Error(error.message)
+      return data ?? { codigos: [] }
+    },
+    enabled: !!userId,
+  })
+}
+
+export function useMeusFilhos() {
+  return useQuery({
+    queryKey: queryKeys.meusFilhos,
+    queryFn: async (): Promise<MeusFilhosRow[]> => {
+      const { data, error } = await api.get<MeusFilhosRow[]>(`${ESCOLA_API}/meus-filhos`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
 export interface TurmaAlunoRow {
   id: string
   alunoId: string
@@ -227,6 +436,63 @@ export function useFrequencia(aulaId: string | null) {
       return data ?? []
     },
     enabled: !!aulaId,
+  })
+}
+
+/* ── Resumo / Relatório de frequência ── */
+
+export interface ResumoFrequenciaRow {
+  alunoId: string
+  alunoNome?: string
+  totalAulas: number
+  presencas: number
+  faltas: number
+  justificadas: number
+  percentagemPresenca: number
+  emRisco: boolean
+}
+
+export function useFrequenciaResumo(
+  turmaId: string | null,
+  disciplinaId?: string | null
+) {
+  return useQuery({
+    queryKey: queryKeys.frequenciaResumo(turmaId ?? '', disciplinaId ?? undefined),
+    queryFn: async (): Promise<ResumoFrequenciaRow[]> => {
+      if (!turmaId) return []
+      const params = new URLSearchParams({ turmaId })
+      if (disciplinaId) params.set('disciplinaId', disciplinaId)
+      const { data, error } = await api.get<ResumoFrequenciaRow[]>(
+        `${ESCOLA_API}/frequencia/resumo?${params}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+    enabled: !!turmaId,
+  })
+}
+
+export interface RelatorioFrequenciaTurma {
+  turmaId: string
+  turmaNome: string
+  resumos: (ResumoFrequenciaRow & { alunoNome: string })[]
+  mediaPresenca: number
+  totalEmRisco: number
+}
+
+export function useRelatorioFrequenciaTurma(turmaId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.relatorioFrequenciaTurma(turmaId ?? ''),
+    queryFn: async (): Promise<RelatorioFrequenciaTurma | null> => {
+      if (!turmaId) return null
+      const params = new URLSearchParams({ turmaId, tipo: 'relatorio' })
+      const { data, error } = await api.get<RelatorioFrequenciaTurma>(
+        `${ESCOLA_API}/frequencia/resumo?${params}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!turmaId,
   })
 }
 
@@ -357,7 +623,7 @@ export interface AuditLogEntry {
   usuarioNome: string | null
 }
 
-export function useAuditLog(entidade?: string, limit = 50) {
+export function useAuditLog(entidade?: string, limit = 50, enabled = true) {
   return useQuery({
     queryKey: queryKeys.auditLog(entidade),
     queryFn: async (): Promise<AuditLogEntry[]> => {
@@ -370,6 +636,7 @@ export function useAuditLog(entidade?: string, limit = 50) {
       if (error) throw new Error(error.message)
       return data ?? []
     },
+    enabled,
   })
 }
 
@@ -388,7 +655,7 @@ export interface AlertaRow {
   criadoEm: string
 }
 
-export function useAlertas() {
+export function useAlertas(enabled = true) {
   return useQuery({
     queryKey: queryKeys.alertas,
     queryFn: async (): Promise<AlertaRow[]> => {
@@ -396,6 +663,7 @@ export function useAlertas() {
       if (error) throw new Error(error.message)
       return data ?? []
     },
+    enabled,
   })
 }
 

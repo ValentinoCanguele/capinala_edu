@@ -1,17 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Sun, Moon, Mail, Lock, LogIn } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
+
+const LOGO_URL = '/logo.png'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [logoError, setLogoError] = useState(false)
   const { login } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    document.title = 'Entrar — Gestão Escolar'
+    return () => {
+      document.title = 'Gestão Escolar'
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,6 +44,7 @@ export default function Login() {
           onClick={toggleTheme}
           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors"
           title={theme === 'dark' ? 'Mudar para claro' : 'Mudar para escuro'}
+          aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
         >
           {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           <span>{theme === 'dark' ? 'Claro' : 'Escuro'}</span>
@@ -66,10 +77,12 @@ export default function Login() {
                   id="login-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); if (error) setError('') }}
                   required
                   className="input w-full pl-9"
                   placeholder="admin@escola.demo"
+                  aria-invalid={!!error}
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -83,10 +96,12 @@ export default function Login() {
                   id="login-password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); if (error) setError('') }}
                   required
                   className="input w-full pl-9"
                   placeholder="••••••••"
+                  aria-invalid={!!error}
+                  autoComplete="current-password"
                 />
               </div>
             </div>
@@ -94,6 +109,7 @@ export default function Login() {
               type="submit"
               disabled={loading}
               className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              aria-busy={loading}
             >
               <LogIn className="w-4 h-4" />
               {loading ? 'A entrar...' : 'Entrar'}

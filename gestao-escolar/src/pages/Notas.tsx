@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTurmas, usePeriodos, useNotas, useTurmaAlunos } from '@/data/escola/queries'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 import { useSaveNotasBatch, useEnsurePeriodos } from '@/data/escola/mutations'
 
@@ -76,12 +77,10 @@ export default function Notas() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold text-studio-foreground">Notas</h2>
-        <p className="text-studio-foreground-light text-sm mt-0.5">
-          Lançamento por turma e bimestre (0–10). Dados da API /api/escola/notas.
-        </p>
-      </div>
+      <PageHeader
+        title="Notas"
+        subtitle="Lançamento por turma e bimestre. Valores entre 0 e 10 (uma casa decimal opcional)."
+      />
 
       <div className="flex flex-wrap gap-4 mb-6">
         <div>

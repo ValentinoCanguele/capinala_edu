@@ -12,6 +12,8 @@ import {
 import type { TurmaFormValues } from '@/schemas/turma'
 import TurmaForm from '@/components/TurmaForm'
 import Modal from '@/components/Modal'
+import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 export default function Turmas() {
@@ -128,17 +130,19 @@ export default function Turmas() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">Turmas</h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Listagem e cadastro. Dados da API /api/escola/turmas.
-          </p>
-        </div>
-        <button type="button" onClick={handleCreate} className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover">
-          Nova turma
-        </button>
-      </div>
+      <PageHeader
+        title="Turmas"
+        subtitle="Listagem e cadastro de turmas e matrículas."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Nova turma
+          </button>
+        }
+      />
 
       <Modal
         open={formOpen}
@@ -232,9 +236,19 @@ export default function Turmas() {
             Erro: {(error as Error).message}
           </div>
         ) : turmas.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            Nenhuma turma registada.
-          </div>
+          <EmptyState
+            title="Nenhuma turma registada"
+            description={'Clique em "Nova turma" para começar.'}
+            action={
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+              >
+                Nova turma
+              </button>
+            }
+          />
         ) : (
           <table className="min-w-full divide-y divide-studio-border">
             <thead className="bg-studio-muted">

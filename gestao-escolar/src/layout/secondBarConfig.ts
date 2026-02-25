@@ -45,6 +45,21 @@ export const secondBarConfig: Record<string, SecondBarItem[]> = {
     { label: 'Log', to: '/auditoria' },
     { label: 'Alertas', to: '/auditoria' },
   ],
+  '/perfil': [
+    { label: 'Dados', to: '/perfil' },
+    { label: 'Alterar senha', to: '/perfil' },
+  ],
+  '/meu-boletim': [{ label: 'Meu boletim', to: '/meu-boletim' }],
+  '/presencas': [{ label: 'Resumo', to: '/presencas' }],
+  '/meus-filhos': [{ label: 'Lista', to: '/meus-filhos' }],
+  '/arquivos': [
+    { label: 'Lista', to: '/arquivos' },
+    { label: 'Enviar', to: '/arquivos' },
+  ],
+  '/utilizadores': [
+    { label: 'Lista', to: '/utilizadores' },
+    { label: 'Novo', to: '/utilizadores?acao=novo' },
+  ],
 }
 
 export function getSecondBarItems(pathname: string): SecondBarItem[] {

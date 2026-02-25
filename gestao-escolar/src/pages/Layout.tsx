@@ -5,7 +5,7 @@
  * - Second Bar: tabs contextuais por rota (ex: /alunos → Lista | Adicionar).
  * Variáveis CSS --studio-* em theme/variables.css (dark/light).
  */
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import {
   Home,
@@ -28,6 +28,9 @@ import {
   ChevronDown,
   HelpCircle,
   Bell,
+  User,
+  FolderOpen,
+  Shield,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
@@ -43,7 +46,15 @@ const SIDEBAR_WIDTH_EXPANDED = 'w-56'
 const SIDEBAR_WIDTH_COLLAPSED = 'w-16'
 const LOGO_URL = '/logo.png'
 
-const navItems = [
+type NavItem = {
+  to: string
+  label: string
+  icon: typeof Home
+  /** Se definido, apenas estes papéis veem o item. */
+  roles?: readonly ('admin' | 'direcao' | 'responsavel')[]
+}
+
+const navItems: NavItem[] = [
   { to: '/', label: 'Início', icon: Home },
   { to: '/alunos', label: 'Alunos', icon: Users },
   { to: '/turmas', label: 'Turmas', icon: BookOpen },
@@ -55,8 +66,21 @@ const navItems = [
   { to: '/disciplinas', label: 'Disciplinas', icon: BookMarked },
   { to: '/anos-letivos', label: 'Anos letivos', icon: Calendar },
   { to: '/salas', label: 'Salas', icon: DoorOpen },
-  { to: '/auditoria', label: 'Auditoria', icon: History },
+  { to: '/auditoria', label: 'Auditoria', icon: History, roles: ['admin', 'direcao'] },
+  { to: '/perfil', label: 'Perfil', icon: User },
+  { to: '/meu-boletim', label: 'Meu boletim', icon: FileText },
+  { to: '/presencas', label: 'Presenças', icon: CalendarCheck },
+  { to: '/meus-filhos', label: 'Meus filhos', icon: Users, roles: ['responsavel'] },
+  { to: '/arquivos', label: 'Arquivos', icon: FolderOpen },
+  { to: '/utilizadores', label: 'Utilizadores', icon: Shield, roles: ['admin', 'direcao'] },
 ]
+
+function getVisibleNavItems(papel: string | undefined) {
+  return navItems.filter((item) => {
+    if (!item.roles) return true
+    return papel && item.roles.includes(papel as 'admin' | 'direcao' | 'responsavel')
+  })
+}
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   const segments = pathname.split('/').filter(Boolean)
@@ -87,7 +111,19 @@ function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
                           ? 'Salas'
                           : seg === 'auditoria'
                             ? 'Auditoria'
-                            : seg
+                            : seg === 'perfil'
+                              ? 'Perfil'
+                              : seg === 'meu-boletim'
+                                ? 'Meu boletim'
+                                : seg === 'presencas'
+                                  ? 'Presenças'
+                                  : seg === 'meus-filhos'
+                                    ? 'Meus filhos'
+                                    : seg === 'arquivos'
+                                      ? 'Arquivos'
+                                      : seg === 'utilizadores'
+                                        ? 'Utilizadores'
+                                        : seg
     crumbs.push({ label, href: acc })
   }
   return crumbs
@@ -101,6 +137,8 @@ export default function Layout() {
   const [logoError, setLogoError] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [acercaOpen, setAcercaOpen] = useState(false)
+  const acercaCloseRef = useRef<HTMLButtonElement>(null)
 
   const [isCollapsed, setCollapsedState] = useState(() => {
     try {
@@ -131,23 +169,29 @@ export default function Layout() {
   const activeSecondBarLabel = getActiveSecondBarLabel(location.pathname, currentSearch)
 
   useEffect(() => {
-    if (!userMenuOpen && !notificationsOpen && !helpOpen) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setUserMenuOpen(false)
-        setNotificationsOpen(false)
-        setHelpOpen(false)
-      }
+      if (e.key !== 'Escape') return
+      setUserMenuOpen(false)
+      setNotificationsOpen(false)
+      setHelpOpen(false)
+      setAcercaOpen((open) => (open ? false : open))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [userMenuOpen, notificationsOpen, helpOpen])
+  }, [])
 
   return (
     <div className="min-h-screen flex bg-studio-bg-alt">
+      {/* Skip link: acessibilidade — foco visível ao navegar por teclado */}
+      <a
+        href="#main-content"
+        className="skip-link"
+      >
+        Saltar para o conteúdo
+      </a>
       {/* Sidebar: retrai para ícones; no hover expande com transition e shadow (estilo Studio) */}
       <aside
-        className={`${sidebarWidth} flex-shrink-0 bg-studio-sidebar-bg flex flex-col border-r border-white/10 overflow-hidden transition-[width,box-shadow] duration-200 ease-out ${isSidebarHoverExpanded ? 'z-20 shadow-xl' : 'z-10'}`}
+        className={`sidebar-transition ${sidebarWidth} flex-shrink-0 bg-studio-sidebar-bg flex flex-col border-r border-white/10 overflow-hidden transition-[width,box-shadow] duration-200 ease-out ${isSidebarHoverExpanded ? 'z-20 shadow-xl' : 'z-10'}`}
         onMouseEnter={() => isCollapsed && setHoverExpanded(true)}
         onMouseLeave={() => setHoverExpanded(false)}
         aria-label="Menu principal"
@@ -159,6 +203,7 @@ export default function Layout() {
                 src={LOGO_URL}
                 alt="Gestão Escolar"
                 className="flex-shrink-0 w-8 h-8 rounded-md object-contain"
+                decoding="async"
                 onError={() => setLogoError(true)}
               />
             ) : (
@@ -186,7 +231,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {navItems.map(({ to, label, icon: Icon }) => {
+          {getVisibleNavItems(user?.papel).map(({ to, label, icon: Icon }) => {
             const isActive =
               to === '/'
                 ? location.pathname === '/'
@@ -249,7 +294,7 @@ export default function Layout() {
       </aside>
 
       {/* Área principal */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main id="main-content" className="flex-1 flex flex-col min-w-0" tabIndex={-1}>
         <header className="h-14 flex-shrink-0 bg-studio-bg border-b border-studio-border flex items-center px-4 sm:px-6 gap-3">
           {/* Logo + Home */}
           <Link
@@ -258,7 +303,13 @@ export default function Layout() {
             title="Ir para início"
           >
             {!logoError ? (
-              <img src={LOGO_URL} alt="" className="w-7 h-7 rounded object-contain" onError={() => setLogoError(true)} />
+              <img
+                src={LOGO_URL}
+                alt=""
+                className="w-7 h-7 rounded object-contain"
+                decoding="async"
+                onError={() => setLogoError(true)}
+              />
             ) : (
               <div className="w-7 h-7 rounded bg-studio-brand/20 flex items-center justify-center">
                 <Home className="w-4 h-4 text-studio-brand" />
@@ -266,8 +317,9 @@ export default function Layout() {
             )}
             <span className="hidden md:inline text-sm font-medium text-studio-foreground">Início</span>
           </Link>
-          <span className="flex-shrink-0 w-px h-5 bg-studio-border" aria-hidden />
-          {/* Breadcrumbs */}
+          <span className={`flex-shrink-0 w-px h-5 bg-studio-border ${location.pathname === '/' ? 'hidden' : 'hidden sm:block'}`} aria-hidden />
+          {/* Breadcrumbs: ocultos na home para evitar redundância com logo "Início" */}
+          {location.pathname !== '/' && (
           <nav className="flex items-center gap-1.5 text-sm text-studio-foreground-light min-w-0" aria-label="Navegação">
             {breadcrumbs.map((crumb, i) => (
               <span key={crumb.href} className="flex items-center gap-1.5 min-w-0">
@@ -297,6 +349,7 @@ export default function Layout() {
               </span>
             ))}
           </nav>
+          )}
           <div className="flex-1 min-w-2" />
           {/* Notificações */}
           <div className="relative">
@@ -307,18 +360,20 @@ export default function Layout() {
               title="Notificações"
               aria-label="Notificações"
               aria-expanded={notificationsOpen}
+              aria-haspopup="true"
             >
               <Bell className="w-4 h-4" />
             </button>
             {notificationsOpen && (
               <>
                 <div className="fixed inset-0 z-10" aria-hidden onClick={() => setNotificationsOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 py-2 w-72 rounded-md border border-studio-border bg-studio-bg shadow-lg z-20">
+                <div className="absolute right-0 top-full mt-1 py-2 w-72 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
                   <div className="px-3 py-2 text-xs font-medium text-studio-foreground-lighter border-b border-studio-border">
                     Notificações
                   </div>
-                  <div className="px-3 py-4 text-sm text-studio-foreground-light text-center">
-                    Sem notificações novas.
+                  <div className="px-3 py-6 flex flex-col items-center gap-2 text-sm text-studio-foreground-light">
+                    <Bell className="w-8 h-8 text-studio-foreground-lighter/60" strokeWidth={1.25} />
+                    <span>Sem notificações novas.</span>
                   </div>
                 </div>
               </>
@@ -333,13 +388,14 @@ export default function Layout() {
               title="Ajuda"
               aria-label="Ajuda"
               aria-expanded={helpOpen}
+              aria-haspopup="true"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
             {helpOpen && (
               <>
                 <div className="fixed inset-0 z-10" aria-hidden onClick={() => setHelpOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 py-1 w-48 rounded-md border border-studio-border bg-studio-bg shadow-lg z-20">
+                <div className="absolute right-0 top-full mt-1 py-1 w-48 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
                   <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
                     Ajuda
                   </div>
@@ -352,7 +408,7 @@ export default function Layout() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setHelpOpen(false); /* TODO: link acerca */ }}
+                    onClick={() => { setHelpOpen(false); setAcercaOpen(true) }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
                   >
                     Acerca
@@ -361,9 +417,29 @@ export default function Layout() {
               </>
             )}
           </div>
+          {/* Modal Acerca */}
+          {acercaOpen && (
+            <>
+              <div className="fixed inset-0 z-30 bg-black/40" aria-hidden onClick={() => setAcercaOpen(false)} />
+              <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-sm rounded-lg border border-studio-border bg-studio-bg p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="acerca-title">
+                <h2 id="acerca-title" className="text-lg font-semibold text-studio-foreground mb-2">Gestão Escolar</h2>
+                <p className="text-sm text-studio-foreground-light mb-4">Sistema de gestão escolar. Módulo Escola — base alinhada ao Supabase Studio.</p>
+                <p className="text-xs text-studio-foreground-lighter mb-4">Versão 1.0</p>
+                <button
+                  ref={acercaCloseRef}
+                  type="button"
+                  onClick={() => setAcercaOpen(false)}
+                  className="w-full px-4 py-2 rounded-md text-sm font-medium bg-studio-brand text-white hover:bg-studio-brand-hover transition-colors"
+                >
+                  Fechar
+                </button>
+              </div>
+            </>
+          )}
           <button
             type="button"
             onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
             className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors"
             title={theme === 'dark' ? 'Mudar para claro' : 'Mudar para escuro'}
           >
@@ -394,7 +470,7 @@ export default function Layout() {
                   aria-hidden
                   onClick={() => setUserMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 py-1 w-48 rounded-md border border-studio-border bg-studio-bg shadow-lg z-20">
+                <div className="absolute right-0 top-full mt-1 py-1 w-48 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
                   <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
                     Sessão
                   </div>
@@ -408,6 +484,7 @@ export default function Layout() {
                       logout()
                     }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                    aria-label="Terminar sessão"
                   >
                     <LogOut className="w-4 h-4" />
                     Terminar sessão
@@ -451,7 +528,7 @@ export default function Layout() {
           </div>
         )}
 
-        <div className="flex-1 p-4 sm:p-6 overflow-auto">
+        <div className="flex-1 min-h-0 p-4 sm:p-6 overflow-auto">
           <Outlet />
         </div>
       </main>

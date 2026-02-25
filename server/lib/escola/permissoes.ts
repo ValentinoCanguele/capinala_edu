@@ -6,7 +6,7 @@ import type { AuthUser } from '@/lib/db'
 
 type Papel = AuthUser['papel']
 
-const PAPEIS_ADMIN: Papel[] = ['admin', 'direcao']
+export const PAPEIS_ADMIN: Papel[] = ['admin', 'direcao']
 const PAPEIS_GESTAO: Papel[] = ['admin', 'direcao', 'professor']
 const TODOS_PAPEIS: Papel[] = ['admin', 'direcao', 'professor', 'responsavel', 'aluno']
 

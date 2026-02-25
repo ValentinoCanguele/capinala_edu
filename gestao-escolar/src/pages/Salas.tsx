@@ -10,6 +10,7 @@ import {
 import type { SalaFormValues } from '@/schemas/sala'
 import Modal from '@/components/Modal'
 import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
 
 function SalaForm({
   defaultValues,
@@ -157,23 +158,19 @@ export default function Salas() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">
-            Salas
-          </h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Gerir salas e capacidade para horários.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-        >
-          Nova sala
-        </button>
-      </div>
+      <PageHeader
+        title="Salas"
+        subtitle="Gerir salas e capacidade para horários."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Nova sala
+          </button>
+        }
+      />
 
       <div className="mb-4">
         <input

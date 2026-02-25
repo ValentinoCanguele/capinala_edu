@@ -25,6 +25,8 @@
 - **nota.ts** — notaSchema, notaBatchSchema.
 - **horario.ts** — horarioCreateSchema, horarioUpdateSchema.
 - **comunicado.ts** — comunicadoCreateSchema, comunicadoUpdateSchema.
+- **perfil.ts** — perfilUpdateSchema, alterarSenhaSchema.
+- **usuario.ts** — usuarioCreateSchema, usuarioUpdateSchema, resetPasswordSchema, setPermissoesSchema.
 
 ### lib/escola/regras/
 - **medias.ts** — `calcularMedia(notas)`, `mediaAprovacao(media, minima)`.
@@ -42,6 +44,10 @@
 - **frequencia.ts** — getFrequenciaByAula, saveFrequenciaBatch.
 - **horarios.ts** — listHorarios, createHorario, updateHorario, deleteHorario; listSalas, createSala, getSala, updateSala, deleteSala; listHorariosProfessor.
 - **comunicados.ts** — listComunicados, getComunicado, createComunicado, updateComunicado, deleteComunicado.
+- **perfil.ts** — getPerfil, updatePerfil, alterarSenha, uploadFotoPerfil, getFotoPerfilPath, removeFotoPerfil.
+- **documentos.ts** — listDocumentos, uploadDocumento, getDocumento, deleteDocumento.
+- **usuarios.ts** — listUsuarios, getUsuario, createUsuario, updateUsuario, resetPassword.
+- **permissoesService.ts** — listPermissoes, getPermissoesUsuario, setPermissoesUsuario, userHasPermissao.
 
 ### lib/escola/permissoes.ts
 - canDeleteAluno, canDeleteTurma, canManageDisciplinas, canLancarNotas, canVerBoletim.
@@ -51,7 +57,19 @@
 
 ### pages/api/escola/
 - **meu-papel.ts** — GET — papel, userId, pessoaId, escolaId.
+- **meu-aluno.ts** — GET — alunoId (papel aluno).
 - **meus-filhos.ts** — GET — lista de filhos (papel responsavel).
+- **perfil/index.ts** — GET perfil, PUT atualizar (id, nome, email, BI, foto, etc.).
+- **perfil/alterar-senha.ts** — POST — senhaAtual, senhaNova.
+- **perfil/foto.ts** — GET foto, POST upload (body image base64), DELETE remover.
+- **frequencia/resumo-aluno.ts** — GET ?alunoId=&anoLetivoId= — resumo presenças do aluno (próprio ou filho).
+- **documentos/index.ts** — GET ?pessoaId=&alunoId=, POST upload (titulo, image, pessoaId/alunoId).
+- **documentos/[id].ts** — GET download, DELETE.
+- **usuarios/index.ts** — GET lista (?escolaId=), POST criar (admin).
+- **usuarios/[id].ts** — GET um, PUT atualizar (admin).
+- **usuarios/[id]/reset-password.ts** — POST body { novaSenha } (admin).
+- **usuarios/[id]/permissoes.ts** — GET codigos, PUT body { codigos } (admin).
+- **permissoes/index.ts** — GET lista de permissões (admin).
 - **alunos/index.ts** — GET lista, POST criar.
 - **alunos/[id].ts** — GET, PUT, DELETE.
 - **turmas/index.ts** — GET lista, POST criar.
@@ -91,10 +109,12 @@
 - AuthProvider, useAuth — user, login, logout, setToken.
 
 ### data/escola/queries.ts
-- useAlunos, useTurmaAlunos, useTurmas, useDisciplinas, useDisciplina(id), useAnosLetivos, useAnoLetivo(id), usePeriodos, useNotas, useBoletim, useFrequencia, useHorarios, useSalas, useComunicados, useComunicado(id), useDashboardStats, useAuditLog(entidade?, limit), useAlertas.
+- useAlunos, useTurmaAlunos, useTurmas, useDisciplinas, useDisciplina(id), useAnosLetivos, useAnoLetivo(id), usePeriodos, useNotas, useBoletim, useFrequencia, useFrequenciaResumo(turmaId, disciplinaId?), useRelatorioFrequenciaTurma(turmaId), useHorarios, useSalas, useComunicados, useComunicado(id), useDashboardStats, useAuditLog(entidade?, limit), useAlertas, useMeuPapel, useMeusFilhos.
+- **Módulo utilizador:** usePerfil, useMeuAluno, useResumoFrequenciaAluno(alunoId, anoLetivoId?), useDocumentos(filters), useUsuarios(escolaId?), useUsuario(id), usePermissoes, useUsuarioPermissoes(userId).
 
 ### data/escola/mutations.ts
 - useCreateAluno, useUpdateAluno, useDeleteAluno; useCreateTurma, useUpdateTurma, useDeleteTurma; useEnsurePeriodos, useSaveNotasBatch; useCreateAula, useSaveFrequencia; useCreateHorario, useUpdateHorario, useDeleteHorario; useCreateSala, useUpdateSala, useDeleteSala; useCreateComunicado, useUpdateComunicado, useDeleteComunicado; useCreateDisciplina, useUpdateDisciplina, useDeleteDisciplina; useCreateAnoLetivo, useUpdateAnoLetivo; useAddMatricula, useRemoveMatricula; useResolveAlerta.
+- **Módulo utilizador:** useUpdatePerfil, useAlterarSenha, useUploadFotoPerfil, useRemoveFotoPerfil; useUploadDocumento, useDeleteDocumento; useCreateUsuario, useUpdateUsuario, useResetPassword, useSetUsuarioPermissoes.
 
 ### schemas/
 - aluno.ts — alunoFormSchema.
@@ -105,6 +125,7 @@
 
 ### pages/
 - Login, Layout, Dashboard, Alunos, Turmas, Notas, Frequencia, Boletim, Horarios, Comunicados, Disciplinas, AnosLetivos, Salas, Auditoria.
+- **Módulo utilizador:** Perfil (dados, BI, foto, alterar senha), MeuBoletim (aluno/responsavel), Presencas (resumo frequência), MeusFilhos (responsavel), Arquivos (documentos), Utilizadores (admin: lista, criar, editar, reset senha, permissões).
 
 ### components/
 - AlunoForm, TurmaForm — react-hook-form + zod; Modal — diálogo reutilizável; PageSkeleton, TableSkeleton, StatCardSkeleton — estados de carregamento; EmptyState — estado vazio; PageHeader — título e ações de página.
@@ -113,3 +134,4 @@
 
 - **001_initial.sql** — escolas, pessoas, usuarios, alunos, responsaveis, professores, vinculo_responsavel_aluno, anos_letivos, turmas, disciplinas, turma_disciplina, matriculas, periodos, notas, aulas, frequencia.
 - **002_seed.sql** — Escola Demo, Admin Demo (admin@escola.demo / admin123).
+- **008_usuario_perfil_documentos.sql** — pessoas: telefone, foto_caminho, bi, bi_emitido_em, bi_valido_ate; tabela documentos; tabelas permissoes, usuario_permissoes (seed de códigos).

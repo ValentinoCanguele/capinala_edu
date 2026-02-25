@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useAuditLog, useAlertas } from '@/data/escola/queries'
+import { useAuditLog, useAlertas, useMeuPapel } from '@/data/escola/queries'
 import { useResolveAlerta } from '@/data/escola/mutations'
 import { TableSkeleton } from '@/components/PageSkeleton'
 import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
 
 const ENTIDADES = [
   { value: '', label: 'Todas' },
@@ -14,6 +16,15 @@ const ENTIDADES = [
   { value: 'frequencia', label: 'Frequência' },
   { value: 'comunicado', label: 'Comunicados' },
 ]
+
+const ACAO_LABELS: Record<string, string> = {
+  criar: 'Criar',
+  atualizar: 'Atualizar',
+  eliminar: 'Eliminar',
+  lancar_nota: 'Lançar nota',
+  registar_frequencia: 'Registar frequência',
+  publicar_comunicado: 'Publicar comunicado',
+}
 
 function formatDate(iso: string) {
   try {
@@ -29,14 +40,37 @@ function formatDate(iso: string) {
   }
 }
 
+const ROLES_AUDITORIA: ('admin' | 'direcao')[] = ['admin', 'direcao']
+
 export default function Auditoria() {
   const [entidade, setEntidade] = useState('')
+  const { data: meuPapel, isLoading: papelLoading } = useMeuPapel()
+  const canViewAuditoria =
+    meuPapel?.papel && ROLES_AUDITORIA.includes(meuPapel.papel as 'admin' | 'direcao')
+
   const { data: log = [], isLoading: logLoading, error: logError } = useAuditLog(
     entidade || undefined,
-    80
+    80,
+    !!canViewAuditoria
   )
-  const { data: alertas = [], isLoading: alertasLoading } = useAlertas()
+  const { data: alertas = [], isLoading: alertasLoading } = useAlertas(!!canViewAuditoria)
   const resolveAlerta = useResolveAlerta()
+
+  if (!papelLoading && !canViewAuditoria) {
+    return (
+      <div>
+        <PageHeader title="Auditoria" subtitle="Log de ações e alertas." />
+        <div className="card p-8 text-center">
+          <p className="text-studio-foreground-light mb-4">
+            Não tem permissão para aceder a esta página. A auditoria está disponível apenas para administradores e direção.
+          </p>
+          <Link to="/" className="text-studio-brand hover:underline">
+            Voltar ao início
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const handleResolve = (id: string) => {
     resolveAlerta.mutate(id, {
@@ -47,14 +81,10 @@ export default function Auditoria() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-studio-foreground">
-          Auditoria
-        </h2>
-        <p className="text-studio-foreground-light text-sm mt-0.5">
-          Log de ações e alertas ativos da escola.
-        </p>
-      </div>
+      <PageHeader
+        title="Auditoria"
+        subtitle="Log de ações e alertas ativos da escola."
+      />
 
       {/* Alertas ativos */}
       {alertas.length > 0 && (
@@ -84,7 +114,7 @@ export default function Auditoria() {
                               : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                         }`}
                       >
-                        {a.severidade}
+                        {a.severidade === 'critico' ? 'Crítico' : a.severidade === 'atencao' ? 'Atenção' : 'Info'}
                       </span>
                       <span className="text-sm font-medium text-studio-foreground">
                         {a.titulo}
@@ -173,7 +203,7 @@ export default function Auditoria() {
                       {formatDate(entry.criadoEm)}
                     </td>
                     <td className="px-4 py-2 text-sm text-studio-foreground">
-                      {entry.acao}
+                      {ACAO_LABELS[entry.acao] ?? entry.acao}
                     </td>
                     <td className="px-4 py-2 text-sm text-studio-foreground-light">
                       {entry.entidade}

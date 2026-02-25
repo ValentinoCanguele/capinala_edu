@@ -10,6 +10,8 @@ import {
 import type { AlunoFormValues } from '@/schemas/aluno'
 import AlunoForm from '@/components/AlunoForm'
 import Modal from '@/components/Modal'
+import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 export default function Alunos() {
@@ -96,17 +98,19 @@ export default function Alunos() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-studio-foreground">Alunos</h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Listagem e cadastro. Dados da API /api/escola/alunos.
-          </p>
-        </div>
-        <button type="button" onClick={handleCreate} className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover">
-          Novo aluno
-        </button>
-      </div>
+      <PageHeader
+        title="Alunos"
+        subtitle="Listagem e cadastro de alunos."
+        actions={
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+          >
+            Novo aluno
+          </button>
+        }
+      />
 
       <div className="mb-4">
         <input
@@ -148,9 +152,21 @@ export default function Alunos() {
             Erro: {(error as Error).message}
           </div>
         ) : filteredAlunos.length === 0 ? (
-          <div className="p-8 text-center text-studio-foreground-lighter">
-            {filter ? 'Nenhum aluno encontrado.' : 'Nenhum aluno registado.'}
-          </div>
+          <EmptyState
+            title={filter ? 'Nenhum aluno encontrado' : 'Nenhum aluno registado'}
+            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em "Novo aluno" para começar.'}
+            action={
+              !filter ? (
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                >
+                  Novo aluno
+                </button>
+              ) : undefined
+            }
+          />
         ) : (
           <table className="min-w-full divide-y divide-studio-border">
             <thead className="bg-studio-muted">

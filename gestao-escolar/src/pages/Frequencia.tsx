@@ -1,13 +1,157 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useTurmas, useDisciplinas, useTurmaAlunos, useFrequencia } from '@/data/escola/queries'
+import {
+  useTurmas,
+  useDisciplinas,
+  useTurmaAlunos,
+  useFrequencia,
+  useRelatorioFrequenciaTurma,
+} from '@/data/escola/queries'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 import { useCreateAula, useSaveFrequencia } from '@/data/escola/mutations'
 
 type Status = 'presente' | 'falta' | 'justificada'
 
 type Row = { alunoId: string; alunoNome: string; status: Status }
+
+function FrequenciaRelatorio() {
+  const [turmaId, setTurmaId] = useState('')
+  const { data: turmas = [] } = useTurmas()
+  const { data: relatorio, isLoading } = useRelatorioFrequenciaTurma(
+    turmaId || null
+  )
+
+  return (
+    <div>
+      <PageHeader
+        title="Relatório de frequência"
+        subtitle="Visão consolidada de presenças e faltas por turma."
+        actions={
+          <Link
+            to="/frequencia"
+            className="text-sm text-studio-brand hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 rounded px-2 py-1"
+          >
+            ← Chamada (registar aula)
+          </Link>
+        }
+      />
+
+      <div className="mb-6">
+        <label htmlFor="relatorio-turma" className="label">
+          Turma
+        </label>
+        <select
+          id="relatorio-turma"
+          value={turmaId}
+          onChange={(e) => setTurmaId(e.target.value)}
+          className="input min-w-[200px]"
+        >
+          <option value="">Selecionar turma</option>
+          {turmas.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.nome} ({t.anoLetivo})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="card">
+        {!turmaId ? (
+          <div className="p-8 text-center text-studio-foreground-lighter">
+            Selecione uma turma para ver o resumo de frequência.
+          </div>
+        ) : isLoading ? (
+          <TableSkeleton rows={8} />
+        ) : !relatorio ? (
+          <div className="p-8 text-center text-studio-foreground-lighter">
+            Sem dados para esta turma.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="px-4 py-3 border-b border-studio-border bg-studio-muted flex flex-wrap items-center justify-between gap-4">
+              <span className="font-medium text-studio-foreground">
+                {relatorio.turmaNome}
+              </span>
+              <span className="text-sm text-studio-foreground-light">
+                Média de presença: <strong>{relatorio.mediaPresenca}%</strong>
+                {relatorio.totalEmRisco > 0 && (
+                  <span className="ml-2 text-amber-600">
+                    · {relatorio.totalEmRisco} em risco (&lt;75%)
+                  </span>
+                )}
+              </span>
+            </div>
+            <table className="min-w-full divide-y divide-studio-border">
+              <thead className="bg-studio-muted">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                    Aluno
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
+                    Aulas
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
+                    Presenças
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
+                    Faltas
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
+                    %
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                    Estado
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-studio-border">
+                {relatorio.resumos.map((r) => (
+                  <tr
+                    key={r.alunoId}
+                    className={
+                      r.emRisco
+                        ? 'bg-amber-50/50 hover:bg-amber-50/70'
+                        : 'hover:bg-studio-muted/50'
+                    }
+                  >
+                    <td className="px-4 py-2 text-sm text-studio-foreground">
+                      {r.alunoNome}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-studio-foreground-light text-right">
+                      {r.totalAulas}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-studio-foreground-light text-right">
+                      {r.presencas}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-studio-foreground-light text-right">
+                      {r.faltas}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-right tabular-nums">
+                      {r.percentagemPresenca}%
+                    </td>
+                    <td className="px-4 py-2">
+                      {r.emRisco ? (
+                        <span className="text-amber-600 text-sm font-medium">
+                          Em risco
+                        </span>
+                      ) : (
+                        <span className="text-studio-foreground-lighter text-sm">
+                          Normal
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function Frequencia() {
   const [searchParams] = useSearchParams()
@@ -47,20 +191,25 @@ export default function Frequencia() {
     setLocalRows(rows)
   }, [rows])
 
-  const canLoadAula = turmaId && dataAula && disciplinaId
+  const canLoadAula = Boolean(turmaId && dataAula && disciplinaId)
+
   useEffect(() => {
-    if (!canLoadAula) {
-      setAulaId(null)
-      return
-    }
+    if (!canLoadAula) setAulaId(null)
+  }, [canLoadAula, turmaId, dataAula, disciplinaId])
+
+  const handleCarregarAula = () => {
+    if (!canLoadAula) return
     createAula.mutate(
       { turmaId, disciplinaId, dataAula },
       {
         onSuccess: (data) => setAulaId(data?.aulaId ?? null),
-        onError: () => setAulaId(null),
+        onError: (err) => {
+          setAulaId(null)
+          toast.error(err.message)
+        },
       }
     )
-  }, [turmaId, dataAula, disciplinaId])
+  }
 
   const handleStatusChange = (alunoId: string, status: Status) => {
     setLocalRows((prev) =>
@@ -86,33 +235,23 @@ export default function Frequencia() {
   const isLoading = createAula.isPending
 
   if (vistaRelatorio) {
-    return (
-      <div>
-        <div className="mb-4">
-          <h2 className="text-2xl font-semibold text-studio-foreground">
-            Relatório de frequência
-          </h2>
-          <p className="text-studio-foreground-light text-sm mt-0.5">
-            Visão consolidada de presenças e faltas por turma ou período.
-          </p>
-        </div>
-        <div className="card p-8 text-center">
-          <p className="text-studio-foreground-light">
-            O relatório de frequência estará disponível em breve. Poderá filtrar por ano letivo, turma e período.
-          </p>
-        </div>
-      </div>
-    )
+    return <FrequenciaRelatorio />
   }
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold text-studio-foreground">Frequência</h2>
-        <p className="text-studio-foreground-light text-sm mt-0.5">
-          Chamada por turma, data e disciplina.
-        </p>
-      </div>
+      <PageHeader
+        title="Frequência"
+        subtitle="Chamada por turma, data e disciplina."
+        actions={
+          <Link
+            to="/frequencia?vista=relatorio"
+            className="text-sm text-studio-brand hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 rounded px-2 py-1"
+          >
+            Ver relatório por turma →
+          </Link>
+        }
+      />
 
       <div className="flex flex-wrap gap-4 mb-6">
         <div>
@@ -154,6 +293,18 @@ export default function Frequencia() {
             ))}
           </select>
         </div>
+        {canLoadAula && !aulaId && (
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={handleCarregarAula}
+              disabled={createAula.isPending}
+              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+            >
+              {createAula.isPending ? 'A carregar...' : 'Carregar aula'}
+            </button>
+          </div>
+        )}
         {aulaId && displayRows.length > 0 && (
           <div className="flex items-end">
             <button
@@ -171,7 +322,11 @@ export default function Frequencia() {
       <div className="card">
         {!canLoadAula ? (
           <div className="p-8 text-center text-studio-foreground-lighter">
-            Selecione turma, data e disciplina.
+            Selecione turma, data e disciplina e clique em &quot;Carregar aula&quot;.
+          </div>
+        ) : canLoadAula && !aulaId && !createAula.isPending ? (
+          <div className="p-8 text-center text-studio-foreground-light">
+            Clique em <strong>Carregar aula</strong> acima para abrir a lista de alunos e registar presenças.
           </div>
         ) : isLoading ? (
           <TableSkeleton rows={8} />

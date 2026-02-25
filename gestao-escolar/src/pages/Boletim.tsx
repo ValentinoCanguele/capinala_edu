@@ -1,9 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAlunos, useAnosLetivos, useBoletim } from '@/data/escola/queries'
+import PageHeader from '@/components/PageHeader'
 
 export default function Boletim() {
+  const [searchParams] = useSearchParams()
+  const alunoIdFromUrl = searchParams.get('alunoId') ?? ''
   const [alunoId, setAlunoId] = useState('')
   const [anoLetivoId, setAnoLetivoId] = useState('')
+
+  useEffect(() => {
+    if (alunoIdFromUrl) setAlunoId(alunoIdFromUrl)
+  }, [alunoIdFromUrl])
+
   const { data: alunos = [] } = useAlunos()
   const { data: anosLetivos = [] } = useAnosLetivos()
   const { data: boletim, isLoading, error } = useBoletim(
@@ -13,12 +22,10 @@ export default function Boletim() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold text-studio-foreground">Boletim</h2>
-        <p className="text-studio-foreground-light text-sm mt-0.5">
-          Consultar notas e médias por aluno e ano letivo.
-        </p>
-      </div>
+      <PageHeader
+        title="Boletim"
+        subtitle="Consultar notas e médias por aluno e ano letivo."
+      />
 
       <div className="flex flex-wrap gap-6 mb-6">
         <div>
@@ -73,8 +80,13 @@ export default function Boletim() {
             <h3 className="text-lg font-semibold text-studio-foreground mb-4">
               {boletim.alunoNome}
             </h3>
+            {!boletim.disciplinas?.length ? (
+              <p className="text-studio-foreground-light text-sm">
+                Nenhuma disciplina com notas no ano letivo selecionado.
+              </p>
+            ) : (
             <div className="space-y-4">
-              {boletim.disciplinas?.map((d) => (
+              {boletim.disciplinas.map((d) => (
                 <div
                   key={d.disciplinaId}
                   className="flex items-center justify-between py-2 border-b border-studio-border last:border-0"
@@ -91,6 +103,7 @@ export default function Boletim() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
       </div>

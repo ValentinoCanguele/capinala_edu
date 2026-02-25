@@ -8,6 +8,11 @@ body {
   @apply bg-studio-bg-alt text-studio-foreground antialiased;
 }
 
+/* Skip link: oculto até receber foco (acessibilidade) */
+.skip-link {
+  @apply fixed left-4 top-4 z-50 -translate-y-full rounded-md bg-studio-brand px-4 py-2 text-sm font-medium text-white shadow-lg transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-studio-brand focus:ring-offset-2 focus:ring-offset-studio-bg-alt;
+}
+
 /* Second bar: scroll horizontal discreto */
 .second-bar-nav {
   scrollbar-width: thin;
@@ -20,4 +25,13 @@ body {
 }
 .second-bar-nav::-webkit-scrollbar-thumb {
   @apply bg-studio-border rounded-full;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .second-bar-nav a {
+    transition: none;
+  }
+  .sidebar-transition {
+    transition-duration: 0.01ms !important;
+  }
 }

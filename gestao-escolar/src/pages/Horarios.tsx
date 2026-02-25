@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useHorarios, useTurmas, useDisciplinas, useSalas, useAnosLetivos } from '@/data/escola/queries'
 import { useCreateHorario, useDeleteHorario } from '@/data/escola/mutations'
+import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
 
 const DIAS = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 
@@ -261,9 +263,19 @@ export default function Horarios() {
                 {isLoading ? (
                     <div className="card p-8 text-center text-studio-foreground-lighter">A carregar...</div>
                 ) : filtered.length === 0 ? (
-                    <div className="card p-8 text-center text-studio-foreground-lighter">
-                        Nenhum horário registado. Clique em "Novo horário" para começar.
-                    </div>
+                    <EmptyState
+                        title="Nenhum horário registado"
+                        description={'Clique em "Novo horário" para começar.'}
+                        action={
+                            <button
+                                type="button"
+                                onClick={() => { setSearchParams({}); setFormOpen(true) }}
+                                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                            >
+                                Novo horário
+                            </button>
+                        }
+                    />
                 ) : (
                     [1, 2, 3, 4, 5, 6].map((dia) => {
                         const items = byDay.get(dia)

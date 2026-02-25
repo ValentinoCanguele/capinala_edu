@@ -178,6 +178,105 @@ export async function getRelatorioTurma(
 }
 
 /**
+ * Resumo de frequência para um aluno (próprio ou filho do responsável).
+ * Verifica permissão: user é o aluno ou responsável desse aluno.
+ */
+export async function getResumoFrequenciaAluno(
+  user: AuthUser,
+  alunoId: string,
+  anoLetivoId?: string
+): Promise<{
+  alunoId: string
+  alunoNome: string
+  totais: ResumoFrequencia
+  porTurma: (ResumoFrequencia & { turmaId: string; turmaNome: string })[]
+} | null> {
+  const db = getDb()
+  const escolaId = user.escolaId
+  if (!escolaId) return null
+
+  const alunoCheck = await db.query(
+    'SELECT a.id, p.nome FROM alunos a JOIN pessoas p ON p.id = a.pessoa_id WHERE a.id = $1 AND a.escola_id = $2',
+    [alunoId, escolaId]
+  )
+  if (alunoCheck.rows.length === 0) return null
+  const alunoNome = alunoCheck.rows[0].nome
+
+  const isOwn =
+    user.papel === 'aluno' &&
+    (await db.query('SELECT 1 FROM alunos WHERE id = $1 AND pessoa_id = $2', [alunoId, user.pessoaId]))
+      .rows.length > 0
+  const isResponsavel =
+    user.papel === 'responsavel' &&
+    (await db.query(
+      `SELECT 1 FROM vinculo_responsavel_aluno v
+       JOIN responsaveis r ON r.id = v.responsavel_id WHERE v.aluno_id = $1 AND r.pessoa_id = $2`,
+      [alunoId, user.pessoaId]
+    )).rows.length > 0
+  const isAdminOrDirecao = user.papel === 'admin' || user.papel === 'direcao'
+  if (!isOwn && !isResponsavel && !isAdminOrDirecao) return null
+
+  let anoFilter = ''
+  const params: unknown[] = [alunoId]
+  if (anoLetivoId) {
+    params.push(anoLetivoId)
+    anoFilter = `AND t.ano_letivo_id = $${params.length}`
+  }
+
+  const result = await db.query(
+    `SELECT
+       m.turma_id AS "turmaId",
+       t.nome AS "turmaNome",
+       COUNT(f.id) AS "totalAulas",
+       COUNT(f.id) FILTER (WHERE f.status = 'presente') AS "presencas",
+       COUNT(f.id) FILTER (WHERE f.status = 'falta') AS "faltas",
+       COUNT(f.id) FILTER (WHERE f.status = 'justificada') AS "justificadas"
+     FROM matriculas m
+     JOIN turmas t ON t.id = m.turma_id
+     LEFT JOIN aulas a ON a.turma_id = m.turma_id
+     LEFT JOIN frequencia f ON f.aula_id = a.id AND f.aluno_id = m.aluno_id
+     WHERE m.aluno_id = $1 ${anoFilter}
+     GROUP BY m.turma_id, t.nome
+     ORDER BY t.nome`,
+    params
+  )
+
+  const porTurma = result.rows.map((r) => ({
+    ...montarResumoFrequencia(
+      alunoId,
+      Number(r.totalAulas),
+      Number(r.presencas),
+      Number(r.faltas),
+      Number(r.justificadas)
+    ),
+    turmaId: r.turmaId,
+    turmaNome: r.turmaNome,
+  }))
+
+  const totais = porTurma.reduce(
+    (acc, t) => ({
+      alunoId,
+      totalAulas: acc.totalAulas + t.totalAulas,
+      presencas: acc.presencas + t.presencas,
+      faltas: acc.faltas + t.faltas,
+      justificadas: acc.justificadas + t.justificadas,
+      percentagemPresenca: 0,
+      emRisco: false,
+    }),
+    { alunoId, totalAulas: 0, presencas: 0, faltas: 0, justificadas: 0, percentagemPresenca: 0, emRisco: false }
+  )
+  totais.percentagemPresenca =
+    totais.totalAulas > 0
+      ? Math.round(
+          ((totais.presencas + totais.justificadas) / totais.totalAulas) * 1000
+        ) / 10
+      : 100
+  totais.emRisco = totais.percentagemPresenca < 75
+
+  return { alunoId, alunoNome, totais, porTurma }
+}
+
+/**
  * Verifica e cria alertas de frequência para alunos em risco numa aula.
  */
 async function verificarAlertasFrequencia(user: AuthUser, aulaId: string): Promise<void> {

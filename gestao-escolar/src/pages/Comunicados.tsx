@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useComunicados, useTurmas } from '@/data/escola/queries'
 import { useCreateComunicado, useUpdateComunicado, useDeleteComunicado } from '@/data/escola/mutations'
+import EmptyState from '@/components/EmptyState'
+import PageHeader from '@/components/PageHeader'
 
 export default function Comunicados() {
     const [searchParams, setSearchParams] = useSearchParams()
@@ -123,21 +125,19 @@ export default function Comunicados() {
 
     return (
         <div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <div>
-                    <h2 className="text-2xl font-semibold text-studio-foreground">Comunicados</h2>
-                    <p className="text-studio-foreground-light text-sm mt-0.5">
-                        Avisos e comunicados internos da escola.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={handleOpenCreate}
-                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
-                >
-                    Novo comunicado
-                </button>
-            </div>
+            <PageHeader
+                title="Comunicados"
+                subtitle="Avisos e comunicados internos da escola."
+                actions={
+                    <button
+                        type="button"
+                        onClick={handleOpenCreate}
+                        className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                    >
+                        Novo comunicado
+                    </button>
+                }
+            />
 
             {/* Modal criar/editar */}
             {formOpen && (
@@ -240,9 +240,19 @@ export default function Comunicados() {
                 {isLoading ? (
                     <div className="card p-8 text-center text-studio-foreground-lighter">A carregar...</div>
                 ) : comunicados.length === 0 ? (
-                    <div className="card p-8 text-center text-studio-foreground-lighter">
-                        Nenhum comunicado publicado.
-                    </div>
+                    <EmptyState
+                        title="Nenhum comunicado publicado"
+                        description={'Clique em "Novo comunicado" para publicar o primeiro.'}
+                        action={
+                            <button
+                                type="button"
+                                onClick={handleOpenCreate}
+                                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                            >
+                                Novo comunicado
+                            </button>
+                        }
+                    />
                 ) : (
                     comunicados.map((c) => (
                         <div key={c.id} className="card p-4">

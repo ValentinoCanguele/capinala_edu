@@ -155,6 +155,10 @@ export function useSaveFrequencia() {
     },
     onSuccess: (_, { aulaId }) => {
       queryClient.invalidateQueries({ queryKey: ['escola', 'frequencia', aulaId] })
+      queryClient.invalidateQueries({
+        queryKey: ['escola', 'relatorio-frequencia-turma'],
+        refetchType: 'active',
+      })
     },
   })
 }
@@ -174,6 +178,7 @@ export function useSaveNotasBatch() {
         })
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.turmas })
+      queryClient.invalidateQueries({ queryKey: ['escola', 'boletim'], refetchType: 'active' })
     },
   })
 }
@@ -459,6 +464,179 @@ export function useResolveAlerta() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.alertas })
+    },
+  })
+}
+
+/* ── Perfil ── */
+
+export interface PerfilUpdateInput {
+  nome?: string
+  email?: string
+  dataNascimento?: string
+  telefone?: string
+  bi?: string
+  biEmitidoEm?: string
+  biValidoAte?: string
+}
+
+export function useUpdatePerfil() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: PerfilUpdateInput) => {
+      const { data, error } = await api.put(`${ESCOLA_API}/perfil`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.perfil }),
+  })
+}
+
+export function useAlterarSenha() {
+  return useMutation({
+    mutationFn: async (body: { senhaAtual: string; senhaNova: string }) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/perfil/alterar-senha`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+  })
+}
+
+export function useUploadFotoPerfil() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (image: string) => {
+      const { data, error } = await api.post<{ ok: boolean }>(`${ESCOLA_API}/perfil/foto`, { image })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.perfil }),
+  })
+}
+
+export function useRemoveFotoPerfil() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await api.delete(`${ESCOLA_API}/perfil/foto`)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.perfil }),
+  })
+}
+
+/* ── Documentos ── */
+
+export function useUploadDocumento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (opts: {
+      titulo: string
+      pessoaId?: string
+      alunoId?: string
+      image: string
+      fileName?: string
+      mimeType?: string
+    }) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/documentos`, opts)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.documentos(vars.pessoaId, vars.alunoId) })
+    },
+  })
+}
+
+export function useDeleteDocumento() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.delete(`${ESCOLA_API}/documentos/${id}`)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'documentos'] }),
+  })
+}
+
+/* ── Utilizadores (admin) ── */
+
+export interface UsuarioCreateInput {
+  nome: string
+  email: string
+  papel: string
+  escolaId?: string | null
+  password: string
+  bi?: string
+  telefone?: string
+}
+
+export function useCreateUsuario() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: UsuarioCreateInput) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/usuarios`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'usuarios'] }),
+  })
+}
+
+export interface UsuarioUpdateInput {
+  nome?: string
+  email?: string
+  papel?: string
+  escolaId?: string | null
+  bi?: string
+  telefone?: string
+}
+
+export function useUpdateUsuario() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...body }: UsuarioUpdateInput & { id: string }) => {
+      const { data, error } = await api.put(`${ESCOLA_API}/usuarios/${id}`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'usuarios'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuario(id) })
+    },
+  })
+}
+
+export function useResetPassword() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ userId, novaSenha }: { userId: string; novaSenha: string }) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/usuarios/${userId}/reset-password`, {
+        novaSenha,
+      })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuario(userId) })
+    },
+  })
+}
+
+export function useSetUsuarioPermissoes() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ userId, codigos }: { userId: string; codigos: string[] }) => {
+      const { data, error } = await api.put(`${ESCOLA_API}/usuarios/${userId}/permissoes`, {
+        codigos,
+      })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarioPermissoes(userId) })
     },
   })
 }
