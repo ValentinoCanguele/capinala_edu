@@ -162,10 +162,10 @@ export default function Notas() {
             </caption>
             <thead className="bg-studio-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Aluno
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase w-28">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase w-28">
                   Nota (0–10)
                 </th>
               </tr>
@@ -188,6 +188,7 @@ export default function Notas() {
                         )
                       }
                       className="input w-20 px-2 py-1.5"
+                      aria-label={`Nota de ${r.alunoNome} (0 a 10)`}
                     />
                   </td>
                 </tr>

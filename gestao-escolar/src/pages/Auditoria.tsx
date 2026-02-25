@@ -155,16 +155,16 @@ export default function Auditoria() {
               </caption>
               <thead className="bg-studio-muted">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Data
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Ação
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Entidade
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Utilizador
                   </th>
                 </tr>

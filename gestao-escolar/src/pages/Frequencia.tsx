@@ -190,10 +190,10 @@ export default function Frequencia() {
             </caption>
             <thead className="bg-studio-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Aluno
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Status
                 </th>
               </tr>
@@ -209,6 +209,7 @@ export default function Frequencia() {
                         handleStatusChange(r.alunoId, e.target.value as Status)
                       }
                       className="input w-32"
+                      aria-label={`Presença de ${r.alunoNome}`}
                     >
                       <option value="presente">Presente</option>
                       <option value="falta">Falta</option>

@@ -134,9 +134,10 @@ export default function FinancasRelatorios() {
 
       <div className="mb-6 flex flex-wrap gap-4 items-end">
         <div>
-          <label className="label text-xs">Mês / Ano</label>
+          <label htmlFor="rel-mes" className="label text-xs">Mês / Ano</label>
           <div className="flex gap-2">
             <select
+              id="rel-mes"
               value={mes}
               onChange={(e) => setMes(Number(e.target.value))}
               className="input min-w-[8rem]"
@@ -149,9 +150,11 @@ export default function FinancasRelatorios() {
               ))}
             </select>
             <select
+              id="rel-ano"
               value={ano}
               onChange={(e) => setAno(Number(e.target.value))}
               className="input w-24"
+              aria-label="Ano"
             >
               {[now.getFullYear(), now.getFullYear() - 1].map((a) => (
                 <option key={a} value={a}>
@@ -162,11 +165,13 @@ export default function FinancasRelatorios() {
           </div>
         </div>
         <div>
-          <label className="label text-xs">Ano letivo (inadimplência)</label>
+          <label htmlFor="rel-ano-letivo" className="label text-xs">Ano letivo (inadimplência)</label>
           <select
+            id="rel-ano-letivo"
             value={anoLetivoId}
             onChange={(e) => setAnoLetivoId(e.target.value)}
             className="input w-48"
+            aria-label="Ano letivo para inadimplência"
           >
             <option value="">Todos</option>
             {anosLetivos.map((a) => (

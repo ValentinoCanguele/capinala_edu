@@ -246,13 +246,13 @@ export default function Salas() {
             <caption className="sr-only">Salas com nome, capacidade e ações</caption>
             <thead className="bg-studio-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Nome
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Capacidade
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
                   Ações
                 </th>
               </tr>

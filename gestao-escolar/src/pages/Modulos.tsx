@@ -400,13 +400,17 @@ export default function Modulos() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-4">
+        <label htmlFor="modulos-search" className="sr-only">
+          Pesquisar módulos por nome ou chave
+        </label>
         <input
+          id="modulos-search"
           type="search"
           placeholder="Pesquisar por nome ou chave..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="input max-w-xs"
-          aria-label="Pesquisar módulos"
+          aria-label="Pesquisar módulos por nome ou chave"
         />
         <ListResultSummary
           count={filteredInstalados.length + filteredDisponiveis.length}
