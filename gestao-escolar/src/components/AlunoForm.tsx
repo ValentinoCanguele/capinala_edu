@@ -70,10 +70,10 @@ export default function AlunoForm({
         )}
       </div>
       <div className="flex gap-2 justify-end pt-2">
-        <button type="button" onClick={onCancel} className="btn-secondary">
+        <button type="button" onClick={onCancel} className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2">
           Cancelar
         </button>
-        <button type="submit" className="btn-primary" disabled={isLoading}>
+        <button type="submit" className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50" disabled={isLoading}>
           {isNew ? 'Criar' : 'Guardar'}
         </button>
       </div>

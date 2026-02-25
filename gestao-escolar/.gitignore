@@ -1,5 +1,6 @@
-node_modules
-dist
+# Mínimo — resto incluído no upload
+node_modules/
+dist/
 .env
 .env.local
-*.local
+.env.*.local

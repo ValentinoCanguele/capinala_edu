@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { TurmaCreate, TurmaUpdate } from '../schemas'
+import { emit } from '@/lib/core/events/bus'
 
 function getEscolaId(user: AuthUser): string {
   if (user.escolaId) return user.escolaId
@@ -74,13 +75,15 @@ export async function createTurma(user: AuthUser, data: TurmaCreate) {
     'SELECT nome FROM anos_letivos WHERE id = $1',
     [anoLetivoId]
   )
-  return {
+  const out = {
     id: turma.id,
     nome: turma.nome,
     anoLetivo: anoResult.rows[0]?.nome ?? data.anoLetivo,
     anoLetivoId,
     alunoIds,
   }
+  emit('turma.criada', { turma: out, escolaId, userId: user.userId })
+  return out
 }
 
 export async function getTurma(user: AuthUser, id: string) {

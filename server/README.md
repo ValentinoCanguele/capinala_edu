@@ -9,6 +9,13 @@ Backend Next.js (porta 8082) para o módulo escola. O frontend em `gestao-escola
 - Node 18+
 - PostgreSQL (variável `DATABASE_URL`)
 
+## Dependências
+
+- **Produção**: `next`, `pg`, `jose`, `zod`, `react`, `react-dom`.
+- Para atualizar dentro do intervalo definido: `npm update`.
+- Ver desatualizados: `npm outdated`. Auditoria: `npm audit`.
+- Notas de atualizações major: `docs/DEPENDENCIAS.md`.
+
 ## Instalação
 
 ```bash

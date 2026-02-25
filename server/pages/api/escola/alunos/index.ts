@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
 import { requireAuth } from '@/lib/auth'
 import { jsonSuccess, jsonError } from '@/lib/apiWrapper'
+import { checkQuotaAlunos } from '@/lib/core/quotas'
 import * as alunosService from '@/lib/escola/services/alunos'
 import { alunoCreateSchema } from '@/lib/escola/schemas'
 
@@ -22,6 +23,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!parsed.success) {
         const msg = parsed.error.flatten().message
         return jsonError(res, typeof msg === 'string' ? msg : 'Dados inválidos', 400)
+      }
+      const escolaId = user.escolaId ?? parsed.data.escolaId
+      if (escolaId) {
+        const quota = await checkQuotaAlunos(escolaId)
+        if (!quota.dentroDoLimite) {
+          return jsonError(res, quota.mensagem ?? 'Limite de alunos atingido.', 403)
+        }
       }
       try {
         const created = await alunosService.createAluno(user, parsed.data)

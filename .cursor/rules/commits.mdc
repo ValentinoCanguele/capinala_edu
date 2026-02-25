@@ -1,0 +1,44 @@
+---
+description: Convenção de mensagens de commit para o projeto
+globs: []
+alwaysApply: true
+---
+
+# Commits
+
+Ao sugerir ou criar commits neste repositório, seguir a convenção em `docs/COMMITS.md`.
+
+## Formato
+
+```
+<tipo>(<âmbito>): <descrição no imperativo, ~50 chars>
+```
+
+## Tipos
+
+- `feat` – nova funcionalidade
+- `fix` – correção de bug
+- `refactor` – alteração sem mudar comportamento
+- `docs` – documentação
+- `style` – formatação / acessibilidade (ex.: scope="col", aria-label)
+- `test` – testes
+- `chore` – manutenção (deps, config)
+- `perf` – desempenho
+
+## Âmbitos comuns
+
+`escola`, `financas`, `modulos`, `auth`, `ui`, `api`
+
+## Regras
+
+1. Descrição no **imperativo** (adicionar, corrigir, refatorar).
+2. **Sem ponto final** na primeira linha.
+3. Preferir **vários commits pequenos** por mudança lógica em vez de um commit enorme.
+4. Em refinamentos em massa, agrupar por tema: um commit para acessibilidade, outro para EmptyState, etc., quando fizer sentido.
+
+## Exemplos
+
+- `feat(financas): adicionar exportação CSV de inadimplentes`
+- `fix(escola): corrigir cálculo de média no boletim`
+- `refactor(ui): aplicar scope="col" e aria-label nas tabelas`
+- `style(modulos): EmptyState e id/htmlFor no formulário de configuração`

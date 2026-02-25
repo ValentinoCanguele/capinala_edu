@@ -7,10 +7,15 @@ const envPath = path.join(__dirname, '..', '.env')
 
 function loadEnv() {
   if (!fs.existsSync(envPath)) return
-  const content = fs.readFileSync(envPath, 'utf8')
+  const content = fs.readFileSync(envPath, 'utf8').replace(/\r\n/g, '\n')
   for (const line of content.split('\n')) {
-    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/)
-    if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '').trim()
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const idx = trimmed.indexOf('=')
+    if (idx === -1) continue
+    const key = trimmed.slice(0, idx).trim()
+    const value = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '')
+    if (key) process.env[key] = value
   }
 }
 

@@ -153,3 +153,9 @@ export function isProfessor(user: AuthUser): boolean {
 export function isAdmin(user: AuthUser): boolean {
   return isPapel(user, PAPEIS_ADMIN)
 }
+
+/* ── Módulos do sistema (Definições) ── */
+
+export function canManageModulos(user: AuthUser): boolean {
+  return user.papel === 'admin'
+}

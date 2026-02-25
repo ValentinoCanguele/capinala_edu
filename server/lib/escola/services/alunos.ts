@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { AlunoCreate, AlunoUpdate } from '../schemas'
+import { emit } from '@/lib/core/events/bus'
 
 function getEscolaId(user: AuthUser): string {
   if (user.escolaId) return user.escolaId
@@ -43,13 +44,14 @@ export async function createAluno(user: AuthUser, data: AlunoCreate) {
       [pessoaId, escolaId]
     )
     const aluno = alunoResult.rows[0]
-    const p = pessoaResult.rows[0]
-    return {
+    const out = {
       id: aluno.id,
       nome: data.nome,
       email: data.email,
       dataNascimento: data.dataNascimento ?? '',
     }
+    emit('aluno.criado', { aluno: out, escolaId, userId: user.userId })
+    return out
   } finally {
     client.release()
   }

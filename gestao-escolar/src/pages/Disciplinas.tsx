@@ -10,6 +10,7 @@ import {
 import type { DisciplinaFormValues } from '@/schemas/disciplina'
 import Modal from '@/components/Modal'
 import EmptyState from '@/components/EmptyState'
+import ListResultSummary from '@/components/ListResultSummary'
 import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
@@ -51,11 +52,11 @@ function DisciplinaForm({
           autoFocus
         />
       </div>
-      <div className="flex gap-2 justify-end pt-2">
-        <button type="button" onClick={onCancel} className="btn-secondary">
+      <div className="flex gap-2 justify-end pt-4 mt-4 border-t border-studio-border">
+        <button type="button" onClick={onCancel} className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2">
           Cancelar
         </button>
-        <button type="submit" className="btn-primary" disabled={isLoading}>
+        <button type="submit" className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50" disabled={isLoading}>
           {isLoading ? 'A guardar...' : 'Guardar'}
         </button>
       </div>
@@ -154,20 +155,29 @@ export default function Disciplinas() {
           <button
             type="button"
             onClick={handleCreate}
-            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
           >
             Nova disciplina
           </button>
         }
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-4">
         <input
           type="search"
           placeholder="Pesquisar por nome..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="input max-w-xs"
+          aria-label="Pesquisar disciplinas por nome"
+        />
+        <ListResultSummary
+          count={filtered.length}
+          total={disciplinas.length}
+          label="disciplina"
+          hasFilter={filter.length > 0}
+          onClearFilter={() => setFilter('')}
+          isLoading={isLoading}
         />
       </div>
 
@@ -188,7 +198,7 @@ export default function Disciplinas() {
         {isLoading ? (
           <TableSkeleton rows={5} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
@@ -206,13 +216,14 @@ export default function Disciplinas() {
             ) : undefined}
           />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de disciplinas">
+            <caption className="sr-only">Disciplinas com nome e ações</caption>
             <thead className="bg-studio-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Nome
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
                   Ações
                 </th>
               </tr>

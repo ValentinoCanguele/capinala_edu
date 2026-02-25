@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuditLog, useAlertas, useMeuPapel } from '@/data/escola/queries'
 import { useResolveAlerta } from '@/data/escola/mutations'
+import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 import EmptyState from '@/components/EmptyState'
 import PageHeader from '@/components/PageHeader'
@@ -95,7 +96,7 @@ export default function Auditoria() {
           <div className="card overflow-hidden">
             <ul className="divide-y divide-studio-border">
               {alertasLoading ? (
-                <li className="px-4 py-3 text-studio-foreground-lighter text-sm">
+                <li className="px-4 py-3 text-studio-foreground-lighter text-sm" role="status" aria-live="polite">
                   A carregar...
                 </li>
               ) : (
@@ -169,7 +170,7 @@ export default function Auditoria() {
         {logLoading ? (
           <TableSkeleton rows={10} />
         ) : logError ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600" role="alert">
             {(logError as Error).message}
           </div>
         ) : log.length === 0 ? (
@@ -179,19 +180,25 @@ export default function Auditoria() {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-studio-border">
+            <table
+              className="min-w-full divide-y divide-studio-border"
+              aria-label="Log de auditoria"
+            >
+              <caption className="sr-only">
+                Entradas do log com data, ação, entidade e utilizador
+              </caption>
               <thead className="bg-studio-muted">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Data
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Ação
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Entidade
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                  <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                     Utilizador
                   </th>
                 </tr>

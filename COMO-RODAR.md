@@ -71,6 +71,13 @@ npm run db:migrate
 
 Isto cria as tabelas e insere o utilizador de teste.
 
+**Se o schema já existir** e só precisares de aplicar as nano funções (migration 010):
+
+```bash
+cd server
+npm run db:migrate:010
+```
+
 ---
 
 ## 4. Backend (API)
@@ -82,6 +89,11 @@ npm run dev
 ```
 
 A API fica em **http://localhost:8082**.
+
+**Endpoints úteis:**
+- `GET http://localhost:8082/api/health` — estado do serviço e da base de dados.
+- `POST http://localhost:8082/api/auth/login` — login (body: email, password).
+- `POST http://localhost:8082/api/auth/refresh` — renovar JWT (header: Authorization Bearer &lt;token&gt;).
 
 ---
 
