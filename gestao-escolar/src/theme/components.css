@@ -172,6 +172,14 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: opacity 0.2s;
+  border-radius: 0.25rem;
+}
+.link-action:focus {
+  outline: none;
+}
+.link-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--studio-bg), 0 0 0 4px var(--studio-brand);
 }
 .link-action-primary {
   color: var(--gibbon-brand-1);

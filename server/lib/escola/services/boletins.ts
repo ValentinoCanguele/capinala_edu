@@ -102,7 +102,7 @@ export async function getBoletim(user: AuthUser, alunoId: string, anoLetivoId?: 
 
   // Calcular médias por trimestre e média final por disciplina
   for (const disc of Object.values(disciplinasMap)) {
-    const trimestres = [1, 2, 3, 4]
+    const trimestres = [1, 2, 3]
     const mediasTrimestres: (number | null)[] = []
 
     for (const tri of trimestres) {

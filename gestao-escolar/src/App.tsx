@@ -20,6 +20,8 @@ import Presencas from './pages/Presencas'
 import MeusFilhos from './pages/MeusFilhos'
 import Arquivos from './pages/Arquivos'
 import Utilizadores from './pages/Utilizadores'
+import FinancasDashboard from './pages/FinancasDashboard'
+import Modulos from './pages/Modulos'
 import Login from './pages/Login'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -75,6 +77,8 @@ export default function App() {
         <Route path="anos-letivos" element={<AnosLetivos />} />
         <Route path="salas" element={<Salas />} />
         <Route path="auditoria" element={<Auditoria />} />
+        <Route path="financas" element={<FinancasDashboard />} />
+        <Route path="modulos" element={<Modulos />} />
         <Route path="perfil" element={<Perfil />} />
         <Route path="meu-boletim" element={<MeuBoletim />} />
         <Route path="presencas" element={<Presencas />} />

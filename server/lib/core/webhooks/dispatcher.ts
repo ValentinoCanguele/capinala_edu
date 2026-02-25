@@ -2,7 +2,7 @@
  * WebhookDispatcher — ao ocorrer evento, chamar URLs configuradas por escola (POST com payload).
  * Implementação: enfileirar ou chamar fetch; em produção usar fila.
  */
-import { emit } from '@/lib/core/events/bus'
+import { emit, on } from '@/lib/core/events/bus'
 
 const webhookUrlsByEvent = new Map<string, string[]>() // event -> URLs
 

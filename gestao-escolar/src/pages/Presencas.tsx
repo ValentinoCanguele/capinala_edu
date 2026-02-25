@@ -158,7 +158,7 @@ export default function Presencas() {
               <div>
                 <h3 className="text-sm font-semibold text-studio-foreground mb-3">Por turma</h3>
                 <table className="min-w-full divide-y divide-studio-border">
-                  <thead>
+                  <thead className="bg-studio-muted">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Turma</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Aulas</th>

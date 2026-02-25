@@ -5,20 +5,20 @@ import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 import { useSaveNotasBatch, useEnsurePeriodos } from '@/data/escola/mutations'
 
-const BIMESTRES = [1, 2, 3, 4] as const
+const TRIMESTRES = [1, 2, 3] as const
 
 type Row = { alunoId: string; alunoNome: string; valor: number }
 
 export default function Notas() {
   const [turmaId, setTurmaId] = useState<string>('')
-  const [bimestre, setBimestre] = useState<number | ''>('')
+  const [trimestre, setTrimestre] = useState<number | ''>('')
 
   const { data: turmas = [] } = useTurmas()
   const selectedTurma = turmas.find((t) => t.id === turmaId)
   const anoLetivoId = selectedTurma?.anoLetivoId ?? null
   const { data: periodos = [], refetch: refetchPeriodos } = usePeriodos(anoLetivoId)
   const ensurePeriodos = useEnsurePeriodos()
-  const periodo = bimestre !== '' ? periodos.find((p) => p.numero === bimestre) : null
+  const periodo = trimestre !== '' ? periodos.find((p) => p.numero === trimestre) : null
   const periodoId = periodo?.id ?? null
 
   useEffect(() => {
@@ -58,13 +58,13 @@ export default function Notas() {
   const saveNotas = useSaveNotasBatch()
 
   const handleSave = () => {
-    if (!turmaId || bimestre === '') return
+    if (!turmaId || trimestre === '') return
     const toSend = (localRows.length === rows.length ? localRows : rows).map((r) => ({
       alunoId: r.alunoId,
       valor: r.valor,
     }))
     saveNotas.mutate(
-      { turmaId, bimestre: bimestre as number, notas: toSend },
+      { turmaId, bimestre: trimestre as number, notas: toSend },
       {
         onSuccess: () => toast.success('Notas guardadas.'),
         onError: (err) => toast.error(err.message),
@@ -72,14 +72,14 @@ export default function Notas() {
     )
   }
 
-  const canSave = turmaId && bimestre !== '' && displayRows.length > 0
+  const canSave = turmaId && trimestre !== '' && displayRows.length > 0
   const isLoading = alunosLoading || notasLoading
 
   return (
     <div>
       <PageHeader
         title="Notas"
-        subtitle="Lançamento por turma e bimestre. Valores entre 0 e 10 (uma casa decimal opcional)."
+        subtitle="Lançamento por turma e trimestre. Valores entre 0 e 20 (uma casa decimal opcional)."
       />
 
       <div className="flex flex-wrap gap-4 mb-6">
@@ -105,22 +105,22 @@ export default function Notas() {
           </select>
         </div>
         <div>
-          <label htmlFor="notas-bimestre" className="label">
-            Bimestre
+          <label htmlFor="notas-trimestre" className="label">
+            Trimestre
           </label>
           <select
-            id="notas-bimestre"
-            value={bimestre === '' ? '' : String(bimestre)}
+            id="notas-trimestre"
+            value={trimestre === '' ? '' : String(trimestre)}
             onChange={(e) => {
-              setBimestre(e.target.value ? Number(e.target.value) : '')
+              setTrimestre(e.target.value ? Number(e.target.value) : '')
               setLocalRows([])
             }}
             className="input min-w-[120px]"
           >
             <option value="">Selecionar</option>
-            {BIMESTRES.map((b) => (
-              <option key={b} value={b}>
-                {b}º bimestre
+            {TRIMESTRES.map((t) => (
+              <option key={t} value={t}>
+                {t}º trimestre
               </option>
             ))}
           </select>
@@ -131,7 +131,7 @@ export default function Notas() {
               type="button"
               onClick={handleSave}
               disabled={saveNotas.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {saveNotas.isPending ? 'A guardar...' : 'Guardar notas'}
             </button>
@@ -140,9 +140,9 @@ export default function Notas() {
       </div>
 
       <div className="card">
-        {!turmaId || bimestre === '' ? (
+        {!turmaId || trimestre === '' ? (
           <div className="p-8 text-center text-studio-foreground-lighter">
-            Selecione uma turma e um bimestre para lançar notas.
+            Selecione uma turma e um trimestre para lançar notas.
           </div>
         ) : isLoading ? (
           <TableSkeleton rows={8} />
@@ -158,7 +158,7 @@ export default function Notas() {
                   Aluno
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase w-28">
-                  Nota (0–10)
+                  Nota (0–20)
                 </th>
               </tr>
             </thead>
@@ -170,13 +170,13 @@ export default function Notas() {
                     <input
                       type="number"
                       min={0}
-                      max={10}
+                      max={20}
                       step={0.5}
                       value={r.valor}
                       onChange={(e) =>
                         updateValor(
                           r.alunoId,
-                          Math.min(10, Math.max(0, Number(e.target.value) || 0))
+                          Math.min(20, Math.max(0, Number(e.target.value) || 0))
                         )
                       }
                       className="input w-20 px-2 py-1.5"

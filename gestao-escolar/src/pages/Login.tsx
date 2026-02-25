@@ -4,14 +4,11 @@ import { BookOpen, Sun, Moon, Mail, Lock, LogIn } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 
-const LOGO_URL = '/logo.png'
-
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [logoError, setLogoError] = useState(false)
   const { login } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
@@ -79,7 +76,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); if (error) setError('') }}
                   required
-                  className="input w-full pl-9"
+                  className="input w-full pl-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                   placeholder="admin@escola.demo"
                   aria-invalid={!!error}
                   autoComplete="email"
@@ -98,7 +95,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); if (error) setError('') }}
                   required
-                  className="input w-full pl-9"
+                  className="input w-full pl-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                   placeholder="••••••••"
                   aria-invalid={!!error}
                   autoComplete="current-password"
@@ -108,7 +105,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full btn-primary flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
               aria-busy={loading}
             >
               <LogIn className="w-4 h-4" />

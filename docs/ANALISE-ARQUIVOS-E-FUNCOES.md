@@ -41,7 +41,7 @@
 - **notas.ts** — upsertNota, saveNotasBatch, getNotasByTurmaPeriodo.
 - **boletins.ts** — getBoletim(alunoId, anoLetivoId?).
 - **aulas.ts** — listAulasByTurmaAndDate, getOrCreateAula.
-- **frequencia.ts** — getFrequenciaByAula, saveFrequenciaBatch.
+- **frequencia.ts** — getFrequenciaByAula, saveFrequenciaBatch, getResumoFrequencia(turmaId), getRelatorioTurma(turmaId), getResumoFrequenciaAluno(alunoId, anoLetivoId?) (próprio ou filho).
 - **horarios.ts** — listHorarios, createHorario, updateHorario, deleteHorario; listSalas, createSala, getSala, updateSala, deleteSala; listHorariosProfessor.
 - **comunicados.ts** — listComunicados, getComunicado, createComunicado, updateComunicado, deleteComunicado.
 - **perfil.ts** — getPerfil, updatePerfil, alterarSenha, uploadFotoPerfil, getFotoPerfilPath, removeFotoPerfil.

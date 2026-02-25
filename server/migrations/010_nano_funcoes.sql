@@ -63,7 +63,7 @@ COMMENT ON FUNCTION fn_financeiro_parcela_esta_atrasada(DATE, TEXT, DATE) IS 'Tr
 
 -- ========== Notas / Média ==========
 -- Retorna true se media >= minima (aprovação por média).
-CREATE OR REPLACE FUNCTION fn_media_aprovacao(media NUMERIC, minima NUMERIC DEFAULT 5)
+CREATE OR REPLACE FUNCTION fn_media_aprovacao(media NUMERIC, minima NUMERIC DEFAULT 10)
 RETURNS BOOLEAN
 LANGUAGE sql
 IMMUTABLE

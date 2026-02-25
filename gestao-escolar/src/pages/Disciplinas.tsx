@@ -69,6 +69,7 @@ export default function Disciplinas() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, nome: string } | null>(null)
 
   useEffect(() => {
     if (searchParams.get('acao') === 'novo') {
@@ -92,8 +93,8 @@ export default function Disciplinas() {
     () =>
       filter
         ? disciplinas.filter((d) =>
-            d.nome.toLowerCase().includes(filter.toLowerCase())
-          )
+          d.nome.toLowerCase().includes(filter.toLowerCase())
+        )
         : disciplinas,
     [disciplinas, filter]
   )
@@ -136,18 +137,45 @@ export default function Disciplinas() {
     }
   }
 
-  const handleDelete = (id: string, nome: string) => {
-    if (!window.confirm(`Eliminar a disciplina "${nome}"?`)) return
-    deleteDisc.mutate(id, {
-      onSuccess: () => toast.success('Disciplina eliminada.'),
-      onError: (err) => toast.error(err.message),
+  const confirmDelete = () => {
+    if (!itemToDelete) return
+    deleteDisc.mutate(itemToDelete.id, {
+      onSuccess: () => {
+        toast.success('Disciplina eliminada.')
+        setItemToDelete(null)
+      },
+      onError: (err) => {
+        toast.error(err.message)
+        setItemToDelete(null)
+      },
     })
+  }
+
+  const handleDelete = (id: string, nome: string) => {
+    setItemToDelete({ id, nome })
   }
 
   const isFormLoading = createDisc.isPending || updateDisc.isPending
 
   return (
     <div>
+      <Modal
+        title="Eliminar disciplina"
+        open={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        size="sm"
+      >
+        <p className="text-sm text-studio-foreground-light mb-4">
+          Tem a certeza que deseja eliminar a disciplina "{itemToDelete?.nome}"? Esta ação não pode ser desfeita.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={() => setItemToDelete(null)} className="btn-secondary">Cancelar</button>
+          <button type="button" onClick={confirmDelete} disabled={deleteDisc.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
+            {deleteDisc.isPending ? 'A eliminar...' : 'Eliminar'}
+          </button>
+        </div>
+      </Modal>
+
       <PageHeader
         title="Disciplinas"
         subtitle="Gerir disciplinas da escola."
@@ -198,7 +226,7 @@ export default function Disciplinas() {
         {isLoading ? (
           <TableSkeleton rows={5} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600" role="alert">
+          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (

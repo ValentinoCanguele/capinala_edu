@@ -15,7 +15,7 @@ export function getConfig(): z.infer<typeof envSchema> {
   if (cached) return cached
   const parsed = envSchema.safeParse(process.env)
   if (!parsed.success) {
-    throw new Error(`Config inválida: ${parsed.error.flatten().message}`)
+    throw new Error(`Config inválida: ${parsed.error.issues[0]?.message ?? 'Erro desconhecido'}`)
   }
   cached = parsed.data
   return cached

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useSalas } from '@/data/escola/queries'
@@ -83,11 +83,19 @@ function SalaForm({
 }
 
 export default function Salas() {
+  const [, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
+  const [salaToDelete, setSalaToDelete] = useState<{ id: string, nome: string } | null>(null)
 
   const { data: salas = [], isLoading, error } = useSalas()
+
+  const handleCloseModal = () => {
+    setModalOpen(false)
+    setEditingId(null)
+    setSearchParams({})
+  }
   const createSala = useCreateSala()
   const updateSala = useUpdateSala()
   const deleteSala = useDeleteSala()
@@ -96,8 +104,8 @@ export default function Salas() {
     () =>
       filter
         ? salas.filter((s) =>
-            s.nome.toLowerCase().includes(filter.toLowerCase())
-          )
+          s.nome.toLowerCase().includes(filter.toLowerCase())
+        )
         : salas,
     [salas, filter]
   )
@@ -107,7 +115,6 @@ export default function Salas() {
   const handleCreate = () => {
     setEditingId(null)
     setModalOpen(true)
-    setSearchParams({})
   }
 
   const handleEdit = (id: string) => {
@@ -146,18 +153,45 @@ export default function Salas() {
     }
   }
 
-  const handleDelete = (id: string, nome: string) => {
-    if (!window.confirm(`Eliminar a sala "${nome}"?`)) return
-    deleteSala.mutate(id, {
-      onSuccess: () => toast.success('Sala eliminada.'),
-      onError: (err) => toast.error(err.message),
+  const confirmDelete = () => {
+    if (!salaToDelete) return
+    deleteSala.mutate(salaToDelete.id, {
+      onSuccess: () => {
+        toast.success('Sala eliminada.')
+        setSalaToDelete(null)
+      },
+      onError: (err) => {
+        toast.error(err.message)
+        setSalaToDelete(null)
+      },
     })
+  }
+
+  const handleDelete = (id: string, nome: string) => {
+    setSalaToDelete({ id, nome })
   }
 
   const isFormLoading = createSala.isPending || updateSala.isPending
 
   return (
     <div>
+      <Modal
+        title="Eliminar sala"
+        open={!!salaToDelete}
+        onClose={() => setSalaToDelete(null)}
+        size="sm"
+      >
+        <p className="text-sm text-studio-foreground-light mb-4">
+          Tem a certeza que deseja eliminar a sala "{salaToDelete?.nome}"? Esta ação não pode ser desfeita.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={() => setSalaToDelete(null)} className="btn-secondary">Cancelar</button>
+          <button type="button" onClick={confirmDelete} disabled={deleteSala.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
+            {deleteSala.isPending ? 'A eliminar...' : 'Eliminar'}
+          </button>
+        </div>
+      </Modal>
+
       <PageHeader
         title="Salas"
         subtitle="Gerir salas e capacidade para horários."
@@ -165,7 +199,7 @@ export default function Salas() {
           <button
             type="button"
             onClick={handleCreate}
-            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
           >
             Nova sala
           </button>
@@ -191,9 +225,9 @@ export default function Salas() {
           defaultValues={
             editing
               ? {
-                  nome: editing.nome,
-                  capacidade: editing.capacidade ?? undefined,
-                }
+                nome: editing.nome,
+                capacidade: editing.capacidade ?? undefined,
+              }
               : null
           }
           onSubmit={handleSubmit}
@@ -208,7 +242,7 @@ export default function Salas() {
             A carregar...
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (

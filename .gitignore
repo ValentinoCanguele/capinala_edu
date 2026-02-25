@@ -2,9 +2,12 @@
 node_modules/
 
 # Environment (nunca commitar segredos)
-
+.env
+.env.*
+!.env.example
 
 # Build / output
+.next/
 *.tsbuildinfo
 
 # OS

@@ -170,7 +170,7 @@ export default function AnosLetivos() {
           <button
             type="button"
             onClick={handleCreate}
-            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
           >
             Novo ano letivo
           </button>
@@ -213,7 +213,7 @@ export default function AnosLetivos() {
         {isLoading ? (
           <TableSkeleton rows={5} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (

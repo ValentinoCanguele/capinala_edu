@@ -401,16 +401,29 @@ export function useNotas(turmaId: string | null, periodoId: string | null) {
   })
 }
 
+export interface BoletimDisciplina {
+  disciplinaId: string
+  nome: string
+  mediaFinal: number | null
+  aprovado: boolean
+}
+
+export interface BoletimResponse {
+  alunoId: string
+  alunoNome: string
+  disciplinas: BoletimDisciplina[]
+}
+
 export function useBoletim(alunoId: string | null, anoLetivoId?: string) {
   return useQuery({
     queryKey: queryKeys.boletim(alunoId ?? '', anoLetivoId),
-    queryFn: async () => {
+    queryFn: async (): Promise<BoletimResponse | null> => {
       if (!alunoId) return null
       const params = new URLSearchParams({ alunoId })
       if (anoLetivoId) params.set('anoLetivoId', anoLetivoId)
-      const { data, error } = await api.get(`${ESCOLA_API}/boletins/${alunoId}?${params}`)
+      const { data, error } = await api.get<BoletimResponse>(`${ESCOLA_API}/boletins/${alunoId}?${params}`)
       if (error) throw new Error(error.message)
-      return data
+      return data ?? null
     },
     enabled: !!alunoId,
   })

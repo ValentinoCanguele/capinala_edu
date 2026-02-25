@@ -19,6 +19,7 @@ export default function Alunos() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     if (searchParams.get('acao') === 'novo') {
@@ -42,8 +43,8 @@ export default function Alunos() {
     () =>
       filter
         ? alunos.filter((a) =>
-            a.nome.toLowerCase().includes(filter.toLowerCase())
-          )
+          a.nome.toLowerCase().includes(filter.toLowerCase())
+        )
         : alunos,
     [alunos, filter]
   )
@@ -86,18 +87,45 @@ export default function Alunos() {
     }
   }
 
-  const handleDelete = (id: string) => {
-    if (!window.confirm('Eliminar este aluno?')) return
-    deleteAluno.mutate(id, {
-      onSuccess: () => toast.success('Aluno eliminado.'),
-      onError: (err) => toast.error(err.message),
+  const confirmDelete = () => {
+    if (!itemToDelete) return
+    deleteAluno.mutate(itemToDelete, {
+      onSuccess: () => {
+        toast.success('Aluno eliminado.')
+        setItemToDelete(null)
+      },
+      onError: (err) => {
+        toast.error(err.message)
+        setItemToDelete(null)
+      },
     })
+  }
+
+  const handleDelete = (id: string) => {
+    setItemToDelete(id)
   }
 
   const isFormLoading = createAluno.isPending || updateAluno.isPending
 
   return (
     <div>
+      <Modal
+        title="Eliminar aluno"
+        open={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        size="sm"
+      >
+        <p className="text-sm text-studio-foreground-light mb-4">
+          Tem a certeza que deseja eliminar este aluno? Esta ação não pode ser desfeita.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={() => setItemToDelete(null)} className="btn-secondary">Cancelar</button>
+          <button type="button" onClick={confirmDelete} disabled={deleteAluno.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
+            {deleteAluno.isPending ? 'A eliminar...' : 'Eliminar'}
+          </button>
+        </div>
+      </Modal>
+
       <PageHeader
         title="Alunos"
         subtitle="Listagem e cadastro de alunos."
@@ -105,7 +133,7 @@ export default function Alunos() {
           <button
             type="button"
             onClick={handleCreate}
-            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
           >
             Novo aluno
           </button>
@@ -131,10 +159,10 @@ export default function Alunos() {
           defaultValues={
             editingAluno
               ? {
-                  nome: editingAluno.nome,
-                  email: editingAluno.email,
-                  dataNascimento: editingAluno.dataNascimento,
-                }
+                nome: editingAluno.nome,
+                email: editingAluno.email,
+                dataNascimento: editingAluno.dataNascimento,
+              }
               : undefined
           }
           isNew={!editingId}
@@ -148,7 +176,7 @@ export default function Alunos() {
         {isLoading ? (
           <TableSkeleton rows={6} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : filteredAlunos.length === 0 ? (

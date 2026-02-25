@@ -68,7 +68,7 @@ export default function Boletim() {
         ) : isLoading ? (
           <div className="p-8 text-center text-studio-foreground-lighter">A carregar...</div>
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
             {(error as Error).message}
           </div>
         ) : !boletim ? (
@@ -93,7 +93,7 @@ export default function Boletim() {
                 >
                   <span className="text-studio-foreground">{d.nome}</span>
                   <span className="text-studio-foreground-light">
-                    Média: {d.media != null ? d.media.toFixed(2) : '-'}
+                    Média: {d.mediaFinal != null ? d.mediaFinal.toFixed(2) : '-'}
                     {d.aprovado != null && (
                       <span className={d.aprovado ? ' text-green-600' : ' text-red-600'}>
                         {d.aprovado ? ' (Aprovado)' : ' (Reprovado)'}

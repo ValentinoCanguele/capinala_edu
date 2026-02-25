@@ -299,7 +299,7 @@ export default function Frequencia() {
               type="button"
               onClick={handleCarregarAula}
               disabled={createAula.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {createAula.isPending ? 'A carregar...' : 'Carregar aula'}
             </button>
@@ -311,7 +311,7 @@ export default function Frequencia() {
               type="button"
               onClick={handleSave}
               disabled={saveFrequencia.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {saveFrequencia.isPending ? 'A guardar...' : 'Guardar frequência'}
             </button>

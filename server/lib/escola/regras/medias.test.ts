@@ -45,29 +45,28 @@ describe('medias', () => {
     it('retorna null para nota null', () => {
       expect(classificarNota(null)).toBeNull()
     })
-    it('classifica Insuficiente < 5', () => {
+    it('classifica Insuficiente < 10', () => {
       expect(classificarNota(4)).toBe('Insuficiente')
       expect(classificarNota(0)).toBe('Insuficiente')
-      expect(classificarNota(4.9)).toBe('Insuficiente')
+      expect(classificarNota(9.9)).toBe('Insuficiente')
     })
-    it('classifica Suficiente [5, 6.5)', () => {
-      expect(classificarNota(5)).toBe('Suficiente')
-      expect(classificarNota(6)).toBe('Suficiente')
-      expect(classificarNota(6.4)).toBe('Suficiente')
+    it('classifica Suficiente [10, 14)', () => {
+      expect(classificarNota(10)).toBe('Suficiente')
+      expect(classificarNota(12)).toBe('Suficiente')
+      expect(classificarNota(13.9)).toBe('Suficiente')
     })
-    it('classifica Bom [6.5, 8)', () => {
-      expect(classificarNota(6.5)).toBe('Bom')
-      expect(classificarNota(7)).toBe('Bom')
-      expect(classificarNota(7.9)).toBe('Bom')
+    it('classifica Bom [14, 18)', () => {
+      expect(classificarNota(14)).toBe('Bom')
+      expect(classificarNota(16)).toBe('Bom')
+      expect(classificarNota(17.9)).toBe('Bom')
     })
-    it('classifica Muito Bom [8, 9.5)', () => {
-      expect(classificarNota(8)).toBe('Muito Bom')
-      expect(classificarNota(9)).toBe('Muito Bom')
-      expect(classificarNota(9.4)).toBe('Muito Bom')
+    it('classifica Muito Bom [18, 20)', () => {
+      expect(classificarNota(18)).toBe('Muito Bom')
+      expect(classificarNota(19)).toBe('Muito Bom')
+      expect(classificarNota(19.9)).toBe('Muito Bom')
     })
-    it('classifica Excelente >= 9.5', () => {
-      expect(classificarNota(9.5)).toBe('Excelente')
-      expect(classificarNota(10)).toBe('Excelente')
+    it('classifica Excelente >= 20', () => {
+      expect(classificarNota(20)).toBe('Excelente')
     })
   })
 
@@ -75,21 +74,21 @@ describe('medias', () => {
     it('Reprovado para null', () => {
       expect(resultadoTrimestral(null)).toBe('Reprovado')
     })
-    it('Aprovado quando >= 5', () => {
-      expect(resultadoTrimestral(5)).toBe('Aprovado')
-      expect(resultadoTrimestral(8)).toBe('Aprovado')
+    it('Aprovado quando >= 10', () => {
+      expect(resultadoTrimestral(10)).toBe('Aprovado')
+      expect(resultadoTrimestral(15)).toBe('Aprovado')
     })
-    it('Recurso quando >= 4 e < 5', () => {
-      expect(resultadoTrimestral(4)).toBe('Recurso')
-      expect(resultadoTrimestral(4.5)).toBe('Recurso')
+    it('Recurso quando >= 8 e < 10', () => {
+      expect(resultadoTrimestral(8)).toBe('Recurso')
+      expect(resultadoTrimestral(9.5)).toBe('Recurso')
     })
-    it('Reprovado quando < 4', () => {
-      expect(resultadoTrimestral(3.9)).toBe('Reprovado')
+    it('Reprovado quando < 8', () => {
+      expect(resultadoTrimestral(7.9)).toBe('Reprovado')
       expect(resultadoTrimestral(0)).toBe('Reprovado')
     })
     it('respeita limites customizados', () => {
-      expect(resultadoTrimestral(6, 7, 5)).toBe('Recurso')
-      expect(resultadoTrimestral(7, 7, 5)).toBe('Aprovado')
+      expect(resultadoTrimestral(12, 14, 10)).toBe('Recurso')
+      expect(resultadoTrimestral(15, 14, 10)).toBe('Aprovado')
     })
   })
 
@@ -107,24 +106,24 @@ describe('medias', () => {
     it('retorna false para media null', () => {
       expect(mediaAprovacao(null)).toBe(false)
     })
-    it('retorna true quando media >= 5 (default)', () => {
-      expect(mediaAprovacao(5)).toBe(true)
-      expect(mediaAprovacao(7)).toBe(true)
+    it('retorna true quando media >= 10 (default)', () => {
+      expect(mediaAprovacao(10)).toBe(true)
+      expect(mediaAprovacao(12)).toBe(true)
     })
-    it('retorna false quando media < 5', () => {
-      expect(mediaAprovacao(4.9)).toBe(false)
+    it('retorna false quando media < 10', () => {
+      expect(mediaAprovacao(9.9)).toBe(false)
     })
   })
 
   describe('validarNota', () => {
-    it('nota válida entre 0 e 10', () => {
-      expect(validarNota(5)).toEqual({ valido: true })
+    it('nota válida entre 0 e 20', () => {
+      expect(validarNota(15)).toEqual({ valido: true })
       expect(validarNota(0)).toEqual({ valido: true })
-      expect(validarNota(10)).toEqual({ valido: true })
+      expect(validarNota(20)).toEqual({ valido: true })
     })
     it('nota inválida fora do range', () => {
       expect(validarNota(-1).valido).toBe(false)
-      expect(validarNota(11).valido).toBe(false)
+      expect(validarNota(21).valido).toBe(false)
     })
     it('NaN é inválido', () => {
       expect(validarNota(NaN).valido).toBe(false)

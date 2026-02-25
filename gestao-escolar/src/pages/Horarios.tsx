@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { useHorarios, useTurmas, useDisciplinas, useSalas, useAnosLetivos } from '@/data/escola/queries'
 import { useCreateHorario, useDeleteHorario } from '@/data/escola/mutations'
 import EmptyState from '@/components/EmptyState'
-import PageHeader from '@/components/PageHeader'
+import Modal from '@/components/Modal'
 
 const DIAS = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 
@@ -12,6 +12,7 @@ export default function Horarios() {
     const [searchParams, setSearchParams] = useSearchParams()
     const [turmaId, setTurmaId] = useState('')
     const [formOpen, setFormOpen] = useState(false)
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 
     useEffect(() => {
         if (searchParams.get('acao') === 'novo') setFormOpen(true)
@@ -21,6 +22,15 @@ export default function Horarios() {
         setFormOpen(false)
         if (searchParams.get('acao') === 'novo') setSearchParams({})
     }
+
+    useEffect(() => {
+        if (!formOpen) return
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleCloseForm()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [formOpen])
 
     const { data: horarios = [], isLoading } = useHorarios(turmaId || undefined)
     const { data: turmas = [] } = useTurmas()
@@ -81,16 +91,43 @@ export default function Horarios() {
         )
     }
 
-    const handleDelete = (id: string) => {
-        if (!window.confirm('Eliminar este horário?')) return
-        deleteHorario.mutate(id, {
-            onSuccess: () => toast.success('Horário eliminado.'),
-            onError: (err) => toast.error(err.message),
+    const confirmDelete = () => {
+        if (!itemToDelete) return
+        deleteHorario.mutate(itemToDelete, {
+            onSuccess: () => {
+                toast.success('Horário eliminado.')
+                setItemToDelete(null)
+            },
+            onError: (err) => {
+                toast.error(err.message)
+                setItemToDelete(null)
+            },
         })
+    }
+
+    const handleDelete = (id: string) => {
+        setItemToDelete(id)
     }
 
     return (
         <div>
+            <Modal
+                title="Eliminar horário"
+                open={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                size="sm"
+            >
+                <p className="text-sm text-studio-foreground-light mb-4">
+                    Tem a certeza que deseja eliminar este horário? Esta ação não pode ser desfeita.
+                </p>
+                <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setItemToDelete(null)} className="btn-secondary">Cancelar</button>
+                    <button type="button" onClick={confirmDelete} disabled={deleteHorario.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
+                        {deleteHorario.isPending ? 'A eliminar...' : 'Eliminar'}
+                    </button>
+                </div>
+            </Modal>
+
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div>
                     <h2 className="text-2xl font-semibold text-studio-foreground">Horários</h2>
@@ -101,7 +138,7 @@ export default function Horarios() {
                 <button
                     type="button"
                     onClick={() => { setSearchParams({}); setFormOpen(true) }}
-                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover"
+                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                 >
                     Novo horário
                 </button>
@@ -129,12 +166,16 @@ export default function Horarios() {
                 <div
                     className="fixed inset-0 z-10 flex items-center justify-center bg-black/40"
                     onClick={handleCloseForm}
+                    role="presentation"
                 >
                     <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="horario-form-title"
                         className="bg-studio-bg rounded-lg shadow-lg p-6 w-full max-w-md mx-4 border border-studio-border"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-semibold text-studio-foreground mb-4">
+                        <h3 id="horario-form-title" className="text-lg font-semibold text-studio-foreground mb-4">
                             Novo horário
                         </h3>
                         <form onSubmit={handleSubmit} className="space-y-3">
@@ -241,14 +282,14 @@ export default function Horarios() {
                                 <button
                                     type="button"
                                     onClick={handleCloseForm}
-                                    className="px-4 py-2 text-sm rounded-md text-studio-foreground-light hover:bg-studio-muted"
+                                    className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={createHorario.isPending}
-                                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
                                 >
                                     {createHorario.isPending ? 'A guardar...' : 'Guardar'}
                                 </button>

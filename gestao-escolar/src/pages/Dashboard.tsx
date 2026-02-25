@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { FileText } from 'lucide-react'
+import { FileText, CalendarCheck } from 'lucide-react'
 import {
   useDashboardStats,
   useAlertas,
@@ -8,6 +8,7 @@ import {
   useMeusFilhos,
 } from '@/data/escola/queries'
 import { useResolveAlerta } from '@/data/escola/mutations'
+import PageHeader from '@/components/PageHeader'
 import { StatCardSkeleton } from '@/components/PageSkeleton'
 
 const navCards = [
@@ -22,6 +23,13 @@ const navCards = [
   { to: '/anos-letivos', title: 'Anos letivos', description: 'Gerir anos letivos' },
   { to: '/salas', title: 'Salas', description: 'Gerir salas e capacidade' },
   { to: '/auditoria', title: 'Auditoria', description: 'Log de ações e alertas' },
+  { to: '/perfil', title: 'Perfil', description: 'Os seus dados e alterar senha' },
+  { to: '/meu-boletim', title: 'Meu boletim', description: 'Consultar o seu boletim ou dos seus filhos' },
+  { to: '/presencas', title: 'Presenças', description: 'Resumo de presenças e faltas' },
+  { to: '/arquivos', title: 'Arquivos', description: 'Documentos e ficheiros' },
+  { to: '/financas', title: 'Finanças', description: 'Receitas, despesas e relatórios' },
+  { to: '/modulos', title: 'Módulos', description: 'Instalar e configurar módulos' },
+  { to: '/utilizadores', title: 'Utilizadores', description: 'Gestão de utilizadores (admin)' },
 ]
 
 function StatCard({ label, value, unit }: { label: string; value: string | number | null; unit?: string }) {
@@ -41,9 +49,9 @@ function StatCard({ label, value, unit }: { label: string; value: string | numbe
 function SeveridadeBadge({ severidade }: { severidade: 'info' | 'atencao' | 'critico' }) {
   const classes =
     severidade === 'critico'
-      ? 'bg-red-100 text-red-800'
+      ? 'bg-red-500/15 text-red-600 dark:text-red-400'
       : severidade === 'atencao'
-        ? 'bg-amber-100 text-amber-800'
+        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
         : 'bg-studio-muted text-studio-foreground-light'
   return (
     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${classes}`}>
@@ -72,12 +80,10 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-studio-foreground">Início</h1>
-        <p className="mt-1 text-sm text-studio-foreground-light">
-          Painel de controlo do Sistema de Gestão Escolar.
-        </p>
-      </div>
+      <PageHeader
+        title="Início"
+        subtitle="Painel de controlo do Sistema de Gestão Escolar."
+      />
 
       {/* Meus filhos (papel responsável) */}
       {isResponsavel && meusFilhos.length > 0 && (
@@ -87,19 +93,30 @@ export default function Dashboard() {
           </h2>
           <div className="card p-4">
             <p className="text-sm text-studio-foreground-light mb-3">
-              Aceda ao boletim de cada educando.
+              Aceda ao boletim e presenças de cada educando.
             </p>
             <div className="flex flex-wrap gap-3">
               {meusFilhos.map((f) => (
-                <Link
+                <div
                   key={f.id}
-                  to={`/boletim?alunoId=${encodeURIComponent(f.id)}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-studio-border bg-studio-bg hover:border-studio-brand/50 hover:bg-studio-muted/50 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-lg border border-studio-border bg-studio-bg p-2"
                 >
-                  <FileText className="w-4 h-4 text-studio-brand" />
-                  <span className="font-medium text-studio-foreground">{f.nome}</span>
-                  <span className="text-studio-foreground-lighter text-sm">→ Boletim</span>
-                </Link>
+                  <span className="font-medium text-studio-foreground px-2">{f.nome}</span>
+                  <Link
+                    to={`/boletim?alunoId=${encodeURIComponent(f.id)}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-studio-brand hover:bg-studio-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Boletim
+                  </Link>
+                  <Link
+                    to={`/presencas?alunoId=${encodeURIComponent(f.id)}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-studio-brand hover:bg-studio-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                  >
+                    <CalendarCheck className="w-3.5 h-3.5" />
+                    Presenças
+                  </Link>
+                </div>
               ))}
             </div>
           </div>

@@ -5,11 +5,13 @@ import { useComunicados, useTurmas } from '@/data/escola/queries'
 import { useCreateComunicado, useUpdateComunicado, useDeleteComunicado } from '@/data/escola/mutations'
 import EmptyState from '@/components/EmptyState'
 import PageHeader from '@/components/PageHeader'
+import Modal from '@/components/Modal'
 
 export default function Comunicados() {
     const [searchParams, setSearchParams] = useSearchParams()
     const [formOpen, setFormOpen] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null)
     const { data: comunicados = [], isLoading } = useComunicados()
 
     useEffect(() => {
@@ -62,6 +64,15 @@ export default function Comunicados() {
         if (searchParams.get('acao') === 'novo') setSearchParams({})
     }
 
+    useEffect(() => {
+        if (!formOpen) return
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleCloseForm()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [formOpen])
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (!form.titulo || !form.conteudo) return
@@ -101,12 +112,22 @@ export default function Comunicados() {
         }
     }
 
-    const handleDelete = (id: string) => {
-        if (!window.confirm('Eliminar este comunicado?')) return
-        deleteComunicado.mutate(id, {
-            onSuccess: () => toast.success('Comunicado eliminado.'),
-            onError: (err) => toast.error(err.message),
+    const confirmDelete = () => {
+        if (!itemToDelete) return
+        deleteComunicado.mutate(itemToDelete, {
+            onSuccess: () => {
+                toast.success('Comunicado eliminado.')
+                setItemToDelete(null)
+            },
+            onError: (err) => {
+                toast.error(err.message)
+                setItemToDelete(null)
+            },
         })
+    }
+
+    const handleDelete = (id: string) => {
+        setItemToDelete(id)
     }
 
     const formatDate = (iso: string) => {
@@ -125,6 +146,33 @@ export default function Comunicados() {
 
     return (
         <div>
+            <Modal
+                title="Eliminar comunicado"
+                open={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                size="sm"
+            >
+                <p className="text-sm text-studio-foreground-light mb-4">
+                    Tem a certeza que deseja eliminar este comunicado? Esta ação não pode ser desfeita.
+                </p>
+                <div className="flex justify-end gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setItemToDelete(null)}
+                        className="btn-secondary"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        onClick={confirmDelete}
+                        disabled={deleteComunicado.isPending}
+                        className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                    >
+                        {deleteComunicado.isPending ? 'A eliminar...' : 'Eliminar'}
+                    </button>
+                </div>
+            </Modal>
             <PageHeader
                 title="Comunicados"
                 subtitle="Avisos e comunicados internos da escola."
@@ -132,7 +180,7 @@ export default function Comunicados() {
                     <button
                         type="button"
                         onClick={handleOpenCreate}
-                        className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                        className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                     >
                         Novo comunicado
                     </button>
@@ -144,12 +192,16 @@ export default function Comunicados() {
                 <div
                     className="fixed inset-0 z-10 flex items-center justify-center bg-black/40"
                     onClick={handleCloseForm}
+                    role="presentation"
                 >
                     <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="comunicado-form-title"
                         className="bg-studio-bg rounded-lg shadow-lg p-6 w-full max-w-lg mx-4 border border-studio-border"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-semibold text-studio-foreground mb-4">
+                        <h3 id="comunicado-form-title" className="text-lg font-semibold text-studio-foreground mb-4">
                             {editingId ? 'Editar comunicado' : 'Novo comunicado'}
                         </h3>
                         <form onSubmit={handleSubmit} className="space-y-3">
@@ -214,20 +266,20 @@ export default function Comunicados() {
                                 <button
                                     type="button"
                                     onClick={handleCloseForm}
-                                    className="px-4 py-2 text-sm rounded-md text-studio-foreground-light hover:bg-studio-muted"
+                                    className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={createComunicado.isPending || updateComunicado.isPending}
-                                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
                                 >
                                     {createComunicado.isPending || updateComunicado.isPending
                                         ? 'A guardar...'
                                         : editingId
-                                          ? 'Guardar'
-                                          : 'Publicar'}
+                                            ? 'Guardar'
+                                            : 'Publicar'}
                                 </button>
                             </div>
                         </form>

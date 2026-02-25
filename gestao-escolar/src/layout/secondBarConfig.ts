@@ -45,6 +45,8 @@ export const secondBarConfig: Record<string, SecondBarItem[]> = {
     { label: 'Log', to: '/auditoria' },
     { label: 'Alertas', to: '/auditoria' },
   ],
+  '/financas': [{ label: 'Visão geral', to: '/financas' }],
+  '/modulos': [{ label: 'Módulos', to: '/modulos' }],
   '/perfil': [
     { label: 'Dados', to: '/perfil' },
     { label: 'Alterar senha', to: '/perfil' },

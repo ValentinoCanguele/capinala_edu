@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   return requireAuth(req, res, async (user) => {
     const parsed = notaBatchSchema.safeParse(req.body)
     if (!parsed.success) {
-      const msg = parsed.error.flatten().message
+      const msg = parsed.error.issues[0]?.message ?? 'Dados inválidos'
       return jsonError(res, typeof msg === 'string' ? msg : 'Dados inválidos', 400)
     }
     let { periodoId, bimestre, ...rest } = parsed.data

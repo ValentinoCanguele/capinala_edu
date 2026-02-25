@@ -20,6 +20,7 @@ export default function Arquivos() {
   const [titulo, setTitulo] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 
   const pessoaId = user?.pessoaId ?? ''
   const { data: filhos = [] } = useMeusFilhos()
@@ -59,12 +60,22 @@ export default function Arquivos() {
     reader.readAsDataURL(file)
   }
 
-  const handleDelete = (id: string) => {
-    if (!window.confirm('Eliminar este documento?')) return
-    deleteDoc.mutate(id, {
-      onSuccess: () => toast.success('Documento eliminado.'),
-      onError: (err) => toast.error(err.message),
+  const confirmDelete = () => {
+    if (!itemToDelete) return
+    deleteDoc.mutate(itemToDelete, {
+      onSuccess: () => {
+        toast.success('Documento eliminado.')
+        setItemToDelete(null)
+      },
+      onError: (err) => {
+        toast.error(err.message)
+        setItemToDelete(null)
+      },
     })
+  }
+
+  const handleDelete = (id: string) => {
+    setItemToDelete(id)
   }
 
   const handleDownload = async (id: string, nomeFicheiro: string) => {
@@ -88,6 +99,23 @@ export default function Arquivos() {
 
   return (
     <div>
+      <Modal
+        title="Eliminar documento"
+        open={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        size="sm"
+      >
+        <p className="text-sm text-studio-foreground-light mb-4">
+          Tem a certeza que deseja eliminar este documento? Esta ação não pode ser desfeita.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={() => setItemToDelete(null)} className="btn-secondary">Cancelar</button>
+          <button type="button" onClick={confirmDelete} disabled={deleteDoc.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
+            {deleteDoc.isPending ? 'A eliminar...' : 'Eliminar'}
+          </button>
+        </div>
+      </Modal>
+
       <PageHeader
         title="Arquivos"
         subtitle="Documentos associados à sua conta ou aos seus filhos."

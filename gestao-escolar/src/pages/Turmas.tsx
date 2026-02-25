@@ -22,6 +22,8 @@ export default function Turmas() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [gerirTurmaId, setGerirTurmaId] = useState<string | null>(null)
   const [alunoToAdd, setAlunoToAdd] = useState('')
+  const [alunoToRemove, setAlunoToRemove] = useState<string | null>(null)
+  const [turmaToDelete, setTurmaToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     if (searchParams.get('acao') === 'novo') {
@@ -66,15 +68,25 @@ export default function Turmas() {
     )
   }
 
-  const handleRemoveAluno = (alunoId: string) => {
-    if (!gerirTurmaId || !window.confirm('Remover este aluno da turma?')) return
+  const confirmRemoveAluno = () => {
+    if (!gerirTurmaId || !alunoToRemove) return
     removeMatricula.mutate(
-      { turmaId: gerirTurmaId, alunoId },
+      { turmaId: gerirTurmaId, alunoId: alunoToRemove },
       {
-        onSuccess: () => toast.success('Aluno removido da turma.'),
-        onError: (err) => toast.error(err.message),
+        onSuccess: () => {
+          toast.success('Aluno removido da turma.')
+          setAlunoToRemove(null)
+        },
+        onError: (err) => {
+          toast.error(err.message)
+          setAlunoToRemove(null)
+        },
       }
     )
+  }
+
+  const handleRemoveAluno = (alunoId: string) => {
+    setAlunoToRemove(alunoId)
   }
 
   const editingTurma = editingId
@@ -118,18 +130,62 @@ export default function Turmas() {
     }
   }
 
-  const handleDelete = (id: string) => {
-    if (!window.confirm('Eliminar esta turma?')) return
-    deleteTurma.mutate(id, {
-      onSuccess: () => toast.success('Turma eliminada.'),
-      onError: (err) => toast.error(err.message),
+  const confirmDeleteTurma = () => {
+    if (!turmaToDelete) return
+    deleteTurma.mutate(turmaToDelete, {
+      onSuccess: () => {
+        toast.success('Turma eliminada.')
+        setTurmaToDelete(null)
+      },
+      onError: (err) => {
+        toast.error(err.message)
+        setTurmaToDelete(null)
+      },
     })
+  }
+
+  const handleDelete = (id: string) => {
+    setTurmaToDelete(id)
   }
 
   const isFormLoading = createTurma.isPending || updateTurma.isPending
 
   return (
     <div>
+      <Modal
+        title="Eliminar turma"
+        open={!!turmaToDelete}
+        onClose={() => setTurmaToDelete(null)}
+        size="sm"
+      >
+        <p className="text-sm text-studio-foreground-light mb-4">
+          Tem a certeza que deseja eliminar esta turma? Esta ação não pode ser desfeita e removerá todas as matrículas associadas.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={() => setTurmaToDelete(null)} className="btn-secondary">Cancelar</button>
+          <button type="button" onClick={confirmDeleteTurma} disabled={deleteTurma.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
+            {deleteTurma.isPending ? 'A eliminar...' : 'Eliminar'}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        title="Remover aluno"
+        open={!!alunoToRemove}
+        onClose={() => setAlunoToRemove(null)}
+        size="sm"
+      >
+        <p className="text-sm text-studio-foreground-light mb-4">
+          Tem a certeza que deseja remover este aluno da turma?
+        </p>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={() => setAlunoToRemove(null)} className="btn-secondary">Cancelar</button>
+          <button type="button" onClick={confirmRemoveAluno} disabled={removeMatricula.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
+            {removeMatricula.isPending ? 'A remover...' : 'Remover'}
+          </button>
+        </div>
+      </Modal>
+
       <PageHeader
         title="Turmas"
         subtitle="Listagem e cadastro de turmas e matrículas."
@@ -137,7 +193,7 @@ export default function Turmas() {
           <button
             type="button"
             onClick={handleCreate}
-            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
           >
             Nova turma
           </button>
@@ -191,7 +247,7 @@ export default function Turmas() {
               type="button"
               onClick={handleAddAluno}
               disabled={!alunoToAdd || addMatricula.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white bg-studio-brand hover:bg-studio-brand-hover disabled:opacity-50"
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {addMatricula.isPending ? 'A adicionar...' : 'Adicionar'}
             </button>
@@ -232,7 +288,7 @@ export default function Turmas() {
         {isLoading ? (
           <TableSkeleton rows={6} />
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
             Erro: {(error as Error).message}
           </div>
         ) : turmas.length === 0 ? (

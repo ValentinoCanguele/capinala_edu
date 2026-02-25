@@ -1,6 +1,6 @@
 /**
  * Regras de médias e classificação académica.
- * Escala: 0–10. Aprovação: >= 5 (configurável).
+ * Escala: 0–20. Aprovação: >= 10 (configurável).
  */
 
 /* ── Tipos ── */
@@ -31,20 +31,20 @@ export function calcularMediaPonderada(notas: NotaPonderada[]): number | null {
   return Math.round((somaValorPeso / totalPeso) * 100) / 100
 }
 
-/* ── Classificação Textual (0–10) ── */
+/* ── Classificação Textual (0–20) ── */
 
 export function classificarNota(nota: number | null): Classificacao | null {
   if (nota === null) return null
-  if (nota < 5) return 'Insuficiente'
-  if (nota < 6.5) return 'Suficiente'
-  if (nota < 8) return 'Bom'
-  if (nota < 9.5) return 'Muito Bom'
+  if (nota < 10) return 'Insuficiente'
+  if (nota < 14) return 'Suficiente'
+  if (nota < 18) return 'Bom'
+  if (nota < 20) return 'Muito Bom'
   return 'Excelente'
 }
 
 /* ── Resultado Trimestral ── */
 
-export function resultadoTrimestral(media: number | null, minimaAprovacao = 5, minimaRecurso = 4): ResultadoTrimestral {
+export function resultadoTrimestral(media: number | null, minimaAprovacao = 10, minimaRecurso = 8): ResultadoTrimestral {
   if (media === null) return 'Reprovado'
   if (media >= minimaAprovacao) return 'Aprovado'
   if (media >= minimaRecurso) return 'Recurso'
@@ -60,14 +60,14 @@ export function mediaFinalAnual(mediasTrimestres: (number | null)[]): number | n
 
 /* ── Aprovação (genérica) ── */
 
-export function mediaAprovacao(media: number | null, minima = 5): boolean {
+export function mediaAprovacao(media: number | null, minima = 10): boolean {
   if (media === null) return false
   return media >= minima
 }
 
 /* ── Validar valor de nota ── */
 
-export function validarNota(valor: number, min = 0, max = 10): { valido: boolean; erro?: string } {
+export function validarNota(valor: number, min = 0, max = 20): { valido: boolean; erro?: string } {
   if (typeof valor !== 'number' || isNaN(valor)) {
     return { valido: false, erro: 'Valor da nota inválido' }
   }

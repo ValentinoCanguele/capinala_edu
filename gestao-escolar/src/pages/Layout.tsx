@@ -31,6 +31,8 @@ import {
   User,
   FolderOpen,
   Shield,
+  DollarSign,
+  Puzzle,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
@@ -67,6 +69,8 @@ const navItems: NavItem[] = [
   { to: '/anos-letivos', label: 'Anos letivos', icon: Calendar },
   { to: '/salas', label: 'Salas', icon: DoorOpen },
   { to: '/auditoria', label: 'Auditoria', icon: History, roles: ['admin', 'direcao'] },
+  { to: '/financas', label: 'Finanças', icon: DollarSign, roles: ['admin', 'direcao'] },
+  { to: '/modulos', label: 'Módulos', icon: Puzzle, roles: ['admin'] },
   { to: '/perfil', label: 'Perfil', icon: User },
   { to: '/meu-boletim', label: 'Meu boletim', icon: FileText },
   { to: '/presencas', label: 'Presenças', icon: CalendarCheck },
@@ -111,7 +115,11 @@ function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
                           ? 'Salas'
                           : seg === 'auditoria'
                             ? 'Auditoria'
-                            : seg === 'perfil'
+                            : seg === 'financas'
+                              ? 'Finanças'
+                              : seg === 'modulos'
+                                ? 'Módulos'
+                                : seg === 'perfil'
                               ? 'Perfil'
                               : seg === 'meu-boletim'
                                 ? 'Meu boletim'
@@ -134,6 +142,12 @@ export default function Layout() {
   const { theme, toggleTheme } = useTheme()
   const location = useLocation()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const crumbs = getBreadcrumbs(location.pathname)
+    const pageTitle = crumbs.length > 0 ? crumbs[crumbs.length - 1].label : 'Início'
+    document.title = `${pageTitle} — Gestão Escolar`
+  }, [location.pathname])
   const [logoError, setLogoError] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -273,7 +287,8 @@ export default function Layout() {
             type="button"
             onClick={logout}
             title="Terminar sessão"
-            className={`flex items-center gap-2 w-full rounded-md text-sm text-studio-sidebar-text hover:bg-studio-sidebar-hover transition-colors ${isSidebarNarrow ? 'justify-center px-0 py-2' : 'px-3 py-2'
+            aria-label="Terminar sessão"
+            className={`flex items-center gap-2 w-full rounded-md text-sm text-studio-sidebar-text hover:bg-studio-sidebar-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-sidebar-bg ${isSidebarNarrow ? 'justify-center px-0 py-2' : 'px-3 py-2'
               }`}
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />

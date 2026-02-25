@@ -6,7 +6,6 @@ import { useResolveAlerta } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
 import { TableSkeleton } from '@/components/PageSkeleton'
 import EmptyState from '@/components/EmptyState'
-import PageHeader from '@/components/PageHeader'
 
 const ENTIDADES = [
   { value: '', label: 'Todas' },
@@ -135,7 +134,7 @@ export default function Auditoria() {
                       type="button"
                       onClick={() => handleResolve(a.id)}
                       disabled={resolveAlerta.isPending}
-                      className="flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-md bg-studio-brand text-white hover:bg-studio-brand-hover disabled:opacity-50"
+                      className="flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-md bg-studio-brand text-white hover:bg-studio-brand-hover disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1"
                     >
                       Resolver
                     </button>
@@ -170,7 +169,7 @@ export default function Auditoria() {
         {logLoading ? (
           <TableSkeleton rows={10} />
         ) : logError ? (
-          <div className="p-8 text-center text-red-600" role="alert">
+          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
             {(logError as Error).message}
           </div>
         ) : log.length === 0 ? (

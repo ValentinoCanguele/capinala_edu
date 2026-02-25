@@ -140,7 +140,7 @@ export default function MeuBoletim() {
                   >
                     <span className="text-studio-foreground">{d.nome}</span>
                     <span className="text-studio-foreground-light">
-                      Média: {d.media != null ? d.media.toFixed(2) : '-'}
+                      Média: {d.mediaFinal != null ? d.mediaFinal.toFixed(2) : '-'}
                       {d.aprovado != null && (
                         <span className={d.aprovado ? ' text-green-600' : ' text-red-600'}>
                           {d.aprovado ? ' (Aprovado)' : ' (Reprovado)'}

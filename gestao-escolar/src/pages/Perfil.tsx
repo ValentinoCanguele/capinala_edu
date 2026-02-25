@@ -8,7 +8,7 @@ import {
   useRemoveFotoPerfil,
 } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
-import { PageSkeleton } from '@/components/PageSkeleton'
+import PageSkeleton from '@/components/PageSkeleton'
 import { User } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
