@@ -71,6 +71,8 @@ const segmentLabels: Record<string, string> = {
   modulos: 'Módulos',
   perfil: 'Perfil',
   'meu-boletim': 'Meu boletim',
+  'meu-perfil': 'Meu perfil',
+  'aulas-hoje': 'Aulas de hoje',
   presencas: 'Presenças',
   'meus-filhos': 'Meus filhos',
   arquivos: 'Arquivos',
@@ -160,6 +162,8 @@ export const secondBarConfig: Record<string, SecondBarItem[]> = {
     { label: 'Alterar senha', to: '/perfil' },
   ],
   '/meu-boletim': [{ label: 'Meu boletim', to: '/meu-boletim' }],
+  '/meu-perfil': [{ label: 'Meu perfil', to: '/meu-perfil' }],
+  '/aulas-hoje': [{ label: 'Aulas de hoje', to: '/aulas-hoje' }],
   '/presencas': [{ label: 'Resumo', to: '/presencas' }],
   '/meus-filhos': [{ label: 'Lista', to: '/meus-filhos' }],
   '/arquivos': [

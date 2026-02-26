@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canManageHorarios } from '@/lib/permissoes'
 import { useHorarios, useTurmas, useDisciplinas, useSalas, useAnosLetivos } from '@/data/escola/queries'
 import { useCreateHorario, useDeleteHorario } from '@/data/escola/mutations'
 import EmptyState from '@/components/EmptyState'
@@ -9,6 +11,7 @@ import Modal from '@/components/Modal'
 const DIAS = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 
 export default function Horarios() {
+    const { user } = useAuth()
     const [searchParams, setSearchParams] = useSearchParams()
     const [turmaId, setTurmaId] = useState('')
     const [formOpen, setFormOpen] = useState(false)
@@ -135,6 +138,7 @@ export default function Horarios() {
                         Gestão de horários por turma. Conflitos de professor/sala são validados automaticamente.
                     </p>
                 </div>
+                {canManageHorarios(user?.papel) && (
                 <button
                     type="button"
                     onClick={() => { setSearchParams({}); setFormOpen(true) }}
@@ -142,6 +146,7 @@ export default function Horarios() {
                 >
                     Novo horário
                 </button>
+                )}
             </div>
 
             {/* Filtro por turma */}
@@ -306,15 +311,17 @@ export default function Horarios() {
                 ) : filtered.length === 0 ? (
                     <EmptyState
                         title="Nenhum horário registado"
-                        description={'Clique em "Novo horário" para começar.'}
+                        description={canManageHorarios(user?.papel) ? 'Clique em "Novo horário" para começar.' : 'Ainda não há horários registados.'}
                         action={
-                            <button
-                                type="button"
-                                onClick={() => { setSearchParams({}); setFormOpen(true) }}
-                                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-                            >
-                                Novo horário
-                            </button>
+                            canManageHorarios(user?.papel) ? (
+                                <button
+                                    type="button"
+                                    onClick={() => { setSearchParams({}); setFormOpen(true) }}
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                                >
+                                    Novo horário
+                                </button>
+                            ) : undefined
                         }
                     />
                 ) : (
@@ -334,7 +341,9 @@ export default function Horarios() {
                                             <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Turma</th>
                                             <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Professor</th>
                                             <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Sala</th>
+                                            {canManageHorarios(user?.papel) && (
                                             <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
+                                            )}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-studio-border">
@@ -347,6 +356,7 @@ export default function Horarios() {
                                                 <td className="px-4 py-2 text-sm text-studio-foreground-light">{h.turmaNome}</td>
                                                 <td className="px-4 py-2 text-sm text-studio-foreground-light">{h.professorNome ?? '—'}</td>
                                                 <td className="px-4 py-2 text-sm text-studio-foreground-light">{h.salaNome ?? '—'}</td>
+                                                {canManageHorarios(user?.papel) && (
                                                 <td className="px-4 py-2 text-right">
                                                     <button
                                                         type="button"
@@ -356,6 +366,7 @@ export default function Horarios() {
                                                         Eliminar
                                                     </button>
                                                 </td>
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>

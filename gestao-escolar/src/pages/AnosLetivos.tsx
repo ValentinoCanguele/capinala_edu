@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { isAdmin } from '@/lib/permissoes'
 import { useAnosLetivos } from '@/data/escola/queries'
 import {
   useCreateAnoLetivo,
@@ -91,6 +93,7 @@ function AnoLetivoForm({
 }
 
 export default function AnosLetivos() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -167,13 +170,15 @@ export default function AnosLetivos() {
         title="Anos letivos"
         subtitle="Gerir anos letivos e períodos."
         actions={
-          <button
-            type="button"
-            onClick={handleCreate}
-            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-          >
-            Novo ano letivo
-          </button>
+          isAdmin(user?.papel) ? (
+            <button
+              type="button"
+              onClick={handleCreate}
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            >
+              Novo ano letivo
+            </button>
+          ) : undefined
         }
       />
 
@@ -219,8 +224,8 @@ export default function AnosLetivos() {
         ) : filtered.length === 0 ? (
           <EmptyState
             title={filter ? 'Nenhum ano letivo encontrado' : 'Nenhum ano letivo registado'}
-            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em "Novo ano letivo" para começar.'}
-            action={!filter ? (
+            description={filter ? 'Tente outro termo de pesquisa.' : (isAdmin(user?.papel) ? 'Clique em "Novo ano letivo" para começar.' : 'Ainda não há anos letivos.')}
+            action={!filter && isAdmin(user?.papel) ? (
               <button
                 type="button"
                 onClick={handleCreate}

@@ -15,7 +15,10 @@ interface AlunosListProps {
   onFilterChange: (value: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onCreate: () => void
+  onCreate?: () => void
+  /** Esconder botão Editar e opção Eliminar quando false (ex.: professor só vê lista). */
+  canEdit?: boolean
+  canDelete?: boolean
   isLoading: boolean
   error: Error | null
 }
@@ -27,6 +30,8 @@ export default function AlunosList({
   onEdit,
   onDelete,
   onCreate,
+  canEdit = true,
+  canDelete = true,
   isLoading,
   error,
 }: AlunosListProps) {
@@ -87,7 +92,7 @@ export default function AlunosList({
             title={hasFilter ? 'Nenhum aluno encontrado' : 'Nenhum aluno registado'}
             description={hasFilter ? 'Tente outro termo de pesquisa ou verifique a ortografia.' : 'Comece por adicionar o primeiro estudante à plataforma.'}
             icon={<UserSearch className="h-12 w-12" />}
-            actionLabel={!hasFilter ? 'Registar Novo Aluno' : undefined}
+            actionLabel={!hasFilter && onCreate ? 'Registar Novo Aluno' : undefined}
             onAction={onCreate}
           />
         ) : (
@@ -118,18 +123,19 @@ export default function AlunosList({
                   <th scope="col" className="px-5 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
                     Nascimento
                   </th>
-                  <th scope="col" className="px-5 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
-                    Gestão
-                  </th>
+                  {(canEdit || canDelete) && (
+                    <th scope="col" className="px-5 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
+                      Gestão
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/30">
                 {alunos.map((a, index) => {
-                  const menuItems: MenuItem[] = [
-                    { label: 'Editar Perfil', icon: <Edit2 className="w-4 h-4" />, onClick: () => onEdit(a.id) },
-                    { separator: true },
-                    { label: 'Eliminar Registo', icon: <Trash2 className="w-4 h-4" />, onClick: () => onDelete(a.id), danger: true },
-                  ]
+                  const menuItems: MenuItem[] = []
+                  if (canEdit) menuItems.push({ label: 'Editar Perfil', icon: <Edit2 className="w-4 h-4" />, onClick: () => onEdit(a.id) })
+                  if (canEdit && canDelete) menuItems.push({ separator: true })
+                  if (canDelete) menuItems.push({ label: 'Eliminar Registo', icon: <Trash2 className="w-4 h-4" />, onClick: () => onDelete(a.id), danger: true })
 
                   const isSelected = selectedIds.has(a.id)
 
@@ -172,23 +178,29 @@ export default function AlunosList({
                           <span>{a.dataNascimento}</span>
                         </div>
                       </td>
+                      {(canEdit || canDelete) && (
                       <td className="px-5 py-4 whitespace-nowrap text-right">
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onEdit(a.id)}
-                            className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity text-studio-muted hover:text-studio-brand"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </Button>
-                          <ContextMenu items={menuItems}>
-                            <Button variant="ghost" size="icon" className="w-8 h-8 text-studio-muted hover:text-studio-brand">
-                              <MoreVertical className="h-4 w-4" />
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onEdit(a.id)}
+                              className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity text-studio-muted hover:text-studio-brand"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
                             </Button>
-                          </ContextMenu>
+                          )}
+                          {menuItems.length > 0 && (
+                            <ContextMenu items={menuItems}>
+                              <Button variant="ghost" size="icon" className="w-8 h-8 text-studio-muted hover:text-studio-brand">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </ContextMenu>
+                          )}
                         </div>
                       </td>
+                      )}
                     </tr>
                   )
                 })}
@@ -213,10 +225,12 @@ export default function AlunosList({
               <UserMinus className="w-4 h-4 mr-2" />
               Suspender
             </Button>
-            <Button size="sm" variant="ghost" className="text-white hover:bg-red-500/20 hover:text-red-400 h-9 px-4">
-              <Trash className="w-4 h-4 mr-2" />
-              Eliminar {selectedIds.size > 1 ? 'Múltiplos' : ''}
-            </Button>
+            {canDelete && (
+              <Button size="sm" variant="ghost" className="text-white hover:bg-red-500/20 hover:text-red-400 h-9 px-4">
+                <Trash className="w-4 h-4 mr-2" />
+                Eliminar {selectedIds.size > 1 ? 'Múltiplos' : ''}
+              </Button>
+            )}
             <div className="w-px h-6 bg-white/10 mx-2" />
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} className="text-white/60 hover:text-white h-9">
               Desmarcar

@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canManageSalas } from '@/lib/permissoes'
 import { useSalas, useSalasAudit, useAnosLetivos, useInventarioSala } from '@/data/escola/queries'
 import {
   useCreateSala,
@@ -66,6 +68,7 @@ const EQUIPAMENTOS_OPCOES = [
 ]
 
 export default function Salas() {
+  const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
   const [logModalOpen, setLogModalOpen] = useState(false)
   const [invModalOpen, setInvModalOpen] = useState(false)
@@ -199,13 +202,15 @@ export default function Salas() {
             >
               {view === 'audit' ? 'Vista Inventário' : 'Auditoria de Uso'}
             </Button>
-            <Button
-              variant="primary"
-              onClick={() => { setEditingSala(null); setModalOpen(true); }}
-              icon={<Plus className="w-4 h-4" />}
-            >
-              Novo Ativo
-            </Button>
+            {canManageSalas(user?.papel) && (
+              <Button
+                variant="primary"
+                onClick={() => { setEditingSala(null); setModalOpen(true); }}
+                icon={<Plus className="w-4 h-4" />}
+              >
+                Novo Ativo
+              </Button>
+            )}
           </div>
         }
       />

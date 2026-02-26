@@ -17,7 +17,10 @@ interface TurmasListProps {
   onGerirAlunos: (turmaId: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onCreate: () => void
+  onCreate?: () => void
+  canEdit?: boolean
+  canDelete?: boolean
+  canGerirAlunos?: boolean
   isLoading: boolean
   error: Error | null
 }
@@ -31,11 +34,15 @@ export default function TurmasList({
   onEdit,
   onDelete,
   onCreate,
+  canEdit = true,
+  canDelete = true,
+  canGerirAlunos = true,
   isLoading,
   error,
 }: TurmasListProps) {
   const hasFilter = filter.length > 0
   const total = totalCount ?? turmas.length
+  const showActions = canEdit || canDelete || canGerirAlunos
 
   return (
     <>
@@ -72,8 +79,8 @@ export default function TurmasList({
           title={hasFilter ? 'Nenhuma turma encontrada' : 'Nenhuma turma registada'}
           description={hasFilter ? 'Tente outro termo de pesquisa.' : 'As turmas são o eixo central da organização escolar. Crie a primeira para começar.'}
           icon={<LayoutGrid className="h-12 w-12" />}
-          actionLabel={hasFilter ? undefined : 'Criar Nova Turma'}
-          onAction={hasFilter ? undefined : onCreate}
+          actionLabel={hasFilter || !onCreate ? undefined : 'Criar Nova Turma'}
+          onAction={hasFilter || !onCreate ? undefined : onCreate}
         />
       ) : (
         <table className="min-w-full divide-y divide-studio-border/50" aria-label="Lista de turmas">
@@ -88,19 +95,21 @@ export default function TurmasList({
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-studio-foreground-light uppercase tracking-wider">
                 Lotação Atual
               </th>
-              <th scope="col" className="px-5 py-3 text-right text-xs font-semibold text-studio-foreground-light uppercase tracking-wider">
-                Ações
-              </th>
+              {showActions && (
+                <th scope="col" className="px-5 py-3 text-right text-xs font-semibold text-studio-foreground-light uppercase tracking-wider">
+                  Ações
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-studio-border/30">
             {turmas.map((t) => {
-              const menuItems: MenuItem[] = [
-                { label: 'Gerir Estudantes', icon: <Users className="w-4 h-4" />, onClick: () => onGerirAlunos(t.id) },
-                { label: 'Editar Configurações', icon: <Edit2 className="w-4 h-4" />, onClick: () => onEdit(t.id) },
-                { separator: true },
-                { label: 'Remover Turma', icon: <Trash2 className="w-4 h-4" />, onClick: () => onDelete(t.id), danger: true },
-              ]
+              const menuItems: MenuItem[] = []
+              if (canGerirAlunos) menuItems.push({ label: 'Gerir Estudantes', icon: <Users className="w-4 h-4" />, onClick: () => onGerirAlunos(t.id) })
+              if (canGerirAlunos && (canEdit || canDelete)) menuItems.push({ separator: true })
+              if (canEdit) menuItems.push({ label: 'Editar Configurações', icon: <Edit2 className="w-4 h-4" />, onClick: () => onEdit(t.id) })
+              if (canEdit && canDelete) menuItems.push({ separator: true })
+              if (canDelete) menuItems.push({ label: 'Remover Turma', icon: <Trash2 className="w-4 h-4" />, onClick: () => onDelete(t.id), danger: true })
 
               return (
                 <tr key={t.id} className="group hover:bg-studio-muted/20 transition-all duration-200">
@@ -121,13 +130,17 @@ export default function TurmasList({
                       {t.alunoIds?.length ?? 0} alunos
                     </span>
                   </td>
+                  {showActions && (
                   <td className="px-5 py-4 whitespace-nowrap text-right">
-                    <ContextMenu items={menuItems}>
-                      <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </ContextMenu>
+                    {menuItems.length > 0 ? (
+                      <ContextMenu items={menuItems}>
+                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </ContextMenu>
+                    ) : null}
                   </td>
+                  )}
                 </tr>
               )
             })}

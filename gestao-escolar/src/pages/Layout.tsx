@@ -5,7 +5,7 @@
  * - Second Bar: tabs contextuais por rota (ex: /alunos → Lista | Adicionar).
  * Variáveis CSS --studio-* em theme/variables.css (dark/light).
  */
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import {
   Home,
@@ -48,7 +48,10 @@ import {
   isSecondBarItemActive,
   getActiveSecondBarLabel,
 } from '@/layout/secondBarConfig'
-import { navItemsConfig, getBreadcrumbs } from '@/config/routes'
+import { getSidebarGroupsForRole } from '@/layout/sidebarConfig'
+import { getContextBarItems } from '@/layout/contextBarConfig'
+import { filterSecondBarByRole } from '@/layout/secondBarPermissions'
+import { getBreadcrumbs } from '@/config/routes'
 
 const SIDEBAR_COLLAPSED_KEY = 'gestao-escolar-sidebar-collapsed'
 const SIDEBAR_WIDTH_EXPANDED = 'w-56'
@@ -82,25 +85,29 @@ const pathToIcon: Record<string, typeof Home> = {
   '/meus-filhos': Users,
   '/arquivos': FolderOpen,
   '/utilizadores': Shield,
+  '/meu-perfil': User,
+  '/aulas-hoje': CalendarCheck,
 }
 
-type NavItem = {
-  to: string
-  label: string
-  icon: typeof Home
-  roles?: readonly ('admin' | 'direcao' | 'responsavel')[]
-}
+const CONTEXT_BAR_WIDTH = 'w-44'
 
-const navItems: NavItem[] = navItemsConfig.map((item) => ({
-  ...item,
-  icon: pathToIcon[item.to] ?? Home,
-}))
-
-function getVisibleNavItems(papel: string | undefined) {
-  return navItems.filter((item) => {
-    if (!item.roles) return true
-    return papel && item.roles.includes(papel as 'admin' | 'direcao' | 'responsavel')
-  })
+/** Ícones para itens da barra contextual (por path ou path+query). */
+const contextBarPathToIcon: Record<string, typeof Home> = {
+  '/alunos': Users,
+  '/boletim': FileText,
+  '/perfil': User,
+  '/meu-perfil': User,
+  '/meu-boletim': FileText,
+  '/aulas-hoje': CalendarCheck,
+  '/horarios': Clock,
+  '/comunicados': Megaphone,
+  '/meus-filhos': Users,
+  '/financas/dashboard': TrendingUp,
+  '/financas/categorias': BookMarked,
+  '/financas/lancamentos': ClipboardList,
+  '/financas/parcelas': FileText,
+  '/financas/relatorios': FileText,
+  '/financas/configuracao': Settings2,
 }
 
 export default function Layout() {
@@ -143,10 +150,20 @@ export default function Layout() {
   const isSidebarHoverExpanded = isCollapsed && hoverExpanded
 
   const breadcrumbs = getBreadcrumbs(location.pathname)
-  const secondBarItems = getSecondBarItems(location.pathname)
+  const secondBarItems = useMemo(
+    () =>
+      filterSecondBarByRole(
+        getSecondBarItems(location.pathname),
+        location.pathname,
+        user?.papel
+      ),
+    [location.pathname, user?.papel]
+  )
   const hasSecondBar = secondBarItems.length > 0
   const currentSearch = location.search
   const activeSecondBarLabel = getActiveSecondBarLabel(location.pathname, currentSearch)
+  const contextBarItems = getContextBarItems(location.pathname, user?.papel)
+  const hasContextBar = contextBarItems.length > 0
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
 
@@ -229,28 +246,40 @@ export default function Layout() {
           )}
         </div>
 
-        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {getVisibleNavItems(user?.papel).map(({ to, label, icon: Icon }) => {
-            const isActive =
-              to === '/'
-                ? location.pathname === '/'
-                : location.pathname.startsWith(to)
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                title={isSidebarNarrow ? label : undefined}
-                className={`flex items-center gap-2 rounded-md text-sm font-medium transition-colors ${isSidebarNarrow ? 'justify-center px-0 py-2.5' : 'px-3 py-2'
-                  } ${isActive
-                    ? 'bg-studio-sidebar-active text-studio-brand'
-                    : 'text-studio-sidebar-text hover:bg-studio-sidebar-hover hover:text-studio-sidebar-text'
-                  }`}
-              >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {!isSidebarNarrow && <span className="truncate">{label}</span>}
-              </NavLink>
-            )
-          })}
+        <nav className="flex-1 p-2 overflow-y-auto" aria-label="Menu principal">
+          {getSidebarGroupsForRole(user?.papel).map((group) => (
+            <div key={group.id} className="space-y-0.5">
+              {!isSidebarNarrow && (
+                <div className="px-3 pt-3 pb-1.5">
+                  <span className="text-xs font-medium uppercase tracking-wider text-studio-sidebar-text-muted">
+                    {group.title}
+                  </span>
+                </div>
+              )}
+              {group.items.map(({ to, label }) => {
+                const Icon = pathToIcon[to] ?? Home
+                const isActive =
+                  to === '/'
+                    ? location.pathname === '/'
+                    : location.pathname.startsWith(to)
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    title={isSidebarNarrow ? label : undefined}
+                    className={`flex items-center gap-2 rounded-md text-sm font-medium transition-colors ${isSidebarNarrow ? 'justify-center px-0 py-2.5' : 'px-3 py-2'
+                      } ${isActive
+                        ? 'bg-studio-sidebar-active text-studio-brand'
+                        : 'text-studio-sidebar-text hover:bg-studio-sidebar-hover hover:text-studio-sidebar-text'
+                      } focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-sidebar-bg`}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    {!isSidebarNarrow && <span className="truncate">{label}</span>}
+                  </NavLink>
+                )
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="p-3 border-t border-studio-border space-y-1">
@@ -292,6 +321,40 @@ export default function Layout() {
           )}
         </div>
       </aside>
+
+      {/* Barra contextual (entre sidebar e main): links do módulo/contexto atual */}
+      {hasContextBar && (
+        <aside
+          className={`${CONTEXT_BAR_WIDTH} flex-shrink-0 bg-studio-muted/30 border-r border-studio-border flex flex-col py-3 px-2 overflow-y-auto transition-[width] duration-300`}
+          aria-label="Ações do contexto"
+        >
+          <nav className="flex flex-col gap-0.5">
+            {contextBarItems.map(({ to, label }) => {
+              const itemPath = to.split('?')[0]
+              const itemQuery = to.includes('?') ? to.slice(to.indexOf('?')) : ''
+              const isActive =
+                to === '/'
+                  ? location.pathname === '/' && !location.search
+                  : location.pathname === itemPath && (itemQuery ? location.search === itemQuery : !location.search)
+              const ContextIcon = contextBarPathToIcon[itemPath] ?? pathToIcon[itemPath] ?? Home
+              return (
+                <NavLink
+                  key={`${to}-${label}`}
+                  to={to}
+                  className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-studio-sidebar-active text-studio-brand'
+                      : 'text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground'
+                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2`}
+                >
+                  <ContextIcon className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{label}</span>
+                </NavLink>
+              )
+            })}
+          </nav>
+        </aside>
+      )}
 
       {/* Área principal */}
       <main id="main-content" className="flex-1 flex flex-col min-w-0" tabIndex={-1}>
@@ -370,71 +433,135 @@ export default function Layout() {
 
           <div className="flex-1 md:hidden" />
 
-          {/* Notificações */}
-          <div className="relative">
+          {/* Zona direita: notificações + ajuda + tema (agrupados) | utilizador (destacado) */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-0.5 sm:gap-1" role="group" aria-label="Ações globais">
+              {/* Notificações */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => { setNotificationsOpen((o) => !o); setUserMenuOpen(false) }}
+                  className="relative p-2 rounded-md text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
+                  title="Notificações"
+                  aria-label="Notificações"
+                  aria-expanded={notificationsOpen}
+                  aria-haspopup="true"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute top-2 right-2 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-studio-bg"></span>
+                  </span>
+                </button>
+                {notificationsOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" aria-hidden onClick={() => setNotificationsOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 py-2 w-72 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
+                      <div className="px-3 py-2 text-xs font-medium text-studio-foreground-lighter border-b border-studio-border">
+                        Notificações
+                      </div>
+                      <div className="px-3 py-6 flex flex-col items-center gap-2 text-sm text-studio-foreground-light">
+                        <Bell className="w-8 h-8 text-studio-foreground-lighter/60" strokeWidth={1.25} />
+                        <span>Sem notificações novas.</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              {/* Ajuda */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => { setHelpOpen((o) => !o); setUserMenuOpen(false); setNotificationsOpen(false) }}
+                  className="p-2 rounded-md text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
+                  title="Ajuda"
+                  aria-label="Ajuda"
+                  aria-expanded={helpOpen}
+                  aria-haspopup="true"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+                {helpOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" aria-hidden onClick={() => setHelpOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 py-1 w-48 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
+                      <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
+                        Ajuda
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setHelpOpen(false); /* TODO: link documentação */ }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                      >
+                        Documentação
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setHelpOpen(false); setAcercaOpen(true) }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                      >
+                        Acerca
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            {/* Tema */}
             <button
               type="button"
-              onClick={() => { setNotificationsOpen((o) => !o); setUserMenuOpen(false) }}
-              className="relative p-2 rounded-md text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
-              title="Notificações"
-              aria-label="Notificações"
-              aria-expanded={notificationsOpen}
-              aria-haspopup="true"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
+              title={theme === 'dark' ? 'Mudar para claro' : 'Mudar para escuro'}
             >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-2 right-2 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-studio-bg"></span>
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">
+                {theme === 'dark' ? 'Claro' : 'Escuro'}
               </span>
             </button>
-            {notificationsOpen && (
-              <>
-                <div className="fixed inset-0 z-10" aria-hidden onClick={() => setNotificationsOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 py-2 w-72 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
-                  <div className="px-3 py-2 text-xs font-medium text-studio-foreground-lighter border-b border-studio-border">
-                    Notificações
-                  </div>
-                  <div className="px-3 py-6 flex flex-col items-center gap-2 text-sm text-studio-foreground-light">
-                    <Bell className="w-8 h-8 text-studio-foreground-lighter/60" strokeWidth={1.25} />
-                    <span>Sem notificações novas.</span>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
-          {/* Ajuda */}
-          <div className="relative">
+          {/* Menu utilizador (ligeiramente destacado) */}
+          <div className="relative pl-1 sm:pl-2 border-l border-studio-border">
             <button
               type="button"
-              onClick={() => { setHelpOpen((o) => !o); setUserMenuOpen(false); setNotificationsOpen(false) }}
-              className="p-2 rounded-md text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
-              title="Ajuda"
-              aria-label="Ajuda"
-              aria-expanded={helpOpen}
+              onClick={() => { setUserMenuOpen((o) => !o); setNotificationsOpen(false); setHelpOpen(false) }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-studio-foreground bg-studio-muted/60 hover:bg-studio-muted border border-studio-border/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
+              aria-expanded={userMenuOpen}
               aria-haspopup="true"
             >
-              <HelpCircle className="w-4 h-4" />
+              <span className="font-medium">{user?.papel}</span>
+              <ChevronDown className={`w-4 h-4 text-studio-foreground-lighter transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
             </button>
-            {helpOpen && (
+            {userMenuOpen && (
               <>
-                <div className="fixed inset-0 z-10" aria-hidden onClick={() => setHelpOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 py-1 w-48 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
+                <div
+                  className="fixed inset-0 z-10"
+                  aria-hidden
+                  onClick={() => setUserMenuOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 py-1 w-56 rounded-xl border border-studio-border bg-studio-bg shadow-glass z-20 overflow-hidden">
                   <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
-                    Ajuda
+                    Sessão
+                  </div>
+                  <div className="px-3 py-2 text-sm text-studio-foreground">
+                    {user?.papel}
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setHelpOpen(false); /* TODO: link documentação */ }}
+                    onClick={() => {
+                      setUserMenuOpen(false)
+                      logout()
+                    }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                    aria-label="Terminar sessão"
                   >
-                    Documentação
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setHelpOpen(false); setAcercaOpen(true) }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
-                  >
-                    Acerca
+                    <LogOut className="w-4 h-4" />
+                    Terminar sessão
                   </button>
                 </div>
               </>
@@ -506,66 +633,9 @@ export default function Layout() {
               </div>
             </div>
           )}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors"
-            title={theme === 'dark' ? 'Mudar para claro' : 'Mudar para escuro'}
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
-            <span className="hidden sm:inline">
-              {theme === 'dark' ? 'Claro' : 'Escuro'}
-            </span>
-          </button>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => { setUserMenuOpen((o) => !o); setNotificationsOpen(false); setHelpOpen(false) }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors"
-              aria-expanded={userMenuOpen}
-              aria-haspopup="true"
-            >
-              <span className="font-medium">{user?.papel}</span>
-              <ChevronDown className={`w-4 h-4 text-studio-foreground-lighter transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {userMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  aria-hidden
-                  onClick={() => setUserMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-2 py-1 w-56 rounded-xl border border-studio-border bg-studio-bg shadow-glass z-20 overflow-hidden">
-                  <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
-                    Sessão
-                  </div>
-                  <div className="px-3 py-2 text-sm text-studio-foreground">
-                    {user?.papel}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUserMenuOpen(false)
-                      logout()
-                    }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
-                    aria-label="Terminar sessão"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Terminar sessão
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
         </header>
 
-        {/* Second Bar: tabs contextuais da rota ativa (ex: /alunos → Lista | Adicionar) */}
+        {/* Second Bar: tabs contextuais da rota ativa; padding alinhado ao header (px-4 sm:px-6) */}
         {hasSecondBar && (
           <div
             className="flex-shrink-0 min-h-[2.75rem] border-b border-studio-border px-4 sm:px-6 flex items-stretch bg-studio-muted/50"

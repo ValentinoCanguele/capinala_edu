@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAuth } from '@/contexts/AuthContext'
+import { canManageDisciplinas } from '@/lib/permissoes'
 import { useDisciplinas } from '@/data/escola/queries'
 import {
   useCreateDisciplina,
@@ -182,13 +184,15 @@ export default function Disciplinas() {
         title="Disciplinas"
         subtitle="Gerir disciplinas da escola."
         actions={
-          <button
-            type="button"
-            onClick={handleCreate}
-            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-          >
-            Nova disciplina
-          </button>
+          canManageDisciplinas(user?.papel) ? (
+            <button
+              type="button"
+              onClick={handleCreate}
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            >
+              Nova disciplina
+            </button>
+          ) : undefined
         }
       />
 
@@ -253,9 +257,11 @@ export default function Disciplinas() {
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Nome
                 </th>
+                {canManageDisciplinas(user?.papel) && (
                 <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
                   Ações
                 </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-studio-border">
@@ -264,6 +270,7 @@ export default function Disciplinas() {
                   <td className="px-4 py-3 text-sm text-studio-foreground">
                     {d.nome}
                   </td>
+                  {canManageDisciplinas(user?.papel) && (
                   <td className="px-4 py-3 text-right text-sm">
                     <button
                       type="button"
@@ -280,6 +287,7 @@ export default function Disciplinas() {
                       Eliminar
                     </button>
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>

@@ -28,6 +28,7 @@ const Salas = lazy(() => import('./pages/Salas'))
 const Auditoria = lazy(() => import('./pages/Auditoria'))
 const Perfil = lazy(() => import('./pages/Perfil'))
 const MeuBoletim = lazy(() => import('./pages/MeuBoletim'))
+const AulasHoje = lazy(() => import('./pages/AulasHoje'))
 const Presencas = lazy(() => import('./pages/Presencas'))
 const MeusFilhos = lazy(() => import('./pages/MeusFilhos'))
 const Arquivos = lazy(() => import('./pages/Arquivos'))
@@ -347,6 +348,22 @@ export default function App() {
             element={
               <Suspense fallback={<PageLoadFallback />}>
                 <Perfil />
+              </Suspense>
+            }
+          />
+          <Route
+            path="meu-perfil"
+            element={
+              <Suspense fallback={<PageLoadFallback />}>
+                <Perfil />
+              </Suspense>
+            }
+          />
+          <Route
+            path="aulas-hoje"
+            element={
+              <Suspense fallback={<PageLoadFallback />}>
+                <AulasHoje />
               </Suspense>
             }
           />

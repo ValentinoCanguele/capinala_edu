@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAuth } from '@/contexts/AuthContext'
+import { canCreateTurma, canDeleteTurma, canManageTurmaAlunos } from '@/lib/permissoes'
 import { useTurmas } from '@/data/escola/queries'
 import {
   useCreateTurma,
@@ -16,6 +18,7 @@ import { Button } from '@/components/shared/Button'
 import { PlusCircle } from 'lucide-react'
 
 export default function Turmas() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -137,12 +140,14 @@ export default function Turmas() {
         title="Turmas"
         subtitle="Listagem e cadastro de turmas e matrículas."
         actions={
-          <Button
-            onClick={handleCreate}
-            icon={<PlusCircle className="w-4 h-4" />}
-          >
-            Nova Turma
-          </Button>
+          canCreateTurma(user?.papel) ? (
+            <Button
+              onClick={handleCreate}
+              icon={<PlusCircle className="w-4 h-4" />}
+            >
+              Nova Turma
+            </Button>
+          ) : undefined
         }
       />
 
@@ -181,7 +186,10 @@ export default function Turmas() {
           setFormOpen(true)
         }}
         onDelete={setTurmaToDelete}
-        onCreate={handleCreate}
+        onCreate={canCreateTurma(user?.papel) ? handleCreate : undefined}
+        canEdit={canCreateTurma(user?.papel)}
+        canDelete={canDeleteTurma(user?.papel)}
+        canGerirAlunos={canManageTurmaAlunos(user?.papel)}
         isLoading={isLoading}
         error={error ?? null}
         totalCount={turmas.length}

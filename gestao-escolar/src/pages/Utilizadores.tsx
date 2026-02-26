@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useAuth } from '@/contexts/AuthContext'
+import { canGerirUtilizadores } from '@/lib/permissoes'
 import {
   useUsuarios,
   useUsuario,
@@ -203,17 +204,19 @@ export default function Utilizadores() {
         title="Utilizadores"
         subtitle="Gestão de utilizadores e permissões."
         actions={
-          <button
-            type="button"
-            onClick={() => {
-              setEditingUserId(null)
-              setForm({ nome: '', email: '', papel: 'professor', escolaId: escolaId ?? '', password: '', bi: '', telefone: '' })
-              setFormOpen(true)
-            }}
-            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-          >
-            Novo utilizador
-          </button>
+          canGerirUtilizadores(authUser?.papel) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingUserId(null)
+                setForm({ nome: '', email: '', papel: 'professor', escolaId: escolaId ?? '', password: '', bi: '', telefone: '' })
+                setFormOpen(true)
+              }}
+              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            >
+              Novo utilizador
+            </button>
+          ) : undefined
         }
       />
 
@@ -242,9 +245,9 @@ export default function Utilizadores() {
         ) : filteredUsuarios.length === 0 ? (
           <EmptyState
             title={filterInput ? 'Nenhum utilizador encontrado' : 'Nenhum utilizador'}
-            description={filterInput ? 'Tente outro termo de pesquisa.' : 'Crie o primeiro utilizador.'}
+            description={filterInput ? 'Tente outro termo de pesquisa.' : (canGerirUtilizadores(authUser?.papel) ? 'Crie o primeiro utilizador.' : 'Ainda não há utilizadores.')}
             action={
-              !filterInput ? (
+              !filterInput && canGerirUtilizadores(authUser?.papel) ? (
                 <button
                   type="button"
                   onClick={() => setFormOpen(true)}

@@ -17,6 +17,7 @@ Documentação completa do projeto Capinala Edu (Gestão Escolar).
 | [API-REFERENCIA.md](API-REFERENCIA.md) | Endpoints da API, autenticação, códigos de resposta. |
 | [BASE-DADOS.md](BASE-DADOS.md) | Migrations, nano funções SQL, convenções. |
 | [ANALISE-ARQUIVOS-E-FUNCOES.md](ANALISE-ARQUIVOS-E-FUNCOES.md) | Índice de ficheiros e funções (backend e frontend). |
+| [FRONTEND-NAVEGACAO-PERMISSOES.md](FRONTEND-NAVEGACAO-PERMISSOES.md) | Sidebar agrupada por papel, barra contextual, header, permissões no frontend, rotas aluno/responsável. |
 
 ## Contrato e evolução
 

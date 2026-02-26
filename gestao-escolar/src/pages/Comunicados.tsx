@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canCreateComunicado, canEditComunicado, canDeleteComunicado } from '@/lib/permissoes'
 import { useComunicados, useTurmas } from '@/data/escola/queries'
 import { useCreateComunicado, useUpdateComunicado, useDeleteComunicado } from '@/data/escola/mutations'
 import { formatRelativeTime } from '@/utils/formatters'
@@ -9,6 +11,7 @@ import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 
 export default function Comunicados() {
+    const { user } = useAuth()
     const [searchParams, setSearchParams] = useSearchParams()
     const [formOpen, setFormOpen] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
@@ -178,13 +181,15 @@ export default function Comunicados() {
                 title="Comunicados"
                 subtitle="Avisos e comunicados internos da escola."
                 actions={
-                    <button
-                        type="button"
-                        onClick={handleOpenCreate}
-                        className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-                    >
-                        Novo comunicado
-                    </button>
+                    canCreateComunicado(user?.papel) ? (
+                        <button
+                            type="button"
+                            onClick={handleOpenCreate}
+                            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                        >
+                            Novo comunicado
+                        </button>
+                    ) : undefined
                 }
             />
 
@@ -295,15 +300,17 @@ export default function Comunicados() {
                 ) : comunicados.length === 0 ? (
                     <EmptyState
                         title="Nenhum comunicado publicado"
-                        description={'Clique em "Novo comunicado" para publicar o primeiro.'}
+                        description={canCreateComunicado(user?.papel) ? 'Clique em "Novo comunicado" para publicar o primeiro.' : 'Ainda não há comunicados publicados.'}
                         action={
-                            <button
-                                type="button"
-                                onClick={handleOpenCreate}
-                                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-                            >
-                                Novo comunicado
-                            </button>
+                            canCreateComunicado(user?.papel) ? (
+                                <button
+                                    type="button"
+                                    onClick={handleOpenCreate}
+                                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                                >
+                                    Novo comunicado
+                                </button>
+                            ) : undefined
                         }
                     />
                 ) : (
@@ -337,22 +344,28 @@ export default function Comunicados() {
                                         {c.conteudo}
                                     </p>
                                 </div>
+                                {(canEditComunicado(user?.papel, user?.userId, c.criadoPor) || canDeleteComunicado(user?.papel, user?.userId, c.criadoPor)) && (
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleOpenEdit(c.id)}
-                                        className="text-studio-brand hover:underline text-sm"
-                                    >
-                                        Editar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(c.id)}
-                                        className="text-red-600 hover:underline text-sm"
-                                    >
-                                        Eliminar
-                                    </button>
+                                    {canEditComunicado(user?.papel, user?.userId, c.criadoPor) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenEdit(c.id)}
+                                            className="text-studio-brand hover:underline text-sm"
+                                        >
+                                            Editar
+                                        </button>
+                                    )}
+                                    {canDeleteComunicado(user?.papel, user?.userId, c.criadoPor) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(c.id)}
+                                            className="text-red-600 hover:underline text-sm"
+                                        >
+                                            Eliminar
+                                        </button>
+                                    )}
                                 </div>
+                                )}
                             </div>
                         </div>
                     ))

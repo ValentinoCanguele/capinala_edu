@@ -14,6 +14,8 @@ import {
     GraduationCap,
     BookOpen
 } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { canCreateAluno, canCreateTurma, canRegistarFrequencia } from '@/lib/permissoes'
 import { useAlunos, useTurmas } from '@/data/escola/queries'
 
 interface Command {
@@ -37,18 +39,22 @@ export function CommandPalette() {
     const [selectedIndex, setSelectedIndex] = useState(0)
     const navigate = useNavigate()
     const inputRef = useRef<HTMLInputElement>(null)
+    const { user } = useAuth()
 
-    const commands: Command[] = [
-        { id: 'dash', title: 'Dashboard', icon: <Home className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/') },
-        { id: 'aln', title: 'Alunos', icon: <User className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/alunos') },
-        { id: 'tur', title: 'Turmas', icon: <Users className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/turmas') },
-        { id: 'fin', title: 'Finanças', icon: <CreditCard className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/financas') },
-        { id: 'pref', title: 'Definições de Perfil', icon: <Settings className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/perfil') },
-
-        { id: 'new-aln', title: 'Registar Novo Aluno', icon: <Plus className="w-4 h-4" />, category: 'Ações', onSelect: () => navigate('/alunos') },
-        { id: 'new-tur', title: 'Criar Nova Turma', icon: <Plus className="w-4 h-4" />, category: 'Ações', onSelect: () => navigate('/turmas') },
-        { id: 'aula', title: 'Marcar Presenças', icon: <Calendar className="w-4 h-4" />, category: 'Ações', onSelect: () => navigate('/frequencia') },
-    ]
+    const commands: Command[] = useMemo(() => {
+        const nav: Command[] = [
+            { id: 'dash', title: 'Dashboard', icon: <Home className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/') },
+            { id: 'aln', title: 'Alunos', icon: <User className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/alunos') },
+            { id: 'tur', title: 'Turmas', icon: <Users className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/turmas') },
+            { id: 'fin', title: 'Finanças', icon: <CreditCard className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/financas') },
+            { id: 'pref', title: 'Definições de Perfil', icon: <Settings className="w-4 h-4" />, category: 'Navegação', onSelect: () => navigate('/perfil') },
+        ]
+        const actions: Command[] = []
+        if (canCreateAluno(user?.papel)) actions.push({ id: 'new-aln', title: 'Registar Novo Aluno', icon: <Plus className="w-4 h-4" />, category: 'Ações', onSelect: () => navigate('/alunos') })
+        if (canCreateTurma(user?.papel)) actions.push({ id: 'new-tur', title: 'Criar Nova Turma', icon: <Plus className="w-4 h-4" />, category: 'Ações', onSelect: () => navigate('/turmas') })
+        if (canRegistarFrequencia(user?.papel)) actions.push({ id: 'aula', title: 'Marcar Presenças', icon: <Calendar className="w-4 h-4" />, category: 'Ações', onSelect: () => navigate('/frequencia') })
+        return [...nav, ...actions]
+    }, [user?.papel, navigate])
 
     const { data: alunos = [] } = useAlunos()
     const { data: turmas = [] } = useTurmas()

@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAuth } from '@/contexts/AuthContext'
+import { canCreateAluno, canDeleteAluno } from '@/lib/permissoes'
 import { useAlunos } from '@/data/escola/queries'
 import {
   useCreateAluno,
@@ -16,6 +18,7 @@ import { Button } from '@/components/shared/Button'
 import { UserPlus } from 'lucide-react'
 
 export default function Alunos() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -130,12 +133,14 @@ export default function Alunos() {
         title="Alunos"
         subtitle="Listagem e cadastro de alunos."
         actions={
-          <Button
-            onClick={handleCreate}
-            icon={<UserPlus className="w-4 h-4" />}
-          >
-            Novo Aluno
-          </Button>
+          canCreateAluno(user?.papel) ? (
+            <Button
+              onClick={handleCreate}
+              icon={<UserPlus className="w-4 h-4" />}
+            >
+              Novo Aluno
+            </Button>
+          ) : undefined
         }
       />
 
@@ -170,7 +175,9 @@ export default function Alunos() {
           setFormOpen(true)
         }}
         onDelete={setItemToDelete}
-        onCreate={handleCreate}
+        onCreate={canCreateAluno(user?.papel) ? handleCreate : undefined}
+        canEdit={canCreateAluno(user?.papel)}
+        canDelete={canDeleteAluno(user?.papel)}
         isLoading={isLoading}
         error={error ?? null}
       />
