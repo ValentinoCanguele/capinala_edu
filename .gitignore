@@ -27,6 +27,13 @@ node_modules/
 server/uploads/
 gestao-escolar/public/uploads/
 
+# Documentos sensíveis (dados reais, backups) — nunca commitar
+docs/aluno_*.csv
+docs/lista_de_alunos.csv
+docs/grade_history.csv
+docs/backup_*.xlsx
+docs/alunos/
+
 # Misc
 *.swp
 *.swo

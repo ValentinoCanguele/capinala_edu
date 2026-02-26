@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pt-br">
+<meta charset="utf-8"/>
+<title>43. Ring with Gap</title>
+<style>
+
+:root{
+  --size:64px;
+  --fg:#111827; /* neutral-900 */
+  --muted:#9CA3AF; /* gray-400 */
+  --bg:#F3F4F6; /* gray-100 */
+  --accent:#2563EB; /* blue-600 */
+}
+*{box-sizing:border-box}
+body{
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell;
+  background:linear-gradient(180deg,#f8fafc,#eef2ff 40%,#f5f3ff);
+  color:#0f172a;
+  margin:0;
+}
+.header{
+  text-align:center;
+  padding:32px 16px 8px;
+}
+.header h1{margin:0 0 6px;font-size:clamp(20px,2.6vw,32px)}
+.header p{margin:0;color:#334155}
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  gap:16px;
+  padding:20px;
+  max-width:1200px;
+  margin:0 auto 28px;
+}
+.card{
+  background:white;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 30px rgba(2,6,23,.06), 0 2px 8px rgba(2,6,23,.04);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 40px rgba(2,6,23,.12), 0 4px 16px rgba(2,6,23,.08);
+}
+.title{margin-top:12px;font-size:14px;color:#475569;text-align:center}
+.loader{ width:var(--size); height:var(--size); position:relative; display:grid; place-items:center }
+.loader span{display:block}
+
+/* 1) Ring Rotate */
+.ring-rotate{
+  border:6px solid #e5e7eb;
+  border-top-color: var(--accent);
+  border-radius:50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 2) Dual Ring */
+.dual-ring{
+  border:6px solid transparent;
+  border-top-color:var(--accent);
+  border-bottom-color:var(--accent);
+  border-radius:50%;
+  animation: spin 1s ease-in-out infinite;
+}
+
+/* 3) Dashed Rotate */
+.dashed-rotate{
+  --c: conic-gradient(from 0deg, var(--accent) 0 60deg, transparent 60deg 120deg, var(--accent) 120deg 180deg, transparent 180deg 240deg, var(--accent) 240deg 300deg, transparent 300deg 360deg);
+  background: var(--c);
+  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+          mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  border-radius:50%;
+  animation: spin 1.2s linear infinite;
+}
+
+/* 4) Dots Bounce (3) */
+.dots-bounce{ display:flex; gap:8px; width:auto; height:auto }
+.dots-bounce span{
+  width:12px;height:12px;border-radius:50%;background:var(--accent);
+  animation:bounce .6s ease-in-out infinite;
+}
+.dots-bounce span:nth-child(2){animation-delay:.1s}
+.dots-bounce span:nth-child(3){animation-delay:.2s}
+
+/* 5) Dots Wave (5) */
+.dots-wave{ display:flex; gap:6px; height:auto; width:auto; align-items:flex-end }
+.dots-wave span{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  animation:wave 1s ease-in-out infinite;
+}
+.dots-wave span:nth-child(1){animation-delay:0s}
+.dots-wave span:nth-child(2){animation-delay:.1s}
+.dots-wave span:nth-child(3){animation-delay:.2s}
+.dots-wave span:nth-child(4){animation-delay:.3s}
+.dots-wave span:nth-child(5){animation-delay:.4s}
+
+/* 6) Dots Circle (8) */
+.dots-circle{ width:var(--size); height:var(--size) }
+.dots-circle span{
+  position:absolute; inset:0; margin:auto;
+  width:10px; height:10px; border-radius:50%; background:var(--accent);
+  transform-origin: calc(var(--size)/2 - 6px) center;
+  animation: spin 1.2s linear infinite;
+}
+.dots-circle span:nth-child(n){
+  transform: rotate(calc(45deg * (var(--i)))) translate(calc(var(--size)/2 - 6px));
+}
+/* assign custom properties via inline style */
+
+/* 7) Bars Grow (3) */
+.bars-grow{ display:flex; gap:8px; align-items:flex-end; width:auto; height:var(--size) }
+.bars-grow span{
+  width:10px; height:30%; background:var(--accent); border-radius:8px;
+  animation:grow .8s ease-in-out infinite;
+}
+.bars-grow span:nth-child(2){animation-delay:.1s}
+.bars-grow span:nth-child(3){animation-delay:.2s}
+
+/* 8) Bars Wave (5) */
+.bars-wave{ display:flex; gap:6px; align-items:flex-end; width:auto; height:var(--size) }
+.bars-wave span{
+  width:8px;height:30%;background:var(--accent);border-radius:6px;
+  animation:grow .8s ease-in-out infinite;
+}
+.bars-wave span:nth-child(1){animation-delay:0s}
+.bars-wave span:nth-child(2){animation-delay:.05s}
+.bars-wave span:nth-child(3){animation-delay:.1s}
+.bars-wave span:nth-child(4){animation-delay:.15s}
+.bars-wave span:nth-child(5){animation-delay:.2s}
+
+/* 9) Striped Progress */
+.bar-stripes{
+  width:120px;height:12px;border-radius:999px;overflow:hidden;background:#e5e7eb;
+}
+.bar-stripes::before{
+  content:"";display:block;height:100%;width:40%;
+  background: repeating-linear-gradient(45deg, var(--accent) 0 8px, #60a5fa 8px 16px);
+  animation: slide 1s linear infinite alternate;
+  border-radius:inherit;
+}
+
+/* 10) Pulse */
+.pulse{
+  width:20px;height:20px;border-radius:50%;background:var(--accent);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* 11) Ripple (2) */
+.ripple{ --ring:2 }
+.ripple span, .ripple::before{
+  position:absolute;border:4px solid var(--accent);border-radius:50%;
+  inset:8px;opacity:.8; animation:ripple 1.4s ease-out infinite;
+}
+.ripple span{ animation-delay:.3s }
+
+/* 12) Radar */
+.radar{
+  background: radial-gradient(circle at center, rgba(37,99,235,.25), rgba(37,99,235,.05) 50%, transparent 55%);
+  border-radius:50%;
+  overflow:hidden;
+}
+.radar::before{
+  content:""; position:absolute; inset:0;
+  background: conic-gradient(from 0deg, rgba(37,99,235,.0), rgba(37,99,235,.7) 40%, rgba(37,99,235,.0) 70%);
+  animation: spin 1.6s linear infinite;
+}
+
+/* 13) Segment Spinner */
+.segments{
+  background: conic-gradient(var(--accent) 0 20%, transparent 20% 100%);
+  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+          mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  border-radius:50%;
+  animation: spin .9s linear infinite;
+}
+
+/* 14) Spiral */
+.spiral{
+  background: conic-gradient(from 0deg, transparent 0 20%, var(--accent) 20% 22%, transparent 22% 24%, var(--accent) 24% 26%, transparent 26% 28%, var(--accent) 28% 30%);
+  border-radius:50%;
+  -webkit-mask: radial-gradient(circle, #000 45%, #0000 46%);
+          mask: radial-gradient(circle, #000 45%, #0000 46%);
+  animation: spin 1.2s linear infinite;
+}
+
+/* 15) Square Rotate */
+.square-rotate{ width:48px;height:48px;border:6px solid #e5e7eb;border-top-color:var(--accent); animation:spin 1s linear infinite }
+
+/* 16) 3D Cube Flip */
+.cube-flip{ perspective:600px }
+.cube-flip span{
+  width:32px;height:32px;background:var(--accent);border-radius:6px;
+  transform-style:preserve-3d;
+  animation:cubeflip 1.2s ease-in-out infinite;
+}
+
+/* 17) Folding Squares (4) */
+.folding-cube{ width:48px;height:48px }
+.folding-cube span{
+  position:absolute;width:50%;height:50%;background:var(--accent);
+  transform-origin:100% 100%;
+  animation:fold 1.6s linear infinite;
+  opacity:.9;
+}
+.folding-cube span:nth-child(1){top:0;left:0;animation-delay:-.3s}
+.folding-cube span:nth-child(2){top:0;right:0;animation-delay:-.15s}
+.folding-cube span:nth-child(3){bottom:0;right:0;animation-delay:0s}
+.folding-cube span:nth-child(4){bottom:0;left:0;animation-delay:.15s}
+
+/* 18) 3x3 Grid Fade */
+.grid-fade{ width:56px; height:56px; display:grid; grid-template-columns:repeat(3,1fr); gap:4px }
+.grid-fade span{
+  width:16px;height:16px;background:var(--accent);border-radius:4px;opacity:.2;
+  animation:gridfade 1.2s infinite;
+}
+.grid-fade span:nth-child(odd){animation-delay:.2s}
+
+/* 19) Two-Dot Roller */
+.roller-two{ width:56px;height:56px }
+.roller-two span{
+  position:absolute;width:12px;height:12px;border-radius:50%;background:var(--accent);
+  animation:spin 1s linear infinite;
+}
+.roller-two span:nth-child(1){ transform-origin: 22px 22px }
+.roller-two span:nth-child(2){ transform-origin: 28px 28px; animation-direction:reverse }
+
+/* 20) Three-Dot Roller */
+.roller-three{ width:56px;height:56px }
+.roller-three span{
+  position:absolute;width:10px;height:10px;border-radius:50%;background:var(--accent);
+  transform-origin: 24px 24px; animation:spin 1s linear infinite;
+}
+.roller-three span:nth-child(2){animation-delay:.1s}
+.roller-three span:nth-child(3){animation-delay:.2s}
+
+/* 21) Yin-Yang */
+.yin-yang{
+  background:
+    radial-gradient(circle at 50% 25%, #fff 12px, transparent 13px),
+    radial-gradient(circle at 50% 75%, #000 12px, transparent 13px),
+    linear-gradient(#000 50%, #fff 0);
+  border:6px solid #000; border-radius:50%;
+  animation:spin 1s linear infinite;
+  overflow:hidden;
+}
+
+/* 22) Hourglass */
+.hourglass{
+  background:
+    conic-gradient(from 45deg, transparent 0 45%, var(--accent) 0 55%, transparent 0 100%);
+  -webkit-mask: radial-gradient(farthest-side, #000 60%, #0000 61%);
+          mask: radial-gradient(farthest-side, #000 60%, #0000 61%);
+  border-radius:50%;
+  animation:spin 1.2s linear infinite;
+}
+
+/* 23) Pie Fill */
+.pie-fill{
+  background:conic-gradient(var(--accent) 0 var(--p,0%), #e5e7eb 0);
+  border-radius:50%;
+  animation:pie 1.5s ease-in-out infinite;
+}
+
+/* 24) Battery */
+.battery{ width:100px;height:36px;border:4px solid #111827;border-radius:8px; position:relative;background:#e5e7eb; overflow:hidden }
+.battery::after{
+  content:""; position:absolute; right:-10px; top:10px; width:8px; height:16px; background:#111827; border-radius:2px;
+}
+.battery::before{
+  content:""; position:absolute; inset:4px; background:linear-gradient(90deg, #e5e7eb 0, var(--accent) 0);
+  animation:charge 1.6s linear infinite;
+  border-radius:4px;
+}
+
+/* 25) Text Shimmer */
+.text-shimmer{ width:120px;height:16px;border-radius:6px;background:#e5e7eb;overflow:hidden;position:relative }
+.text-shimmer::before{
+  content:""; position:absolute; inset:0;
+  background: linear-gradient(90deg, #e5e7eb 0, #f8fafc 30%, #e5e7eb 60%);
+  transform:translateX(-100%); animation: shimmer 1.2s infinite;
+}
+
+/* 26) Skeleton Card */
+.skeleton-card{ width:160px; height:100px; border-radius:12px; background:linear-gradient(90deg,#e5e7eb,#f3f4f6,#e5e7eb); background-size:200% 100%; animation: bgmove 1.2s linear infinite }
+.skeleton-avatar{ width:56px; height:56px; border-radius:50%; background:linear-gradient(90deg,#e5e7eb,#f3f4f6,#e5e7eb); background-size:200% 100%; animation: bgmove 1.2s linear infinite }
+
+/* 27) Sonar Ping */
+.sonar{}
+.sonar span{
+  position:absolute;width:16px;height:16px;border-radius:50%;background:var(--accent);
+  animation: sonar 1.6s ease-out infinite;
+}
+
+/* 28) Triple Ripple */
+.ripple-3 span{
+  position:absolute;border:4px solid var(--accent);border-radius:50%;
+  inset:10px; animation:ripple 1.8s ease-out infinite;
+}
+.ripple-3 span:nth-child(2){animation-delay:.3s}
+.ripple-3 span:nth-child(3){animation-delay:.6s}
+
+/* 29) Typing Dots */
+.dots-typing{ display:flex; gap:6px; height:auto; width:auto; align-items:center }
+.dots-typing span{
+  width:8px;height:8px;border-radius:50%;background:var(--accent);
+  animation:bounce .7s ease-in-out infinite;
+}
+.dots-typing span:nth-child(2){animation-delay:.1s}
+.dots-typing span:nth-child(3){animation-delay:.2s}
+
+/* 30) Equalizer */
+.equalizer{ display:flex; gap:6px; align-items:flex-end; width:auto; height:var(--size) }
+.equalizer span{ width:10px; background:var(--accent); border-radius:6px; height:20%; animation: eq 1s ease-in-out infinite }
+.equalizer span:nth-child(2){animation-delay:.1s}
+.equalizer span:nth-child(3){animation-delay:.2s}
+.equalizer span:nth-child(4){animation-delay:.3s}
+.equalizer span:nth-child(5){animation-delay:.4s}
+
+/* 31) Metronome */
+.metronome{
+  width:8px;height:64px;background:#e5e7eb;border-radius:999px; position:relative; overflow:visible;
+}
+.metronome::before{
+  content:""; position:absolute; width:6px;height:40px; background:var(--accent); left:50%; bottom:8px; transform-origin:bottom center; border-radius:999px;
+  animation: swing 1.2s ease-in-out infinite;
+}
+
+/* 32) Pendulum */
+.pendulum{ width:64px;height:40px; position:relative }
+.pendulum span{
+  position:absolute; top:0; width:8px;height:8px; background:var(--accent); border-radius:50%;
+  transform-origin: top center;
+}
+.pendulum span:nth-child(1){ left:12px; animation: swing 1s ease-in-out infinite; }
+.pendulum span:nth-child(2){ right:12px; animation: swing 1s ease-in-out infinite reverse; }
+
+/* 33) Triangle Chase */
+.triangle-chase{ width:56px;height:56px; position:relative }
+.triangle-chase span{
+  position:absolute; width:0;height:0;
+  border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:18px solid var(--accent);
+  transform-origin:center 16px; animation:spin 1.4s linear infinite;
+}
+.triangle-chase span:nth-child(2){ transform: rotate(120deg); animation-delay:.1s}
+.triangle-chase span:nth-child(3){ transform: rotate(240deg); animation-delay:.2s}
+
+/* 34) Hexagon Pulse */
+.hex-pulse{
+  width:54px;height:54px;
+  background:
+    conic-gradient(from 30deg, var(--accent) 0 60deg, transparent 60deg 120deg, var(--accent) 120deg 180deg, transparent 180deg 240deg, var(--accent) 240deg 300deg, transparent 300deg 360deg);
+  -webkit-mask: polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%);
+          mask: polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%);
+  animation: pulse .9s ease-in-out infinite;
+  border-radius:8px;
+}
+
+/* 35) Stars Twinkle */
+.star-twinkle{ width:64px;height:64px; position:relative }
+.star-twinkle span{
+  position:absolute; width:6px;height:6px;background:var(--accent); transform:rotate(45deg); animation: twinkle 1.2s infinite;
+}
+.star-twinkle span:nth-child(1){ top:10px; left:18px; animation-delay:.1s }
+.star-twinkle span:nth-child(2){ top:28px; left:34px; animation-delay:.2s }
+.star-twinkle span:nth-child(3){ top:44px; left:20px; animation-delay:.3s }
+
+/* 36) Cloud Rain */
+.cloud-rain{
+  width:80px;height:56px; position:relative;
+}
+.cloud-rain::before{
+  content:""; position:absolute; top:6px; left:14px; right:14px; height:28px; background:#e5e7eb; border-radius:999px;
+  box-shadow: -18px 6px 0 0 #e5e7eb, 18px 6px 0 0 #e5e7eb;
+}
+.cloud-rain span{
+  position:absolute; top:36px; width:2px; height:12px; background:var(--accent); border-radius:2px; animation: rain .8s linear infinite;
+}
+.cloud-rain span:nth-child(1){ left:20px; animation-delay:.1s }
+.cloud-rain span:nth-child(2){ left:38px; animation-delay:.2s }
+.cloud-rain span:nth-child(3){ left:56px; animation-delay:.3s }
+
+/* 37) Comet Sweep */
+.comet{ width:120px;height:6px; position:relative; overflow:hidden; border-radius:999px; background:#e5e7eb }
+.comet::before{
+  content:""; position:absolute; width:16px;height:16px; border-radius:50%; background:var(--accent); top:50%; transform:translate(-20px,-50%);
+  filter: blur(0.3px) drop-shadow(0 0 10px rgba(37,99,235,.6));
+  animation: comet 1.2s ease-in-out infinite;
+}
+
+/* 38) Arc Sweep */
+.arc-sweep{
+  background:
+    conic-gradient(from 0deg, transparent 0 70%, var(--accent) 70% 100%);
+  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 10px),#000 0);
+          mask: radial-gradient(farthest-side,#0000 calc(100% - 10px),#000 0);
+  border-radius:50%;
+  animation: spin .8s linear infinite;
+}
+
+/* 39) Infinity Loop */
+.infinity{ position:relative; width:90px; height:48px }
+.infinity span{
+  position:absolute; inset:0; border:6px solid var(--accent); border-radius:50%;
+  animation: infinity 1.2s ease-in-out infinite;
+}
+.infinity span:nth-child(1){ left:-22px }
+.infinity span:nth-child(2){ right:-22px; animation-delay:.2s }
+
+/* 40) Heartbeat */
+.heart-beat{
+  width:28px;height:28px; background:var(--accent);
+  transform: rotate(45deg); animation: beat 1s ease-in-out infinite;
+  position:relative;
+}
+.heart-beat::before, .heart-beat::after{
+  content:""; position:absolute; width:28px;height:28px; background:var(--accent); border-radius:50%;
+  top:-14px; left:0;
+}
+.heart-beat::after{ left:-14px; top:0 }
+
+/* 41) Wi-Fi Pulse */
+.wifi{ position:relative; width:64px;height:64px }
+.wifi span{
+  position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); border:3px solid var(--accent); border-radius:50%;
+  width:20px;height:20px; opacity:.3; animation: wifi 1.2s ease-out infinite;
+}
+.wifi span:nth-child(2){ width:36px;height:36px; animation-delay:.15s }
+.wifi span:nth-child(3){ width:52px;height:52px; animation-delay:.3s }
+
+/* 42) Ring with Gap */
+.ring-gap{
+  background: conic-gradient(from 0deg, var(--accent) 0 290deg, transparent 290deg 360deg);
+  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+          mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  border-radius:50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 43) Radial Dots (12) */
+.spinner-dots{ position:relative }
+.spinner-dots span{
+  position:absolute; width:8px;height:8px; border-radius:50%; background:var(--accent);
+  top:50%; left:50%; transform-origin:0 -24px;
+  animation: spin 1.2s linear infinite;
+}
+.spinner-dots span:nth-child(n){ transform: rotate(calc(30deg * (var(--j)))) translate(-50%, -50%) }
+.spinner-dots span:nth-child(odd){ opacity:.7 }
+
+/* 44) Racing Bars */
+.bars-race{ width:120px; height:16px; background:#e5e7eb; border-radius:999px; overflow:hidden; position:relative }
+.bars-race span{
+  position:absolute; top:2px; bottom:2px; width:30px; border-radius:999px; background:var(--accent);
+  animation: racer 1.4s infinite;
+}
+.bars-race span:nth-child(2){ left:20px; animation-delay:.2s }
+.bars-race span:nth-child(3){ left:40px; animation-delay:.4s }
+.bars-race span:nth-child(4){ left:60px; animation-delay:.6s }
+
+/* Keyframes */
+@keyframes spin { to{ transform:rotate(360deg) } }
+@keyframes bounce { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-8px) } }
+@keyframes wave { 0%,100%{ transform: translateY(6px) } 50%{ transform: translateY(-6px) } }
+@keyframes grow { 0%,100%{ height:20% } 50%{ height:80% } }
+@keyframes slide { 0%{ transform:translateX(-5%) } 100%{ transform:translateX(165%) } }
+@keyframes pulse { 0%,100%{ transform:scale(.85); opacity:.8 } 50%{ transform:scale(1.15); opacity:1 } }
+@keyframes ripple { 0%{ transform:scale(.4); opacity:1 } 100%{ transform:scale(1); opacity:0 } }
+@keyframes shimmer { 0%{ transform:translateX(-100%) } 100%{ transform:translateX(100%) } }
+@keyframes bgmove { 0%{ background-position:0% 0 } 100%{ background-position:200% 0 } }
+@keyframes sonar { 0%{ transform:scale(.6); opacity:1 } 100%{ transform:scale(1.8); opacity:0 } }
+@keyframes eq { 0%,100%{ height:10% } 50%{ height:90% } }
+@keyframes swing { 0%{ transform:rotate(-22deg) } 50%{ transform:rotate(22deg) } 100%{ transform:rotate(-22deg) } }
+@keyframes rain { 0%{ transform:translateY(0); opacity:1 } 100%{ transform:translateY(14px); opacity:0 } }
+@keyframes comet { 0%{ left:-10px } 100%{ left:110px } }
+@keyframes infinity { 0%,100%{ transform:rotate(0) scale(1) } 50%{ transform:rotate(180deg) scale(.95) } }
+@keyframes beat { 0%,100%{ transform: rotate(45deg) scale(1) } 50%{ transform: rotate(45deg) scale(1.2) } }
+@keyframes wifi { 0%{ transform: translate(-50%,-50%) scale(.8); opacity:.8 } 100%{ transform: translate(-50%,-50%) scale(1.3); opacity:0 } }
+@keyframes pie { 0%{ --p:0% } 50%{ --p:85% } 100%{ --p:0% } }
+@keyframes racer { 0%{ left:-30px } 100%{ left:120px } }
+@keyframes cubeflip { 0%{ transform: rotateX(0) rotateY(0) } 50%{ transform: rotateX(180deg) rotateY(0) } 100%{ transform: rotateX(180deg) rotateY(180deg) } }
+@keyframes fold { 0%,10%{ transform: perspective(140px) rotateX(-180deg) } 25%,75%{ transform: perspective(140px) rotateX(0) } 90%,100%{ transform: perspective(140px) rotateY(180deg) } }
+@keyframes gridfade { 0%,100%{ opacity:.2 } 50%{ opacity:1 } }
+
+body{display:grid;place-items:center;min-height:100vh;background:#f8fafc}
+</style>
+<div class="loader ring-gap">
+
+</div>
