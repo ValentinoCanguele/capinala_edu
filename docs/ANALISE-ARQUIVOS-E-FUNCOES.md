@@ -50,17 +50,21 @@
 - **notas.ts** — upsertNota, saveNotasBatch, getNotasByTurmaPeriodo.
 - **boletins.ts** — getBoletim(alunoId, anoLetivoId?).
 - **aulas.ts** — listAulasByTurmaAndDate, getOrCreateAula.
-- **frequencia.ts** — getFrequenciaByAula, saveFrequenciaBatch, getResumoFrequencia(turmaId), getRelatorioTurma(turmaId), getResumoFrequenciaAluno(alunoId, anoLetivoId?) (próprio ou filho).
+- **frequencia.ts** — getFrequenciaByAula, saveFrequenciaBatch, getResumoFrequencia(turmaId), getRelatorioTurma(turmaId), getResumoFrequenciaAluno(alunoId, anoLetivoId?); getJustificativas(user, alunoId?), createJustificativa(user, data), processarAprovacaoJustificativa(user, id, acao).
 - **horarios.ts** — listHorarios, createHorario, updateHorario, deleteHorario; listSalas, createSala, getSala, updateSala, deleteSala; listHorariosProfessor.
 - **comunicados.ts** — listComunicados, getComunicado, createComunicado, updateComunicado, deleteComunicado.
+- **atas.ts** — listAtas, getAta, createAta, updateAta, deleteAta.
+- **ocorrencias.ts** — getOcorrencias, createOcorrencia, resolveOcorrencia, deleteOcorrencia.
+- **exames.ts** — listExames, upsertExame, deleteExame.
 - **perfil.ts** — getPerfil, updatePerfil, alterarSenha, uploadFotoPerfil, getFotoPerfilPath, removeFotoPerfil.
 - **documentos.ts** — listDocumentos, uploadDocumento, getDocumento, deleteDocumento.
 - **usuarios.ts** — listUsuarios, getUsuario, createUsuario, updateUsuario, resetPassword.
 - **permissoesService.ts** — listPermissoes, getPermissoesUsuario, setPermissoesUsuario, userHasPermissao.
 
 ### lib/escola/permissoes.ts
-- canDeleteAluno, canDeleteTurma, canManageDisciplinas, canLancarNotas, canVerBoletim; canCreateComunicado, canDeleteComunicado, canViewComunicados; canManageHorarios, canViewHorarios; canManageSalas; canViewDashboard; canViewAuditLog; isResponsavel, isAluno, isProfessor, isAdmin; canManageModulos.
-- Nano: canEditComunicado(user, autorId), canAcederAuditoria, canGerirUtilizadores, canGerirFinancas, canVerRelatorioFrequencia.
+- **Helpers:** assertPermissao(user, papeis, acao) — lança erro se o utilizador não tiver papel em papeis; usado nas rotas API para devolver 403.
+- **Constantes exportadas:** PAPEIS_ADMIN (admin, direcao), PAPEIS_GESTAO (admin, direcao, professor).
+- **Por recurso:** canCreateAluno, canDeleteAluno, canViewAlunos; canCreateTurma, canDeleteTurma, canManageTurmaAlunos; canManageDisciplinas; canLancarNotas, canViewNotas; canVerBoletim; canRegistarFrequencia, canViewFrequencia, canViewRelatorioFrequencia; canManageHorarios, canViewHorarios; canCreateComunicado, canDeleteComunicado, canEditComunicado(user, autorId), canViewComunicados; canManageSalas; canManageAtas; canManageOcorrencias; canViewDashboard; canViewAuditLog; isResponsavel, isAluno, isProfessor, isAdmin; canManageModulos; canGerirUtilizadores; canGerirFinancas; canVerRelatorioFrequencia; canAcederAuditoria.
 
 ### pages/api/auth/login.ts
 - POST — body: email, password; resposta: { token, papel, userId }.
@@ -97,6 +101,7 @@
 - **aulas/index.ts** — GET por turmaId e dataAula.
 - **aulas/create.ts** — POST — turmaId, disciplinaId, dataAula; retorna aulaId.
 - **frequencia/[aulaId].ts** — GET lista, POST batch (items: alunoId, status).
+- **frequencia/justificativas.ts** — GET lista (?alunoId= opcional; requer PAPEIS_GESTAO; 403 caso contrário). POST criar (body: aluno_id, motivo, data_inicio?, data_fim?, descricao?, aula_id?; requer PAPEIS_GESTAO; 403). POST ?action=approve&id= com body { acao: 'deferido'|'indeferido' } (requer PAPEIS_ADMIN; 403).
 - **salas/index.ts** — GET lista, POST criar.
 - **salas/[id].ts** — GET um, PUT atualizar, DELETE.
 - **horarios/index.ts** — GET lista (turmaId, anoLetivoId opcionais), POST criar.
@@ -104,6 +109,10 @@
 - **comunicados/index.ts** — GET lista, POST criar.
 - **comunicados/[id].ts** — GET um, PUT atualizar, DELETE.
 - **dashboard/stats.ts** — GET estatísticas (totais, média, presença, alunos por turma).
+- **atas/index.ts** — GET lista (?turmaId=, periodoId=), POST criar (requer PAPEIS_ADMIN; 403 caso contrário).
+- **atas/[id].ts** — GET um, PATCH/PUT atualizar, DELETE (PATCH/DELETE requerem PAPEIS_ADMIN; 403 caso contrário).
+- **ocorrencias.ts** — GET lista (?alunoId=, turmaId=, resolvido=), POST criar, PATCH resolver, DELETE (POST/PATCH/DELETE requerem PAPEIS_GESTAO; 403 caso contrário).
+- **exames/index.ts** — GET lista (?turmaId=, disciplinaId=), POST lançar nota, DELETE (POST/DELETE requerem PAPEIS_GESTAO; 403 caso contrário).
 - **audit/index.ts** — GET log de auditoria (query: entidade, limit).
 - **alertas/index.ts** — GET alertas ativos, PATCH resolver (body: alertaId).
 
@@ -114,6 +123,9 @@
 
 ### lib/auth.ts
 - getToken, setToken, clearToken, getAuthHeader.
+
+### lib/permissoes.ts (frontend)
+- Espelho das permissões do backend por papel: canCreateAluno, canDeleteAluno, canCreateTurma, canDeleteTurma, canManageTurmaAlunos, canManageDisciplinas, canLancarNotas, canViewNotas, canRegistarFrequencia, canManageHorarios, canCreateComunicado, canEditComunicado(papel, userId, autorId), canDeleteComunicado(…), canManageSalas, canManageAtas, canManageOcorrencias, canGerirFinancas, canViewAuditLog, isAdmin, canManageModulos, canGerirUtilizadores. Usado para esconder na UI botões/links que o backend recusaria. Registo completo em [FRONTEND-NAVEGACAO-PERMISSOES.md](FRONTEND-NAVEGACAO-PERMISSOES.md).
 
 ### contexts/AuthContext.tsx
 - AuthProvider, useAuth — user, login, logout, setToken.
