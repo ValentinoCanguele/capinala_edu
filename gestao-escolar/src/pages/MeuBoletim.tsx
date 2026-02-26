@@ -6,33 +6,31 @@ import {
   useAnosLetivos,
   useBoletim,
   useResumoFrequenciaAluno,
-  useOcorrencias
+  useOcorrencias,
+  type ResumoFrequenciaAlunoResult,
+  type OcorrenciaRow,
 } from '@/data/escola/queries'
 import PageHeader from '@/components/PageHeader'
 import { Card } from '@/components/shared/Card'
 import { Select } from '@/components/shared/Select'
 import { StatCard } from '@/components/shared/StatCard'
 import { Badge } from '@/components/shared/Badge'
-import { Avatar } from '@/components/shared/Avatar'
 import EmptyState from '@/components/shared/EmptyState'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { Button } from '@/components/shared/Button'
 import {
   FileText,
   TrendingUp,
-  CheckCircle2,
   AlertCircle,
   Award,
   GraduationCap,
   BookOpen,
-  Info,
   Printer,
   Download,
   Activity,
   UserCheck,
   Briefcase,
   ShieldAlert,
-  Calendar,
   History,
   Clock,
   MessageSquare
@@ -56,25 +54,27 @@ export default function MeuBoletim() {
     if (user?.papel === 'aluno' && meuAluno?.alunoId) setAlunoId(meuAluno.alunoId)
   }, [user?.papel, meuAluno?.alunoId])
 
-  const { data: boletim, isLoading: loadingBoletim, error } = useBoletim(
+  const { data: boletim, isLoading: loadingBoletim, error: _error } = useBoletim(
     effectiveAlunoId || null,
     anoLetivoId || undefined
   )
 
-  const { data: frequencia, isLoading: loadingFreq } = useResumoFrequenciaAluno(
+  const { data: frequencia, isLoading: _loadingFreq } = useResumoFrequenciaAluno(
     effectiveAlunoId || null,
     anoLetivoId || undefined
   )
 
-  const { data: ocorrencias = [], isLoading: loadingOco } = useOcorrencias({ alunoId: effectiveAlunoId || '0000' })
+  const { data: ocorrenciasRaw, isLoading: _loadingOco } = useOcorrencias({ alunoId: effectiveAlunoId || '0000' })
+  const ocorrencias = Array.isArray(ocorrenciasRaw) ? ocorrenciasRaw : []
 
   const isAluno = user?.papel === 'aluno'
   const isResponsavel = user?.papel === 'responsavel'
   const canView = isAluno || isResponsavel
 
   const stats = useMemo(() => {
-    if (!boletim?.disciplinas?.length) return { media: 0, aprovadas: 0, total: 0, percent: 0, frequencia: 0, ocorrencias: 0 }
-    const valid = boletim.disciplinas.filter(d => d.mediaFinal != null)
+    const disciplinas = boletim?.disciplinas
+    if (!disciplinas || !Array.isArray(disciplinas) || disciplinas.length === 0) return { media: 0, aprovadas: 0, total: 0, percent: 0, frequencia: 0, ocorrencias: 0 }
+    const valid = disciplinas.filter((d: { mediaFinal?: number | null }) => d.mediaFinal != null)
     const media = valid.reduce((acc, curr) => acc + (curr.mediaFinal || 0), 0) / (valid.length || 1)
     const aprovadas = boletim.disciplinas.filter(d => d.aprovado).length
     const total = boletim.disciplinas.length
@@ -85,7 +85,7 @@ export default function MeuBoletim() {
       total,
       percent: Math.round((aprovadas / total) * 100),
       frequencia: frequencia?.totais?.percentagemPresenca ? Math.round(frequencia.totais.percentagemPresenca) : 0,
-      ocorrencias: ocorrencias.filter(o => !o.resolvido).length
+      ocorrencias: ocorrencias.filter((o: OcorrenciaRow) => !o.resolvido).length
     }
   }, [boletim, frequencia, ocorrencias])
 
@@ -227,7 +227,7 @@ export default function MeuBoletim() {
                                 </div>
                               </td>
                               <td className="px-8 py-5 text-center">
-                                <Badge variant={d.aprovado ? 'success' : 'danger'} size="sm" className="uppercase font-black text-[9px]">
+                                <Badge variant={d.aprovado ? 'success' : 'danger'} className="uppercase font-black text-[9px]">
                                   {d.aprovado ? 'Aprovado' : 'Em curso / Reprov.'}
                                 </Badge>
                               </td>
@@ -253,7 +253,7 @@ export default function MeuBoletim() {
                   {ocorrencias.length === 0 ? (
                     <EmptyState title="Cump rimento Exemplar" description="Não existem registos disciplinares negativos até à data." icon={<Award className="w-12 h-12 text-emerald-500" />} />
                   ) : (
-                    ocorrencias.map((oc: any) => (
+                    ocorrencias.map((oc: OcorrenciaRow) => (
                       <div key={oc.id} className={`flex items-start gap-4 p-4 rounded-xl border ${oc.tipo === 'elogio' ? 'border-studio-brand bg-studio-brand/5' : 'border-red-500/20 bg-red-500/[0.02]'}`}>
                         <div className={`p-2 rounded-lg ${oc.tipo === 'elogio' ? 'bg-studio-brand/20 text-studio-brand' : 'bg-red-500/20 text-red-500'}`}>
                           {oc.tipo === 'elogio' ? <Star className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
@@ -283,7 +283,7 @@ export default function MeuBoletim() {
                         <MessageSquare className="w-4 h-4" /> Resumo de Faltas
                       </h4>
                       <div className="space-y-3">
-                        {frequencia?.porTurma.map((t: any) => (
+                        {frequencia?.porTurma.map((t: ResumoFrequenciaAlunoResult['porTurma'][number]) => (
                           <div key={t.turmaId} className="flex items-center justify-between p-3 bg-studio-muted/10 rounded-xl">
                             <span className="text-xs font-bold text-studio-foreground">{t.turmaNome}</span>
                             <div className="flex items-center gap-4">
@@ -331,7 +331,7 @@ export default function MeuBoletim() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[9px] border-studio-border">Atualizado em tempo real</Badge>
+                <Badge variant="neutral" className="text-[9px] border-studio-border">Atualizado em tempo real</Badge>
                 <span className="text-[10px] text-studio-foreground-lighter italic">Nexus Education Cloud</span>
               </div>
             </div>
@@ -342,7 +342,7 @@ export default function MeuBoletim() {
   )
 }
 
-function Star(props: any) {
+function Star(props: React.SVGAttributes<SVGSVGElement>) {
   return (
     <svg
       {...props}

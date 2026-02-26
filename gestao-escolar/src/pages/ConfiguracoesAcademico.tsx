@@ -6,7 +6,6 @@ import {
     Percent,
     GraduationCap,
     ShieldCheck,
-    AlertTriangle,
     Calculator,
     Zap,
     Hash,
@@ -80,7 +79,7 @@ export default function ConfiguracoesAcademico() {
         if (!selectedAnoId) return
         updateConfig.mutate({ anoLetivoId: selectedAnoId, ...form }, {
             onSuccess: () => toast.success('Arquitetura pedagógica consolidada.'),
-            onError: (err: any) => toast.error(err.message)
+            onError: (err: unknown) => toast.error(err instanceof Error ? err.message : String(err))
         })
     }
 
@@ -145,7 +144,7 @@ export default function ConfiguracoesAcademico() {
                                 value={form.limiteFaltasPercentagem}
                                 onChange={(e) => setForm({ ...form, limiteFaltasPercentagem: Number(e.target.value) })}
                                 leftIcon={<UserX className="w-4 h-4 text-red-500" />}
-                                subtitle="Percentual de ausências que gera reprovação automática."
+                                hint="Percentual de ausências que gera reprovação automática."
                             />
                         </div>
                     </Card>

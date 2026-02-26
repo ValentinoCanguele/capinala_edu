@@ -77,7 +77,7 @@ const queryKeys = {
   pautaGeral: (turmaId: string, periodoId: string) =>
     ['escola', 'pauta-geral', turmaId, periodoId] as const,
   accessLogs: (limit?: number) => ['escola', 'access-logs', limit] as const,
-  ocorrencias: (filters?: any) => ['escola', 'ocorrencias', filters] as const,
+  ocorrencias: (filters?: { alunoId?: string; turmaId?: string; resolvido?: boolean }) => ['escola', 'ocorrencias', filters] as const,
   studentCard: (alunoId: string) => ['escola', 'student-card', alunoId] as const,
   anoLetivo: (id: string) => ['escola', 'anoLetivo', id] as const,
   dashboardStats: ['escola', 'dashboard-stats'] as const,
@@ -131,6 +131,18 @@ export function prefetchAlunos(queryClient: QueryClient): void {
 
 export function useTurmas() {
   return useQuery({
+    queryKey: queryKeys.turmas,
+    queryFn: async (): Promise<Turma[]> => {
+      const { data, error } = await api.get<Turma[]>(`${ESCOLA_API}/turmas`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchTurmas(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
     queryKey: queryKeys.turmas,
     queryFn: async (): Promise<Turma[]> => {
       const { data, error } = await api.get<Turma[]>(`${ESCOLA_API}/turmas`)
@@ -315,13 +327,24 @@ export function useResumoFrequenciaAluno(alunoId: string | null, anoLetivoId?: s
   })
 }
 
+export interface JustificativaRow {
+  id: string
+  parecer_direcao?: string
+  alunoNome?: string
+  data_inicio?: string
+  data_fim?: string
+  dataAula?: string
+  motivo?: string
+  descricao?: string
+}
+
 export function useJustificativas(alunoId?: string) {
   return useQuery({
     queryKey: ['escola', 'justificativas', alunoId] as const,
-    queryFn: async () => {
+    queryFn: async (): Promise<JustificativaRow[]> => {
       const params = new URLSearchParams()
       if (alunoId) params.set('alunoId', alunoId)
-      const { data, error } = await api.get(`${ESCOLA_API}/frequencia/justificativas?${params.toString()}`)
+      const { data, error } = await api.get<JustificativaRow[]>(`${ESCOLA_API}/frequencia/justificativas?${params.toString()}`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
@@ -495,6 +518,8 @@ export interface BoletimDisciplina {
   nome: string
   mediaFinal: number | null
   aprovado: boolean
+  resultadoFinal?: string
+  detalhesPorTrimestre?: Record<number, { valor?: number; mac?: number; npp?: number }>
 }
 
 export interface BoletimResponse {
@@ -650,6 +675,12 @@ export interface SalaRow {
   id: string
   nome: string
   capacidade: number | null
+  tipo?: string
+  estado_conservacao?: string
+  equipamentos?: string[]
+  area_m2?: number
+  log_manutencao?: { data: string; descricao?: string }[]
+  data_ultima_manutencao?: string | null
 }
 
 export function useSalas() {
@@ -675,12 +706,21 @@ export function prefetchSalas(queryClient: QueryClient): void {
   })
 }
 
+export interface InventarioItem {
+  id?: string
+  nome?: string
+  item_nome?: string
+  quantidade?: number
+  estado?: string
+  numero_serie?: string
+}
+
 export function useInventarioSala(salaId: string | null) {
   return useQuery({
     queryKey: ['escola', 'inventario', salaId] as const,
-    queryFn: async (): Promise<any[]> => {
+    queryFn: async (): Promise<InventarioItem[]> => {
       if (!salaId) return []
-      const { data, error } = await api.get<any[]>(`${ESCOLA_API}/salas?action=inventario&id=${salaId}`)
+      const { data, error } = await api.get<InventarioItem[]>(`${ESCOLA_API}/salas?action=inventario&id=${salaId}`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
@@ -1044,6 +1084,12 @@ export interface ConfigPedagogica {
   minimaAcessoExame: number
   pesoMfaNoExame: number
   pesoExameFinal: number
+  tipoArredondamento?: string
+  casasDecimais?: number
+  formulaNotaTrimestral?: string
+  formulaMfa?: string
+  toleranciaAtrasoMinutos?: number
+  limiteFaltasPercentagem?: number
 }
 
 export function usePedagogicalConfig(anoLetivoId: string | null) {
@@ -1089,27 +1135,48 @@ export function useExames(filters?: { turmaId?: string; disciplinaId?: string })
   })
 }
 
+export interface AccessLogRow {
+  id: string
+  studentName?: string
+  timestamp: string
+  sentido: 'entrada' | 'saida'
+}
+
 export function useAccessLogs(limit = 20) {
   return useQuery({
     queryKey: queryKeys.accessLogs(limit),
-    queryFn: async () => {
-      const { data, error } = await api.get<any[]>(`${ESCOLA_API}/frequencia/logs?limit=${limit}`)
+    queryFn: async (): Promise<AccessLogRow[]> => {
+      const { data, error } = await api.get<AccessLogRow[]>(`${ESCOLA_API}/frequencia/logs?limit=${limit}`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
   })
 }
 
+export interface OcorrenciaRow {
+  id: string
+  tipo: string
+  gravidade?: string
+  descricao?: string
+  data_ocorrencia: string
+  resolvido?: boolean
+  studentName?: string
+  turmaNome?: string
+  medida_tomada?: string
+  professorName?: string
+  notificar_encarregado?: boolean
+}
+
 export function useOcorrencias(filters?: { alunoId?: string, turmaId?: string, resolvido?: boolean }) {
   return useQuery({
     queryKey: queryKeys.ocorrencias(filters),
-    queryFn: async () => {
+    queryFn: async (): Promise<OcorrenciaRow[]> => {
       const params = new URLSearchParams()
       if (filters?.alunoId) params.set('alunoId', filters.alunoId)
       if (filters?.turmaId) params.set('turmaId', filters.turmaId)
       if (filters?.resolvido !== undefined) params.set('resolvido', String(filters.resolvido))
       const qs = params.toString()
-      const { data, error } = await api.get(`${ESCOLA_API}/ocorrencias${qs ? `?${qs}` : ''}`)
+      const { data, error } = await api.get<OcorrenciaRow[]>(`${ESCOLA_API}/ocorrencias${qs ? `?${qs}` : ''}`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
@@ -1128,11 +1195,42 @@ export function prefetchOcorrencias(queryClient: QueryClient): void {
   })
 }
 
+export interface MatrizRow {
+  id: string
+  nome: string
+  grau_escolar?: string
+  versao?: number
+}
+
+export interface MatrizDisciplinaRow {
+  id: string
+  disciplina_name: string
+  ordem?: number
+  grupo?: string
+  carga_horaria_teorica?: number
+  carga_horaria_pratica?: number
+  formula_media?: string
+  peso_na_media?: number
+  nota_minima_aprovacao?: number
+}
+
+export interface MatrizPrecedenciaRow {
+  id: string
+  alvo_nome?: string
+  precedente_nome?: string
+}
+
+export interface MatrizDetalhe {
+  id: string
+  disciplinas?: MatrizDisciplinaRow[]
+  precedencias?: MatrizPrecedenciaRow[]
+}
+
 export function useMatrizes() {
   return useQuery({
     queryKey: queryKeys.matrizes,
-    queryFn: async () => {
-      const { data, error } = await api.get(`${ESCOLA_API}/matrizes`)
+    queryFn: async (): Promise<MatrizRow[]> => {
+      const { data, error } = await api.get<MatrizRow[]>(`${ESCOLA_API}/matrizes`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
@@ -1143,8 +1241,8 @@ export function useMatrizes() {
 export function prefetchMatrizes(queryClient: QueryClient): void {
   queryClient.prefetchQuery({
     queryKey: queryKeys.matrizes,
-    queryFn: async () => {
-      const { data, error } = await api.get(`${ESCOLA_API}/matrizes`)
+    queryFn: async (): Promise<MatrizRow[]> => {
+      const { data, error } = await api.get<MatrizRow[]>(`${ESCOLA_API}/matrizes`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
@@ -1154,11 +1252,11 @@ export function prefetchMatrizes(queryClient: QueryClient): void {
 export function useMatriz(id: string | null) {
   return useQuery({
     queryKey: id ? queryKeys.matriz(id) : ['escola', 'matriz', 'none'],
-    queryFn: async () => {
+    queryFn: async (): Promise<MatrizDetalhe | null> => {
       if (!id) return null
-      const { data, error } = await api.get(`${ESCOLA_API}/matrizes?id=${id}`)
+      const { data, error } = await api.get<MatrizDetalhe>(`${ESCOLA_API}/matrizes?id=${id}`)
       if (error) throw new Error(error.message)
-      return data
+      return data ?? null
     },
     enabled: !!id,
   })

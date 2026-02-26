@@ -5,7 +5,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { canManageSalas } from '@/lib/permissoes'
-import { useSalas, useSalasAudit, useAnosLetivos, useInventarioSala } from '@/data/escola/queries'
+import { useSalas, useSalasAudit, useAnosLetivos, useInventarioSala, type SalaRow } from '@/data/escola/queries'
 import {
   useCreateSala,
   useUpdateSala,
@@ -34,20 +34,17 @@ import {
   Plus,
   Search,
   Activity,
-  Cpu,
   Maximize,
   Clock,
   Settings2,
   ShieldCheck,
-  Calendar,
   AlertTriangle,
   Package,
   X,
-  Smartphone,
   HardDrive
 } from 'lucide-react'
 
-const TIPO_LABELS: Record<string, { label: string, icon: any, color: string }> = {
+const TIPO_LABELS: Record<string, { label: string, icon: import('lucide-react').LucideIcon, color: string }> = {
   sala_aula: { label: 'Sala de Aula', icon: Home, color: 'text-blue-500' },
   laboratorio: { label: 'Laboratório', icon: FlaskConical, color: 'text-purple-500' },
   biblioteca: { label: 'Biblioteca', icon: BookOpen, color: 'text-emerald-500' },
@@ -64,20 +61,15 @@ const ESTADO_LABELS: Record<string, { label: string, variant: 'success' | 'warni
   inutilizavel: { label: 'Inabilitada', variant: 'neutral' },
 }
 
-const EQUIPAMENTOS_OPCOES = [
-  'Projetor', 'Ar Condicionado', 'Quadro Branco', 'Quadro Interativo',
-  'Computadores', 'Microscópios', 'Sistema de Som', 'Wi-Fi Dedicado', 'Câmeras IP'
-]
-
 export default function Salas() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [logModalOpen, setLogModalOpen] = useState(false)
   const [invModalOpen, setInvModalOpen] = useState(false)
-  const [selectedSalaForLog, setSelectedSalaForLog] = useState<any>(null)
-  const [selectedSalaForInv, setSelectedSalaForInv] = useState<any>(null)
-  const [editingSala, setEditingSala] = useState<any>(null)
+  const [selectedSalaForLog, setSelectedSalaForLog] = useState<SalaRow | null>(null)
+  const [selectedSalaForInv, setSelectedSalaForInv] = useState<SalaRow | null>(null)
+  const [editingSala, setEditingSala] = useState<SalaRow | null>(null)
   const [filterFromUrl, setFilterFromUrl] = useQueryState('q')
   const [filter, setFilter] = useState(() => searchParams.get('q') ?? '')
   const debouncedFilter = useDebounce(filter, 400)
@@ -92,11 +84,12 @@ export default function Salas() {
     setFilterFromUrl(debouncedFilter)
   }, [debouncedFilter, setFilterFromUrl])
 
-  const { data: salas = [], isLoading } = useSalas()
+  const { data: salas = [] } = useSalas()
   const { data: anosLetivos = [] } = useAnosLetivos()
-  const { data: auditData = [], isLoading: loadingAudit } = useSalasAudit(anoAudit || null)
+  const { data: rawAuditData } = useSalasAudit(anoAudit || null)
+  const auditData = Array.isArray(rawAuditData) ? rawAuditData : []
   const { data: inventarioRaw } = useInventarioSala(selectedSalaForInv?.id || null)
-  const inventario: any[] = Array.isArray(inventarioRaw) ? inventarioRaw : []
+  const inventario: InventarioItem[] = Array.isArray(inventarioRaw) ? inventarioRaw : []
 
   const createSala = useCreateSala()
   const updateSala = useUpdateSala()
@@ -105,7 +98,7 @@ export default function Salas() {
   const removeItem = useRemoveItemInventario()
 
   const filtered = useMemo(() =>
-    salas.filter((s: any) =>
+    salas.filter((s: SalaRow) =>
       s.nome.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
       (s.equipamentos || []).some((eq: string) => eq.toLowerCase().includes(debouncedFilter.toLowerCase()))
     ),
@@ -115,10 +108,10 @@ export default function Salas() {
   const stats = useMemo(() => {
     return {
       total: salas.length,
-      laboratorios: salas.filter((s: any) => s.tipo === 'laboratorio').length,
-      capacidadeTotal: salas.reduce((acc: number, s: any) => acc + (s.capacidade || 0), 0),
-      mediaCapacidade: Math.round(salas.reduce((acc: number, s: any) => acc + (s.capacidade || 0), 0) / (salas.length || 1)),
-      manutencaoPendente: salas.filter((s: any) => s.estado_conservacao === 'precisa_reparacao' || s.estado_conservacao === 'inutilizavel').length
+      laboratorios: salas.filter((s: SalaRow) => s.tipo === 'laboratorio').length,
+      capacidadeTotal: salas.reduce((acc: number, s: SalaRow) => acc + (s.capacidade || 0), 0),
+      mediaCapacidade: Math.round(salas.reduce((acc: number, s: SalaRow) => acc + (s.capacidade || 0), 0) / (salas.length || 1)),
+      manutencaoPendente: salas.filter((s: SalaRow) => s.estado_conservacao === 'precisa_reparacao' || s.estado_conservacao === 'inutilizavel').length
     }
   }, [salas])
 
@@ -131,18 +124,18 @@ export default function Salas() {
       tipo: formData.get('tipo') as string,
       area_m2: Number(formData.get('area_m2')) || undefined,
       estado_conservacao: formData.get('estado_conservacao') as string,
-      equipamentos: Array.from(formData.getAll('equipamentos'))
+      equipamentos: Array.from(formData.getAll('equipamentos'), (v) => (v instanceof File ? v.name : String(v)))
     }
 
     if (editingSala) {
-      updateSala.mutate({ id: editingSala.id, ...data } as any, {
+      updateSala.mutate({ id: editingSala.id, ...data }, {
         onSuccess: () => {
           toast.success('Ativo imobiliário atualizado')
           setModalOpen(false)
         }
       })
     } else {
-      createSala.mutate(data as any, {
+      createSala.mutate(data, {
         onSuccess: () => {
           toast.success('Nova unidade registada')
           setModalOpen(false)
@@ -185,7 +178,7 @@ export default function Salas() {
       id: selectedSalaForLog.id,
       log_manutencao: [newLog, ...currentLogs],
       data_ultima_manutencao: newLog.data
-    } as any, {
+    }, {
       onSuccess: () => {
         toast.success('Log de manutenção registado')
         setLogModalOpen(false)
@@ -255,7 +248,7 @@ export default function Salas() {
             <EmptyState title="Auditoria Pendente" description="Selecione um ciclo para análise." icon={<Clock className="w-12 h-12 opacity-10" />} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {auditData.map((s: any) => (
+              {auditData.map((s: { salaId: string; salaNome: string; tipo?: string; totalAulasSemanais: number }) => (
                 <div key={s.salaId} className="p-6 rounded-3xl bg-studio-muted/5 border border-studio-border/60 hover:border-studio-brand transition-all">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -303,9 +296,9 @@ export default function Salas() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/20">
-                {filtered.map((s: any) => {
-                  const Config = TIPO_LABELS[s.tipo] || TIPO_LABELS.outro
-                  const Estado = ESTADO_LABELS[s.estado_conservacao] || ESTADO_LABELS.bom
+                {filtered.map((s: SalaRow) => {
+                  const Config = TIPO_LABELS[s.tipo ?? 'outro'] ?? TIPO_LABELS.outro
+                  const Estado = ESTADO_LABELS[s.estado_conservacao ?? 'bom'] ?? ESTADO_LABELS.bom
                   return (
                     <tr key={s.id} className="hover:bg-studio-brand/[0.01] transition-colors group">
                       <td className="px-6 py-4">
@@ -392,21 +385,21 @@ export default function Salas() {
               <Badge variant="neutral" className="text-[9px] font-black">{inventario.length} Itens</Badge>
             </div>
             <div className="divide-y divide-studio-border/30 border border-studio-border/50 rounded-3xl overflow-hidden bg-white dark:bg-studio-bg">
-              {inventario.map((item: any) => (
+              {inventario.map((item: InventarioItem) => (
                 <div key={item.id} className="p-4 flex items-center justify-between group hover:bg-studio-muted/5 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-2xl bg-studio-muted/5 border border-studio-border flex items-center justify-center">
-                      {item.item_nome.toLowerCase().includes('pc') || item.item_nome.toLowerCase().includes('comp') ? <Monitor className="w-5 h-5 text-cyan-500" /> : <HardDrive className="w-5 h-5 text-studio-foreground-lighter" />}
+                      {(item.item_nome ?? '').toLowerCase().includes('pc') || (item.item_nome ?? '').toLowerCase().includes('comp') ? <Monitor className="w-5 h-5 text-cyan-500" /> : <HardDrive className="w-5 h-5 text-studio-foreground-lighter" />}
                     </div>
                     <div>
-                      <p className="text-xs font-black text-studio-foreground uppercase tracking-tight">{item.item_nome}</p>
+                      <p className="text-xs font-black text-studio-foreground uppercase tracking-tight">{item.item_nome ?? ''}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={item.estado === 'funcional' ? 'success' : 'danger'} size="sm" className="text-[8px] font-black uppercase leading-none">{item.estado}</Badge>
+                        <Badge variant={item.estado === 'funcional' ? 'success' : 'danger'} className="text-[8px] font-black uppercase leading-none">{item.estado}</Badge>
                         <span className="text-[9px] font-bold text-studio-foreground-lighter uppercase tracking-tighter">{item.quantidade} UNIDADES • SN: {item.numero_serie || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => removeItem.mutate(item.id)} className="p-2 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
+                  <button onClick={() => item.id != null && removeItem.mutate(item.id)} className="p-2 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -443,7 +436,7 @@ export default function Salas() {
             <Select name="tipo" label="Tipo" defaultValue={editingSala?.tipo} options={Object.keys(TIPO_LABELS).map(k => ({ value: k, label: TIPO_LABELS[k].label }))} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input name="capacidade" type="number" label="Capacidade" defaultValue={editingSala?.capacidade} />
+            <Input name="capacidade" type="number" label="Capacidade" defaultValue={editingSala?.capacidade ?? undefined} />
             <Input name="area_m2" type="number" step="0.1" label="Área (m2)" defaultValue={editingSala?.area_m2} />
           </div>
           <div className="flex justify-end gap-3 pt-6">

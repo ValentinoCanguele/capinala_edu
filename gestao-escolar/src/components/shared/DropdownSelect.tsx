@@ -9,7 +9,7 @@ export interface DropdownOption {
 interface DropdownSelectProps {
     options: DropdownOption[]
     value: string | string[]
-    onChange: (value: any) => void
+    onChange: (value: string | string[]) => void
     multiple?: boolean
     searchable?: boolean
     placeholder?: string

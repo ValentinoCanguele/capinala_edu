@@ -69,6 +69,7 @@ function DisciplinaForm({
 }
 
 export default function Disciplinas() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)

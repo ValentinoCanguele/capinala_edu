@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, FileText, Calendar, Users, Trash2, Edit, Save, X, Eye, ShieldCheck, History } from 'lucide-react'
+import { Plus, Search, Calendar, Users, Trash2, Edit, Save, Eye, ShieldCheck, History } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useQueryState } from '@/hooks/useQueryState'
@@ -13,10 +13,21 @@ import { Button } from '@/components/shared/Button'
 import { Input } from '@/components/shared/Input'
 import { Select } from '@/components/shared/Select'
 import { Badge } from '@/components/shared/Badge'
-import { Modal } from '@/components/shared/Modal'
+import Modal from '@/components/shared/Modal'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { Textarea } from '@/components/shared/Textarea'
 import EmptyState from '@/components/shared/EmptyState'
+
+interface AtaEdicao {
+    id: string
+    titulo: string
+    conteudo: string
+    turmaId: string
+    periodoId?: string | null
+    dataReuniao: string
+    participantes?: string[]
+    decisoes?: string[]
+}
 
 export default function Atas() {
     const { user } = useAuth()
@@ -63,7 +74,7 @@ export default function Atas() {
         )
     }, [atas, debouncedFilter])
 
-    const handleOpenModal = (ata?: any) => {
+    const handleOpenModal = (ata?: AtaEdicao) => {
         if (ata) {
             setEditingAtaId(ata.id)
             setForm({
@@ -241,7 +252,7 @@ export default function Atas() {
                                                     </Button>
                                                 </>
                                             )}
-                                            <Button variant="brand" size="icon" title="Ver Detalhes">
+                                            <Button variant="primary" size="icon" title="Ver Detalhes">
                                                 <Eye className="w-4 h-4" />
                                             </Button>
                                         </div>

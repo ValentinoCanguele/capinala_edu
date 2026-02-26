@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, GraduationCap, Save, TrendingUp, AlertCircle, Info, RefreshCw, Trash2 } from 'lucide-react'
+import { Save, TrendingUp, Info, RefreshCw, Trash2, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { canLancarNotas } from '@/lib/permissoes'
@@ -10,8 +10,6 @@ import { Card } from '@/components/shared/Card'
 import { Select } from '@/components/shared/Select'
 import { Button } from '@/components/shared/Button'
 import { Badge } from '@/components/shared/Badge'
-import { Input } from '@/components/shared/Input'
-import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import EmptyState from '@/components/shared/EmptyState'
 
 export default function Recuperacao() {
@@ -25,14 +23,13 @@ export default function Recuperacao() {
 
     // We need to know who is in the "Exame" zone. We can use usePautaGeral for this (3rd period of course)
     // To keep it simple, we fetch the pauta for the whole year (using a virtual period or 3rd period result)
-    const { data: pauta, isLoading: pautaLoading } = usePautaGeral(turmaId || null, 'actual') // 'actual' might need to be resolved to periodoId
+    const { data: pauta } = usePautaGeral(turmaId || null, 'actual') // 'actual' might need to be resolved to periodoId
 
-    const { data: exames = [], isLoading: examesLoading } = useExames({ turmaId: turmaId || undefined, disciplinaId: disciplinaId || undefined })
+    const { data: exames = [] } = useExames({ turmaId: turmaId || undefined, disciplinaId: disciplinaId || undefined })
     const saveExame = useSaveExame()
     const deleteExame = useDeleteExame()
 
-    // Find the Periodo for the 3rd Trimester (standard for annual MFA)
-    const selectedTurma = turmas.find(t => t.id === turmaId)
+    // Find the Periodo for the 3rd Trimester (standard for annual MFA) – selectedTurma available via turmas.find(t => t.id === turmaId) if needed later
 
     const candidates = useMemo(() => {
         if (!pauta) return []
@@ -103,7 +100,7 @@ export default function Recuperacao() {
                         <label className="text-[10px] font-bold text-studio-foreground-lighter uppercase tracking-widest px-1">Tipo de Exame</label>
                         <Select
                             value={tipo}
-                            onChange={(e) => setTipo(e.target.value as any)}
+                            onChange={(e) => setTipo((e.target.value || 'recurso') as 'recurso' | 'melhoria' | 'especial')}
                             options={[
                                 { value: 'recurso', label: 'Exame de Recurso' },
                                 { value: 'melhoria', label: 'Melhoria de Nota' },
@@ -215,7 +212,7 @@ export default function Recuperacao() {
                                                 <td className="px-6 py-4 text-right">
                                                     {canLancarNotas(user?.papel) && (
                                                     <Button
-                                                        variant="brand"
+                                                        variant="primary"
                                                         size="sm"
                                                         icon={<Save className="w-3 h-3" />}
                                                         onClick={() => handleSave(aluno.alunoId)}

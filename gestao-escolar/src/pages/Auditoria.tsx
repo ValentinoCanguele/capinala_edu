@@ -1,23 +1,19 @@
 import { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
-import { useAuditLog, useAlertas, useMeuPapel } from '@/data/escola/queries'
+import { useAuditLog, useAlertas, useMeuPapel, type AuditLogEntry } from '@/data/escola/queries'
 import { api } from '@/api/client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatRelativeTime } from '@/utils/formatters'
 import PageHeader from '@/components/PageHeader'
-import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { Card } from '@/components/shared/Card'
 import { Badge, type BadgeVariant } from '@/components/shared/Badge'
 import { Select } from '@/components/shared/Select'
 import { Button } from '@/components/shared/Button'
 import EmptyState from '@/components/shared/EmptyState'
 import {
-  AlertCircle,
-  History,
   Info,
   ShieldAlert,
   Download,
-  Eye,
   Search,
   Database,
   Zap,
@@ -50,19 +46,19 @@ const ROLES_AUDITORIA: ('admin' | 'direcao')[] = ['admin', 'direcao']
 export default function Auditoria() {
   const [entidade, setEntidade] = useState('')
   const [filterQuery, setFilterQuery] = useState('')
-  const [selectedEntry, setSelectedEntry] = useState<any>(null)
+  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
   const queryClient = useQueryClient()
   const { data: meuPapel, isLoading: papelLoading } = useMeuPapel()
 
-  const canViewAuditoria = meuPapel?.papel && ROLES_AUDITORIA.includes(meuPapel.papel as any)
+  const canViewAuditoria = meuPapel?.papel && ROLES_AUDITORIA.includes(meuPapel.papel as 'admin' | 'direcao')
 
-  const { data: log = [], isLoading: logLoading, error: logError } = useAuditLog(
+  const { data: log = [], isLoading: _logLoading } = useAuditLog(
     entidade || undefined,
     100,
     !!canViewAuditoria
   )
 
-  const { data: alertas = [], isLoading: alertasLoading } = useAlertas(!!canViewAuditoria)
+  const { data: alertas = [] } = useAlertas(!!canViewAuditoria)
 
   const resolveAlerta = useMutation({
     mutationFn: async (alertaId: string) => {
@@ -74,7 +70,7 @@ export default function Auditoria() {
       queryClient.invalidateQueries({ queryKey: ['alertas'] })
       toast.success('Alerta institucional arquivado.')
     },
-    onError: (err: any) => toast.error(err.message)
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : String(err))
   })
 
   const filteredLog = useMemo(() => {

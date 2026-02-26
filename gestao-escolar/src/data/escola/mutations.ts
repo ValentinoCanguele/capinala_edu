@@ -21,7 +21,87 @@ export interface NotaBatchInput {
   turmaId: string
   periodoId?: string
   bimestre?: number
+  disciplinaId?: string
   notas: { alunoId: string; valor: number }[]
+}
+
+export interface CreateJustificativaPayload {
+  aluno_id: string
+  motivo: string
+  data_inicio: string
+  data_fim: string
+  descricao?: string
+}
+
+export interface ProcessarAcessoResponse {
+  aulaMarcada?: boolean
+  riskLevel?: string
+  studentName?: string
+}
+
+export interface CreateOcorrenciaPayload {
+  aluno_id: string
+  turma_id?: string
+  tipo: string
+  gravidade?: string
+  descricao?: string
+  data_ocorrencia: string
+}
+
+export interface UpdatePedagogicalConfigPayload {
+  anoLetivoId?: string
+  [key: string]: unknown
+}
+
+export interface SaveExamePayload {
+  turmaId: string
+  disciplinaId: string
+  periodoId?: string
+  bimestre?: number
+  dataExame?: string
+  [key: string]: unknown
+}
+
+export interface CreateMatrizPayload {
+  nome: string
+  grau_escolar: string
+  ano_letivo_inicio: string
+  notas_normativas?: string
+}
+
+export interface AddDisciplinaMatrizPayload {
+  matrizId: string
+  disciplina_id: string
+  ordem?: number
+  carga_horaria_teorica?: number
+  carga_horaria_pratica?: number
+  formula_media?: string
+  peso_na_media?: number
+  nota_minima_aprovacao?: number
+  grupo?: string
+  [key: string]: unknown
+}
+
+export interface AddPrecedenciaPayload {
+  matrizId: string
+  disciplina_alvo_id: string
+  disciplina_precedente_id: string
+}
+
+export interface CreateSalaPayload {
+  nome: string
+  tipo: string
+  capacidade?: number
+  estado?: string
+  [key: string]: unknown
+}
+
+export interface AddItemInventarioPayload {
+  salaId: string
+  item_nome: string
+  quantidade?: number
+  estado?: string
+  numero_serie?: string
 }
 
 export function useCreateAluno() {
@@ -183,7 +263,7 @@ export function useSaveFrequencia() {
 export function useCreateJustificativa() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: CreateJustificativaPayload) => {
       const { error } = await api.post(`${ESCOLA_API}/frequencia/justificativas`, data)
       if (error) throw new Error(error.message)
     },
@@ -284,7 +364,7 @@ export function useDeleteHorario() {
 export function useCreateSala() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (body: { nome: string; capacidade?: number }) => {
+    mutationFn: async (body: { nome: string; capacidade?: number; tipo?: string; area_m2?: number; estado_conservacao?: string; equipamentos?: string[] }) => {
       const result = await withRetry(
         () => api.post(`${ESCOLA_API}/salas`, body),
         { attempts: 3, delayMs: 500 }
@@ -462,7 +542,7 @@ export function useUpdateSala() {
     mutationFn: async ({
       id,
       ...body
-    }: { id: string; nome?: string; capacidade?: number }) => {
+    }: { id: string; nome?: string; capacidade?: number; tipo?: string; estado_conservacao?: string; equipamentos?: string[]; area_m2?: number; log_manutencao?: { data: string; descricao?: string }[]; data_ultima_manutencao?: string }) => {
       const { data, error } = await api.put(`${ESCOLA_API}/salas/${id}`, body)
       if (error) throw new Error(error.message)
       return data
@@ -819,7 +899,7 @@ export function useDeleteAta() {
 export function useUpdatePedagogicalConfig() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (body: any) => {
+    mutationFn: async (body: UpdatePedagogicalConfigPayload) => {
       const { data, error } = await api.patch(`${ESCOLA_API}/configuracoes/pedagogica`, body)
       if (error) throw new Error(error.message)
       return data
@@ -834,7 +914,7 @@ export function useUpdatePedagogicalConfig() {
 export function useSaveExame() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (body: any) => {
+    mutationFn: async (body: SaveExamePayload) => {
       const { data, error } = await api.post(`${ESCOLA_API}/exames`, body)
       if (error) throw new Error(error.message)
       return data
@@ -871,7 +951,7 @@ export function useProcessarAcessoQR() {
       if (error) throw new Error(error.message)
       return data
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: ProcessarAcessoResponse | undefined) => {
       queryClient.invalidateQueries({ queryKey: ['escola', 'access-logs'] })
       if (data?.aulaMarcada) {
         queryClient.invalidateQueries({ queryKey: ['escola', 'frequencia'] })
@@ -886,7 +966,7 @@ export function useProcessarAcessoQR() {
 export function useCreateOcorrencia() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (body: any) => {
+    mutationFn: async (body: CreateOcorrenciaPayload) => {
       const { data, error } = await api.post(`${ESCOLA_API}/ocorrencias`, body)
       if (error) throw new Error(error.message)
       return data
@@ -924,7 +1004,7 @@ export function useDeleteOcorrencia() {
 export function useCreateMatriz() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: CreateMatrizPayload) => {
       const { error } = await api.post(`${ESCOLA_API}/matrizes`, data)
       if (error) throw new Error(error.message)
     },

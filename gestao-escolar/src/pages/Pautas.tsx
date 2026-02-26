@@ -16,7 +16,6 @@ import { Avatar } from '@/components/shared/Avatar'
 import EmptyState from '@/components/shared/EmptyState'
 import { printElement } from '@/utils/print'
 import {
-    Table,
     FileSpreadsheet,
     Printer,
     TrendingUp,

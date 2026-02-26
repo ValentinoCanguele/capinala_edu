@@ -142,12 +142,14 @@ function FrequenciaRelatorio() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-studio-border/30">
-                  {relatorio.resumos.map((r) => (
+                  {relatorio.resumos.map((r) => {
+                    const nivelRisco: 'critico' | 'atencao' | 'ok' = r.emRisco ? (r.percentagemPresenca < 25 ? 'critico' : 'atencao') : 'ok'
+                    return (
                     <tr
                       key={r.alunoId}
-                      className={`group transition-all duration-200 ${r.nivelRisco === 'critico'
+                      className={`group transition-all duration-200 ${nivelRisco === 'critico'
                         ? 'bg-red-50/40 hover:bg-red-50/60'
-                        : r.nivelRisco === 'atencao'
+                        : nivelRisco === 'atencao'
                           ? 'bg-amber-50/20 hover:bg-amber-50/40'
                           : 'hover:bg-studio-muted/20'
                         }`}
@@ -168,28 +170,28 @@ function FrequenciaRelatorio() {
                       </td>
                       <td className="px-6 py-4 text-sm text-center tabular-nums border-l border-studio-border/30">
                         <div className="flex flex-col items-center gap-1">
-                          <span className={`font-black ${r.nivelRisco === 'critico' ? 'text-red-600' : r.nivelRisco === 'atencao' ? 'text-amber-600' : 'text-studio-foreground-light'}`}>
+                          <span className={`font-black ${nivelRisco === 'critico' ? 'text-red-600' : nivelRisco === 'atencao' ? 'text-amber-600' : 'text-studio-foreground-light'}`}>
                             {r.percentagemPresenca}%
                           </span>
                           <div className="w-16 h-1.5 bg-studio-muted rounded-full overflow-hidden">
                             <div
-                              className={`h-full transition-all duration-700 ${r.nivelRisco === 'critico' ? 'bg-red-600' : r.nivelRisco === 'atencao' ? 'bg-amber-500' : 'bg-studio-brand'}`}
+                              className={`h-full transition-all duration-700 ${nivelRisco === 'critico' ? 'bg-red-600' : nivelRisco === 'atencao' ? 'bg-amber-500' : 'bg-studio-brand'}`}
                               style={{ width: `${r.percentagemPresenca}%` }}
                             />
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {r.nivelRisco === 'critico' ? (
+                        {nivelRisco === 'critico' ? (
                           <Badge variant="danger" pulse className="font-black uppercase tracking-tighter">Eliminado por Faltas</Badge>
-                        ) : r.nivelRisco === 'atencao' ? (
+                        ) : nivelRisco === 'atencao' ? (
                           <Badge variant="warning" className="font-black uppercase tracking-tighter">Risco de Exclusão</Badge>
                         ) : (
                           <Badge variant="success" className="font-black uppercase tracking-tighter">Regularizado</Badge>
                         )}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>

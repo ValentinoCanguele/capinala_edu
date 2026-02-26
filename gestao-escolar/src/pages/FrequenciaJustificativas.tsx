@@ -18,6 +18,7 @@ import { Select } from '@/components/shared/Select'
 import Modal from '@/components/shared/Modal'
 import EmptyState from '@/components/shared/EmptyState'
 import toast from 'react-hot-toast'
+import type { LucideIcon } from 'lucide-react'
 import {
     FileText,
     Plus,
@@ -27,11 +28,9 @@ import {
     User,
     Calendar,
     Search,
-    Filter,
     Stethoscope,
     ShieldAlert,
     ChevronRight,
-    ExternalLink,
     AlertCircle
 } from 'lucide-react'
 
@@ -42,7 +41,7 @@ const MOTIVOS = [
     { value: 'outro', label: 'Outros Motivos Justificáveis', icon: FileText },
 ]
 
-const STATUS_CONFIG: Record<string, { label: string, variant: 'neutral' | 'success' | 'danger' | 'warning', icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string, variant: 'neutral' | 'success' | 'danger' | 'warning', icon: LucideIcon }> = {
     pendente: { label: 'Em Análise', variant: 'warning', icon: Clock },
     deferido: { label: 'Aprovada', variant: 'success', icon: CheckCircle2 },
     indeferido: { label: 'Rejeitada', variant: 'danger', icon: XCircle },
@@ -54,7 +53,7 @@ export default function FrequenciaJustificativas() {
     const [filter, setFilter] = useState('')
     const [statusFilter, setStatusFilter] = useState('todos')
 
-    const { data: justificativas = [], isLoading } = useJustificativas() as unknown as { data: any[], isLoading: boolean }
+    const { data: justificativas = [], isLoading } = useJustificativas()
     const { data: alunos = [] } = useAlunos()
 
     const createJustificativa = useCreateJustificativa()

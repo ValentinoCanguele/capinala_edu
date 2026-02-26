@@ -4,7 +4,11 @@ import { isAdmin } from '@/lib/permissoes'
 import {
     useMatrizes,
     useMatriz,
-    useAnosLetivos
+    useAnosLetivos,
+    type MatrizRow,
+    type MatrizDetalhe,
+    type MatrizDisciplinaRow,
+    type MatrizPrecedenciaRow
 } from '@/data/escola/queries'
 import {
     useCreateMatriz,
@@ -25,18 +29,17 @@ import toast from 'react-hot-toast'
 import {
     Layers,
     Plus,
-    BookOpen,
     ChevronRight,
     Settings2,
     ListChecks,
     GraduationCap,
     Copy,
-    Info,
     Calculator,
     ShieldCheck,
     X,
     Lock,
-    Link as LinkIcon
+    Link as LinkIcon,
+    AlertTriangle
 } from 'lucide-react'
 
 export default function Matrizes() {
@@ -47,8 +50,8 @@ export default function Matrizes() {
     const [precModalOpen, setPrecModalOpen] = useState(false)
     const [selectedMatrizId, setSelectedMatrizId] = useState<string | null>(null)
 
-    const { data: matrizes = [], isLoading } = useMatrizes() as unknown as { data: any[], isLoading: boolean }
-    const { data: matrizDetalhe } = useMatriz(selectedMatrizId) as unknown as { data: any }
+    const { data: matrizes = [], isLoading } = useMatrizes()
+    const { data: matrizDetalhe } = useMatriz(selectedMatrizId)
     const { data: anosLetivos = [] } = useAnosLetivos()
 
     const createMatriz = useCreateMatriz()
@@ -82,7 +85,8 @@ export default function Matrizes() {
             novoNome: formData.get('novo_nome') as string,
             novoAnoLetivoId: formData.get('novo_ano_letivo') as string
         }, {
-            onSuccess: (res) => {
+            onSuccess: (data: unknown) => {
+                const res = data as { id: string }
                 toast.success('Plano herdado e versionado com sucesso')
                 setCloneModalOpen(false)
                 setSelectedMatrizId(res.id)
@@ -126,7 +130,7 @@ export default function Matrizes() {
                 toast.success('Regra de precedência ativada.')
                 setPrecModalOpen(false)
             },
-            onError: (err: any) => toast.error(err.message)
+            onError: (err: unknown) => toast.error(err instanceof Error ? err.message : String(err))
         })
     }
 
@@ -161,7 +165,7 @@ export default function Matrizes() {
                                 <p className="text-[10px] font-bold text-studio-foreground-lighter uppercase tracking-widest leading-relaxed">Nenhuma matriz<br />configurada no sistema</p>
                             </div>
                         )}
-                        {matrizes.map((m: any) => (
+                        {matrizes.map((m: MatrizRow) => (
                             <button
                                 key={m.id}
                                 onClick={() => setSelectedMatrizId(m.id)}
@@ -252,7 +256,7 @@ export default function Matrizes() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-studio-border/20">
-                                            {matrizDetalhe?.disciplinas?.map((d: any) => (
+                                            {matrizDetalhe?.disciplinas?.map((d: MatrizDisciplinaRow) => (
                                                 <tr key={d.id} className="hover:bg-studio-brand/[0.01] group transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
@@ -296,7 +300,7 @@ export default function Matrizes() {
                                     </Button>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {matrizDetalhe?.precedencias?.map((p: any) => (
+                                    {matrizDetalhe?.precedencias?.map((p: MatrizPrecedenciaRow) => (
                                         <div key={p.id} className="p-4 rounded-3xl border border-amber-600/20 bg-amber-600/[0.03] flex items-center justify-between group">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-2xl bg-amber-600/10 flex items-center justify-center text-amber-600">
@@ -358,7 +362,7 @@ export default function Matrizes() {
                         name="precedente"
                         label="Disciplina Atuante (Precedente)"
                         required
-                        options={matrizDetalhe?.disciplinas?.map((d: any) => ({ value: d.id, label: d.disciplina_name })) || []}
+                        options={matrizDetalhe?.disciplinas?.map((d: MatrizDisciplinaRow) => ({ value: d.id, label: d.disciplina_name })) || []}
                         leftIcon={<Lock className="w-4 h-4 text-amber-600" />}
                     />
 
@@ -370,7 +374,7 @@ export default function Matrizes() {
                         name="alvo"
                         label="Disciplina Sofredora (Alvo)"
                         required
-                        options={matrizDetalhe?.disciplinas?.map((d: any) => ({ value: d.id, label: d.disciplina_name })) || []}
+                        options={matrizDetalhe?.disciplinas?.map((d: MatrizDisciplinaRow) => ({ value: d.id, label: d.disciplina_name })) || []}
                         leftIcon={<ShieldCheck className="w-4 h-4 text-studio-brand" />}
                     />
 

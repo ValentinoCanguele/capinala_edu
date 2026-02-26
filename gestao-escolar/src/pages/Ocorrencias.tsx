@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
-import { Plus, Search, ShieldAlert, AlertTriangle, Info, CheckCircle, Trash2, User, Calendar, Filter, FileText, Bell, MessageSquare, Star } from 'lucide-react'
+import { Plus, ShieldAlert, AlertTriangle, Info, CheckCircle, Trash2, User, Calendar, Filter, FileText, Bell, MessageSquare, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { canManageOcorrencias } from '@/lib/permissoes'
-import { useOcorrencias, useTurmas, useTurmaAlunos } from '@/data/escola/queries'
+import { useOcorrencias, useTurmas, useTurmaAlunos, type OcorrenciaRow } from '@/data/escola/queries'
 import { useCreateOcorrencia, useResolveOcorrencia, useDeleteOcorrencia } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
 import { Card } from '@/components/shared/Card'
@@ -13,7 +13,7 @@ import { Input } from '@/components/shared/Input'
 import { Select } from '@/components/shared/Select'
 import { Badge } from '@/components/shared/Badge'
 import { Avatar } from '@/components/shared/Avatar'
-import { Modal } from '@/components/shared/Modal'
+import Modal from '@/components/shared/Modal'
 import EmptyState from '@/components/shared/EmptyState'
 
 const TIPOS = [
@@ -23,14 +23,17 @@ const TIPOS = [
     { value: 'suspensao', label: 'Suspensão', icon: AlertTriangle },
     { value: 'expulsao', label: 'Expulsão', icon: ShieldAlert },
     { value: 'elogio', label: 'Elogio / Mérito', icon: Star },
-]
+] as const
 
 const GRAVIDADES = [
     { value: 'leve', label: 'Leve', color: 'bg-blue-500' },
     { value: 'moderada', label: 'Moderada', color: 'bg-amber-500' },
     { value: 'grave', label: 'Grave', color: 'bg-orange-600' },
     { value: 'critica', label: 'Crítica', color: 'bg-red-700' },
-]
+] as const
+
+type TipoOcorrencia = (typeof TIPOS)[number]['value']
+type Gravidade = (typeof GRAVIDADES)[number]['value']
 
 function parseResolvido(s: string): boolean | undefined {
     if (s === 'true') return true
@@ -57,17 +60,26 @@ export default function Ocorrencias() {
 
     const { data: turmas = [] } = useTurmas()
     const { data: alunos = [] } = useTurmaAlunos(filters.turmaId || null)
-    const { data: ocorrencias = [], isLoading } = useOcorrencias(filters)
+    const { data: ocorrenciasRaw, isLoading } = useOcorrencias(filters)
+    const ocorrencias = Array.isArray(ocorrenciasRaw) ? ocorrenciasRaw : []
 
     const createMutation = useCreateOcorrencia()
     const resolveMutation = useResolveOcorrencia()
     const deleteMutation = useDeleteOcorrencia()
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<{
+        alunoId: string
+        turmaId: string
+        tipo: TipoOcorrencia
+        gravidade: Gravidade
+        descricao: string
+        medidaTomada: string
+        notificarEncarregado: boolean
+    }>({
         alunoId: '',
         turmaId: '',
-        tipo: 'advertencia_verbal' as any,
-        gravidade: 'leve' as any,
+        tipo: 'advertencia_verbal',
+        gravidade: 'leve',
         descricao: '',
         medidaTomada: '',
         notificarEncarregado: true,
@@ -181,12 +193,12 @@ export default function Ocorrencias() {
                         />
                     ) : (
                         <div className="space-y-4">
-                            {ocorrencias.map((oc: any) => (
+                            {ocorrencias.map((oc: OcorrenciaRow) => (
                                 <Card key={oc.id} className={`overflow-hidden border-l-4 ${oc.resolvido ? 'border-l-emerald-500 opacity-80' : oc.tipo === 'elogio' ? 'border-l-studio-brand' : 'border-l-red-500'} hover:shadow-xl transition-all duration-300`}>
                                     <div className="p-5">
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-4">
-                                                <Avatar name={oc.studentName} size="md" />
+                                                <Avatar name={oc.studentName ?? ''} size="md" />
                                                 <div>
                                                     <h4 className="text-sm font-black text-studio-foreground uppercase tracking-tight">{oc.studentName}</h4>
                                                     <p className="text-[10px] text-studio-foreground-lighter flex items-center gap-2">
@@ -195,7 +207,7 @@ export default function Ocorrencias() {
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end gap-2">
-                                                <Badge variant={oc.resolvido ? 'success' : 'danger'} size="sm" className="uppercase font-black tracking-tighter">
+                                                <Badge variant={oc.resolvido ? 'success' : 'danger'} className="uppercase font-black tracking-tighter text-[10px]">
                                                     {oc.resolvido ? 'Resolvido' : 'Pendente'}
                                                 </Badge>
                                                 <Badge variant="neutral" className="bg-studio-muted/10 text-[9px]">
@@ -210,7 +222,7 @@ export default function Ocorrencias() {
                                                     <Badge className={`${GRAVIDADES.find(g => g.value === oc.gravidade)?.color} text-white border-none py-1 px-3 text-[10px] font-black uppercase`}>
                                                         Gravidade: {oc.gravidade}
                                                     </Badge>
-                                                    <Badge variant="outline" className="text-studio-brand border-studio-brand/30 py-1 px-3 text-[10px] font-black uppercase">
+                                                    <Badge variant="neutral" className="text-studio-brand border border-studio-brand/30 py-1 px-3 text-[10px] font-black uppercase">
                                                         {oc.tipo.replace('_', ' ')}
                                                     </Badge>
                                                 </div>
@@ -246,7 +258,7 @@ export default function Ocorrencias() {
                                                     variant="ghost"
                                                     size="sm"
                                                     icon={oc.resolvido ? <CheckCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
-                                                    onClick={() => handleResolve(oc.id, oc.resolvido)}
+                                                    onClick={() => handleResolve(oc.id, oc.resolvido ?? false)}
                                                     className={oc.resolvido ? 'text-emerald-500' : 'text-amber-500'}
                                                 >
                                                     {oc.resolvido ? 'Reabrir' : 'Marcar Resolvido'}
@@ -272,7 +284,7 @@ export default function Ocorrencias() {
 
             {/* Modal Nova Ocorrência */}
             <Modal
-                isOpen={isModalOpen}
+                open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title="Registar Ocorrência Disciplinar"
                 size="lg"
@@ -301,14 +313,14 @@ export default function Ocorrencias() {
                             label="Tipo de Participação"
                             required
                             value={form.tipo}
-                            onChange={(e) => setForm({ ...form, tipo: e.target.value as any })}
+                            onChange={(e) => setForm({ ...form, tipo: e.target.value as TipoOcorrencia })}
                             options={TIPOS.map(t => ({ value: t.value, label: t.label }))}
                         />
                         <Select
                             label="Gravidade"
                             required
                             value={form.gravidade}
-                            onChange={(e) => setForm({ ...form, gravidade: e.target.value as any })}
+                            onChange={(e) => setForm({ ...form, gravidade: e.target.value as Gravidade })}
                             options={GRAVIDADES.map(g => ({ value: g.value, label: g.label }))}
                         />
                     </div>

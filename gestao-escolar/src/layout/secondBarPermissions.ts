@@ -20,10 +20,9 @@ import {
  */
 export function filterSecondBarByRole(
   items: SecondBarItem[],
-  pathname: string,
+  _pathname: string,
   papel: string | undefined
 ): SecondBarItem[] {
-  const base = pathname.split('?')[0]
   return items.filter((item) => {
     const toPath = item.to.split('?')[0]
     const hasNovo = item.to.includes('acao=novo')

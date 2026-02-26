@@ -60,7 +60,7 @@ export default function Dashboard() {
     if (!papel) return new Set<string>()
     return new Set(
       navItemsConfig
-        .filter((item) => !item.roles || item.roles.includes(papel))
+        .filter((item) => !item.roles || (item.roles as readonly string[]).includes(papel))
         .map((item) => item.to)
     )
   }, [meuPapel?.papel])

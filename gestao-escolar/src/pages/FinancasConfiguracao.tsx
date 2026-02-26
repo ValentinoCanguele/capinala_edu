@@ -12,6 +12,7 @@ import { Input } from '@/components/shared/Input'
 import { Settings, Percent, AlertCircle, Save, ShieldAlert } from 'lucide-react'
 
 export default function FinancasConfiguracao() {
+  const { user } = useAuth()
   const { data: config, isLoading, error } = useFinancasConfiguracao()
   const updateConfig = useUpdateFinancasConfiguracao()
 

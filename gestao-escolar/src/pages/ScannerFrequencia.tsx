@@ -12,11 +12,18 @@ import {
     Maximize2,
     Zap,
     AlertTriangle,
-    ShieldAlert
+    ShieldAlert,
+    Info
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useProcessarAcessoQR } from '@/data/escola/mutations'
-import { useAccessLogs } from '@/data/escola/queries'
+import { useAccessLogs, type AccessLogRow } from '@/data/escola/queries'
+
+export interface ProcessarAcessoResult {
+  riskLevel?: string
+  studentName?: string
+  aulaMarcada?: boolean
+}
 import PageHeader from '@/components/PageHeader'
 import { Card } from '@/components/shared/Card'
 import { Button } from '@/components/shared/Button'
@@ -26,14 +33,14 @@ import { Avatar } from '@/components/shared/Avatar'
 export default function ScannerFrequencia() {
     const [identifier, setIdentifier] = useState('')
     const [sentido, setSentido] = useState<'entrada' | 'saida'>('entrada')
-    const [lastScan, setLastScan] = useState<any>(null)
+    const [lastScan, setLastScan] = useState<ProcessarAcessoResult | null>(null)
     const [fullScreen, setFullScreen] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
     const processScan = useProcessarAcessoQR()
     const { data: logs = [], refetch: refetchLogs } = useAccessLogs(15)
 
-    const playSound = (type: 'success' | 'error' | 'warning') => {
+    const playSound = (_kind: 'success' | 'error' | 'warning') => {
         // Placeholder para lógica de som se necessário no futuro
     }
 
@@ -42,16 +49,17 @@ export default function ScannerFrequencia() {
         if (!identifier) return
 
         processScan.mutate({ identifier, sentido }, {
-            onSuccess: (data) => {
-                setLastScan(data)
+            onSuccess: (data: unknown) => {
+                const res = data as ProcessarAcessoResult
+                setLastScan(res)
                 setIdentifier('')
                 refetchLogs()
-                if (data.riskLevel === 'CRÍTICO') {
+                if (res.riskLevel === 'CRÍTICO') {
                     playSound('warning')
                     toast.error(`ALERTA: Aluno com alto absentismo!`, { duration: 5000 })
                 } else {
                     playSound('success')
-                    toast.success(`Acesso autorizado: ${data.studentName}`)
+                    toast.success(`Acesso autorizado: ${res.studentName ?? ''}`)
                 }
             },
             onError: (err) => {
@@ -212,7 +220,7 @@ export default function ScannerFrequencia() {
                                 </div>
                             ) : (
                                 <div className="divide-y divide-studio-border/30">
-                                    {logs.map((log: any) => (
+                                    {logs.map((log: AccessLogRow) => (
                                         <div
                                             key={log.id}
                                             className="p-4 flex items-center gap-4 hover:bg-studio-brand/[0.03] transition-all group"

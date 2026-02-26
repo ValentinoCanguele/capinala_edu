@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useAlunos, useAnosLetivos, useBoletim, useResumoFrequenciaAluno } from '@/data/escola/queries'
+import { useAlunos, useAnosLetivos, useBoletim, useResumoFrequenciaAluno, type BoletimDisciplina } from '@/data/escola/queries'
 import PageHeader from '@/components/PageHeader'
 import { Card } from '@/components/shared/Card'
 import { Select } from '@/components/shared/Select'
@@ -17,16 +17,13 @@ import {
   Calendar,
   TrendingUp,
   CheckCircle2,
-  AlertCircle,
   Award,
-  GraduationCap,
   BookOpen,
   Info,
   Printer,
   Download,
   Activity,
   UserCheck,
-  TrendingDown,
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
@@ -44,7 +41,7 @@ export default function Boletim() {
 
   const { data: alunos = [] } = useAlunos()
   const { data: anosLetivos = [] } = useAnosLetivos()
-  const { data: boletim, isLoading, error } = useBoletim(
+  const { data: boletim, isLoading } = useBoletim(
     alunoId || null,
     anoLetivoId || undefined
   )
@@ -162,9 +159,9 @@ export default function Boletim() {
 
           <Card noPadding className="overflow-hidden border-studio-border/60 shadow-2xl">
             <div className="bg-studio-muted/10 p-8 border-b border-studio-border/50 flex flex-wrap gap-8 items-center">
-              <Avatar name={boletim.alunoNome} size="xl" shape="square" className="shadow-xl ring-4 ring-white" />
+              <Avatar name={boletim?.alunoNome ?? ''} size="xl" shape="square" className="shadow-xl ring-4 ring-white" />
               <div className="flex-1">
-                <h3 className="text-3xl font-black text-studio-foreground uppercase tracking-tighter">{boletim.alunoNome}</h3>
+                <h3 className="text-3xl font-black text-studio-foreground uppercase tracking-tighter">{boletim?.alunoNome}</h3>
                 <div className="flex gap-4 mt-2">
                   <Badge variant="success" className="font-extrabold text-[10px] tracking-widest px-3">ENSINO SECUNDÁRIO</Badge>
                   <Badge variant="neutral" className="font-extrabold text-[10px] tracking-widest px-3">CÓDIGO: {alunoId.slice(0, 8).toUpperCase()}</Badge>
@@ -184,7 +181,7 @@ export default function Boletim() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-studio-border/20">
-                  {boletim.disciplinas.map((d: any) => (
+                  {(boletim?.disciplinas ?? []).map((d: BoletimDisciplina) => (
                     <>
                       <tr key={d.disciplinaId} className="group hover:bg-studio-brand/[0.02] cursor-pointer" onClick={() => toggleRow(d.disciplinaId)}>
                         <td className="px-8 py-6">
@@ -203,8 +200,8 @@ export default function Boletim() {
                         </td>
                         {[1, 2, 3].map(t => (
                           <td key={t} className="px-8 py-6 text-center">
-                            <Badge variant={d.detalhesPorTrimestre[t]?.valor >= 10 ? 'success' : d.detalhesPorTrimestre[t]?.valor > 0 ? 'danger' : 'neutral'} className="font-black text-[12px] min-w-[40px]">
-                              {d.detalhesPorTrimestre[t]?.valor || '—'}
+                            <Badge variant={(d.detalhesPorTrimestre?.[t]?.valor ?? 0) >= 10 ? 'success' : (d.detalhesPorTrimestre?.[t]?.valor ?? 0) > 0 ? 'danger' : 'neutral'} className="font-black text-[12px] min-w-[40px]">
+                              {d.detalhesPorTrimestre?.[t]?.valor ?? '—'}
                             </Badge>
                           </td>
                         ))}
@@ -227,16 +224,16 @@ export default function Boletim() {
                                   <div className="grid grid-cols-2 gap-4">
                                     <div className="p-2.5 bg-studio-muted/5 rounded-xl text-center">
                                       <p className="text-[8px] font-black text-studio-foreground-lighter uppercase mb-1">MAC</p>
-                                      <p className="text-sm font-black text-studio-foreground">{d.detalhesPorTrimestre[t]?.mac || '—'}</p>
+                                      <p className="text-sm font-black text-studio-foreground">{d.detalhesPorTrimestre?.[t]?.mac ?? '—'}</p>
                                     </div>
                                     <div className="p-2.5 bg-studio-muted/5 rounded-xl text-center">
                                       <p className="text-[8px] font-black text-studio-foreground-lighter uppercase mb-1">NPP</p>
-                                      <p className="text-sm font-black text-studio-foreground">{d.detalhesPorTrimestre[t]?.npp || '—'}</p>
+                                      <p className="text-sm font-black text-studio-foreground">{d.detalhesPorTrimestre?.[t]?.npp ?? '—'}</p>
                                     </div>
                                   </div>
                                   <div className="pt-2 border-t border-studio-border/30 flex justify-between items-center px-1">
                                     <span className="text-[9px] font-black text-studio-foreground-lighter uppercase">Média:</span>
-                                    <span className="text-[11px] font-bold text-studio-brand">{d.detalhesPorTrimestre[t]?.valor || '—'} v.</span>
+                                    <span className="text-[11px] font-bold text-studio-brand">{d.detalhesPorTrimestre?.[t]?.valor ?? '—'} v.</span>
                                   </div>
                                 </div>
                               ))}

@@ -23,9 +23,7 @@ import {
   BookOpen,
   GraduationCap,
   Save,
-  TrendingUp,
   CheckCircle2,
-  AlertCircle,
   Info,
   Sigma,
   Calculator,
@@ -49,8 +47,6 @@ export default function Notas() {
   const [turmaId, setTurmaId] = useState<string>('')
   const [disciplinaId, setDisciplinaId] = useState<string>('')
   const [trimestre, setTrimestre] = useState<number | ''>('')
-  const [viewMode, setViewMode] = useState<'grid' | 'direct'>('grid')
-
   const { data: turmas = [] } = useTurmas()
   const { data: disciplinas = [] } = useDisciplinas()
 
@@ -327,7 +323,7 @@ export default function Notas() {
                         ) : (
                           <div className="flex flex-col items-end">
                             <span className="text-[9px] font-black text-emerald-600 uppercase">Aprovado</span>
-                            <Badge variant="success" size="sm" className="mt-1 invisible group-hover:visible">{r.valor >= 16 ? 'Excelente' : 'Bom'}</Badge>
+                            <Badge variant="success" className="mt-1 text-[10px] invisible group-hover:visible">{r.valor >= 16 ? 'Excelente' : 'Bom'}</Badge>
                           </div>
                         )}
                       </td>
