@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { canViewNotas } from '@/lib/permissoes'
 import {
     useTurmas,
     usePeriodos,
@@ -26,6 +28,7 @@ import {
 } from 'lucide-react'
 
 export default function Pautas() {
+    const { user } = useAuth()
     const [turmaId, setTurmaId] = useState<string>('')
     const [trimestre, setTrimestre] = useState<number | ''>('')
 
@@ -62,6 +65,7 @@ export default function Pautas() {
                 title="Pautas de Aproveitamento"
                 subtitle="Mapa consolidado de rendimento académico por turma e período (Broadsheet)."
                 actions={
+                    canViewNotas(user?.papel) ? (
                     <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
@@ -82,6 +86,7 @@ export default function Pautas() {
                             Exportar Excel
                         </Button>
                     </div>
+                    ) : undefined
                 }
             />
 

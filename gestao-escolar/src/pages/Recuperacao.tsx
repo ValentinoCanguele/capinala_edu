@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { Search, GraduationCap, Save, TrendingUp, AlertCircle, Info, RefreshCw, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canLancarNotas } from '@/lib/permissoes'
 import { useTurmas, useDisciplinas, useExames, usePautaGeral } from '@/data/escola/queries'
 import { useSaveExame, useDeleteExame } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
@@ -13,6 +15,7 @@ import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import EmptyState from '@/components/shared/EmptyState'
 
 export default function Recuperacao() {
+    const { user } = useAuth()
     const [turmaId, setTurmaId] = useState<string>('')
     const [disciplinaId, setDisciplinaId] = useState<string>('')
     const [tipo, setTipo] = useState<'recurso' | 'melhoria' | 'especial'>('recurso')
@@ -179,9 +182,11 @@ export default function Recuperacao() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
+                                                    {canLancarNotas(user?.papel) && (
                                                     <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(ex.id)}>
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}
@@ -199,6 +204,7 @@ export default function Recuperacao() {
                                                     <div className="flex justify-center">
                                                         <input
                                                             type="number"
+                                                            readOnly={!canLancarNotas(user?.papel)}
                                                             className="w-20 px-3 py-1.5 bg-studio-bg border border-studio-border rounded-md text-center font-bold text-lg focus:ring-2 focus:ring-studio-brand focus:border-transparent outline-none transition-all"
                                                             placeholder="0-20"
                                                             value={localGrades[aluno.alunoId] ?? ''}
@@ -207,6 +213,7 @@ export default function Recuperacao() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
+                                                    {canLancarNotas(user?.papel) && (
                                                     <Button
                                                         variant="brand"
                                                         size="sm"
@@ -216,6 +223,7 @@ export default function Recuperacao() {
                                                     >
                                                         Lançar
                                                     </Button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}

@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canGerirFinancas } from '@/lib/permissoes'
 import {
   useFinancasLancamentos,
   type LancamentosFilters,
@@ -165,6 +167,7 @@ function LancamentoForm({
 }
 
 export default function FinancasLancamentos() {
+  const { user } = useAuth()
   const [filters, setFilters] = useState<LancamentosFilters>({})
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -229,12 +232,14 @@ export default function FinancasLancamentos() {
         title="Lançamentos Financeiros"
         subtitle="Movimentação institucional de receitas e despesas operacionais."
         actions={
-          <Button
-            onClick={() => { setEditingId(null); setModalOpen(true) }}
-            icon={<PlusCircle className="w-4 h-4" />}
-          >
-            Novo Lançamento
-          </Button>
+          canGerirFinancas(user?.papel) ? (
+            <Button
+              onClick={() => { setEditingId(null); setModalOpen(true) }}
+              icon={<PlusCircle className="w-4 h-4" />}
+            >
+              Novo Lançamento
+            </Button>
+          ) : undefined
         }
       />
 
@@ -367,7 +372,9 @@ export default function FinancasLancamentos() {
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Descrição</th>
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Categoria</th>
                   <th scope="col" className="text-right px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Montante</th>
+                  {canGerirFinancas(user?.papel) && (
                   <th scope="col" className="w-24 px-6 py-4" aria-label="Ações" />
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/20">
@@ -402,6 +409,7 @@ export default function FinancasLancamentos() {
                         </span>
                       </div>
                     </td>
+                    {canGerirFinancas(user?.papel) && (
                     <td className="px-6 py-4">
                       <div className="flex gap-2 justify-end">
                         <Button
@@ -423,6 +431,7 @@ export default function FinancasLancamentos() {
                         </Button>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

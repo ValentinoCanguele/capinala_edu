@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { canRegistarFrequencia } from '@/lib/permissoes'
 import {
   useMeuAluno,
   useMeusFilhos,
@@ -56,12 +57,14 @@ export default function Presencas() {
         title="Presenças"
         subtitle="Registo de presenças e faltas. Resumo por turma."
         actions={
-          <Link
-            to="/frequencia"
-            className="text-sm text-studio-brand hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 rounded px-2 py-1"
-          >
-            Registo de chamada →
-          </Link>
+          canRegistarFrequencia(user?.papel) ? (
+            <Link
+              to="/frequencia"
+              className="text-sm text-studio-brand hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 rounded px-2 py-1"
+            >
+              Registo de chamada →
+            </Link>
+          ) : undefined
         }
       />
 

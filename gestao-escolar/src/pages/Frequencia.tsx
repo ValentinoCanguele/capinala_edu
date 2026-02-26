@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canRegistarFrequencia } from '@/lib/permissoes'
 import { useTurmas, useDisciplinas, useTurmaAlunos, useFrequencia, useRelatorioFrequenciaTurma } from '@/data/escola/queries'
 import { useQueryClient } from '@tanstack/react-query'
 import PageHeader from '@/components/PageHeader'
@@ -24,6 +26,7 @@ type Status = 'presente' | 'falta' | 'justificada'
 type Row = { alunoId: string; alunoNome: string; status: Status }
 
 function FrequenciaRelatorio() {
+  const { user } = useAuth()
   const [turmaId, setTurmaId] = useState('')
   const { data: turmas = [] } = useTurmas()
   const { data: relatorio, isLoading } = useRelatorioFrequenciaTurma(
@@ -41,15 +44,17 @@ function FrequenciaRelatorio() {
         title="Relatório de Frequência"
         subtitle="Analítica consolidada de presenças e alertas de assiduidade."
         actions={
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => window.history.pushState({}, '', '/frequencia')}
-            className="group"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Registar Chamada
-          </Button>
+          canRegistarFrequencia(user?.papel) ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => window.history.pushState({}, '', '/frequencia')}
+              className="group"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+              Registar Chamada
+            </Button>
+          ) : undefined
         }
       />
 

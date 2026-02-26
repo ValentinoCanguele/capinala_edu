@@ -1,4 +1,6 @@
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canManageModulos } from '@/lib/permissoes'
 import { useModulosComDisponiveis } from '@/data/escola/queries'
 import { useInstallModulo } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
@@ -6,6 +8,7 @@ import EmptyState from '@/components/EmptyState'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 export default function Modulos() {
+  const { user } = useAuth()
   const { data, isLoading, error } = useModulosComDisponiveis()
   const installModulo = useInstallModulo()
 
@@ -21,6 +24,20 @@ export default function Modulos() {
       <div>
         <PageHeader title="Módulos" subtitle="Instalar e configurar módulos do sistema." />
         <TableSkeleton rows={6} cols={3} />
+      </div>
+    )
+  }
+
+  if (!canManageModulos(user?.papel)) {
+    return (
+      <div>
+        <PageHeader title="Módulos" subtitle="Gestão de módulos do sistema." />
+        <EmptyState
+          title="Acesso reservado"
+          description="A instalação e configuração de módulos está reservada a utilizadores com perfil de administrador."
+          actionLabel="Voltar ao início"
+          onAction={() => window.location.assign('/')}
+        />
       </div>
     )
   }
@@ -96,7 +113,9 @@ export default function Modulos() {
                 <tr className="bg-studio-muted/50 border-b border-studio-border">
                   <th scope="col" className="text-left px-4 py-3 font-medium">Nome</th>
                   <th scope="col" className="text-left px-4 py-3 font-medium">Descrição</th>
+                  {canManageModulos(user?.papel) && (
                   <th scope="col" className="w-28" aria-label="Ações" />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -106,6 +125,7 @@ export default function Modulos() {
                     <td className="px-4 py-3 text-studio-foreground-light">
                       {m.descricao}
                     </td>
+                    {canManageModulos(user?.papel) && (
                     <td className="px-4 py-3">
                       <button
                         type="button"
@@ -116,6 +136,7 @@ export default function Modulos() {
                         {installModulo.isPending ? 'A instalar...' : 'Instalar'}
                       </button>
                     </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

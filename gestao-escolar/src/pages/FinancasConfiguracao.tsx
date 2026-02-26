@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canGerirFinancas } from '@/lib/permissoes'
 import { useFinancasConfiguracao } from '@/data/escola/financasQueries'
 import { useUpdateFinancasConfiguracao } from '@/data/escola/financasMutations'
 import PageHeader from '@/components/PageHeader'
@@ -143,6 +145,7 @@ export default function FinancasConfiguracao() {
               </div>
             </div>
 
+            {canGerirFinancas(user?.papel) && (
             <div className="flex gap-3 justify-end pt-6 border-t border-studio-border/50">
               <Button
                 type="submit"
@@ -153,6 +156,7 @@ export default function FinancasConfiguracao() {
                 {updateConfig.isPending ? 'Guardando...' : 'Aplicar Configurações'}
               </Button>
             </div>
+            )}
           </form>
         </Card>
       </div>

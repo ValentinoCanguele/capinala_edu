@@ -488,13 +488,15 @@ export default function Layout() {
                       <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
                         Ajuda
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => { setHelpOpen(false); /* TODO: link documentação */ }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
-                      >
-                        Documentação
-                      </button>
+                  <a
+                    href="https://github.com/ValentinoCanguele/capinala_edu/blob/main/docs/FRONTEND-NAVEGACAO-PERMISSOES.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setHelpOpen(false)}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                  >
+                    Documentação
+                  </a>
                       <button
                         type="button"
                         onClick={() => { setHelpOpen(false); setAcercaOpen(true) }}

@@ -152,6 +152,16 @@ export function canGerirUtilizadores(papel: string | undefined): boolean {
   return isPapel(papel, PAPEIS_ADMIN)
 }
 
+/* ── Atas de conselho ── */
+export function canManageAtas(papel: string | undefined): boolean {
+  return isPapel(papel, PAPEIS_ADMIN)
+}
+
+/* ── Ocorrências disciplinares ── */
+export function canManageOcorrencias(papel: string | undefined): boolean {
+  return isPapel(papel, PAPEIS_GESTAO)
+}
+
 /* ── Finanças ── */
 export function canGerirFinancas(papel: string | undefined): boolean {
   return isPapel(papel, PAPEIS_ADMIN)

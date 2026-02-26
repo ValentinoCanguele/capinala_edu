@@ -248,9 +248,11 @@ export default function AnosLetivos() {
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Fim
                 </th>
+                {isAdmin(user?.papel) && (
                 <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
                   Ações
                 </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-studio-border">
@@ -265,6 +267,7 @@ export default function AnosLetivos() {
                   <td className="px-4 py-3 text-sm text-studio-foreground-light">
                     {a.dataFim}
                   </td>
+                  {isAdmin(user?.papel) && (
                   <td className="px-4 py-3 text-right text-sm">
                     <button
                       type="button"
@@ -274,6 +277,7 @@ export default function AnosLetivos() {
                       Editar
                     </button>
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>

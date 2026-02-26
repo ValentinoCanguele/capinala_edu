@@ -84,13 +84,23 @@ Posição: entre a sidebar principal e o `<main>`; largura fixa (ex.: 11rem). It
 - **Ficheiro:** `gestao-escolar/src/lib/permissoes.ts`
 - Funções por papel (ex.: `canViewAlunos(papel)`, `canLancarNotas(papel)`) alinhadas a `server/lib/escola/permissoes.ts`, para **esconder na UI** o que o backend recusaria (botões, links, secções). Não substitui a verificação no backend.
 
-Exemplos: `canCreateAluno`, `canCreateTurma`, `canCreateComunicado`, `canManageHorarios`, `canManageDisciplinas`, `canManageSalas`, `canGerirUtilizadores`, `canManageModulos`, `isAdmin`, `isAluno`, `isResponsavel`.
+Exemplos: `canCreateAluno`, `canCreateTurma`, `canCreateComunicado`, `canManageHorarios`, `canManageDisciplinas`, `canManageSalas`, `canManageAtas`, `canManageOcorrencias`, `canGerirFinancas`, `canGerirUtilizadores`, `canManageModulos`, `isAdmin`, `isAluno`, `isResponsavel`.
 
 **Onde é usada:**
 - **Second bar:** `layout/secondBarPermissions.ts` filtra as tabs (ex.: "Adicionar" em Alunos só aparece se `canCreateAluno(papel)`).
 - **Barra contextual:** o item "Adicionar aluno" só aparece se `canCreateAluno(papel)`.
-- **Páginas:** Alunos, Comunicados, Turmas, Utilizadores, Disciplinas, Anos letivos e Salas escondem o botão de criação quando o utilizador não tem a permissão correspondente.
-- **Listas:** Em Alunos e Turmas, as ações Editar e Eliminar (e Gerir Estudantes em Turmas) são escondidas quando o utilizador não tem permissão (`canCreateAluno`/`canDeleteAluno`, `canCreateTurma`/`canDeleteTurma`/`canManageTurmaAlunos`). Em Comunicados, Editar e Eliminar por linha dependem de `canEditComunicado` e `canDeleteComunicado` (admin ou autor do comunicado).
+- **Páginas:** Alunos, Comunicados, Turmas, Utilizadores, Disciplinas, Anos letivos, Salas, Horários, Matrizes, Atas, Ocorrências e Finanças (Categorias) escondem o botão de criação quando o utilizador não tem a permissão correspondente.
+- **Listas:** Em Alunos e Turmas, as ações Editar e Eliminar (e Gerir Estudantes em Turmas) são escondidas quando o utilizador não tem permissão. Em Comunicados, Editar e Eliminar por linha dependem de `canEditComunicado` e `canDeleteComunicado` (admin ou autor). Em Disciplinas, a coluna Ações (Editar/Eliminar) só aparece com `canManageDisciplinas`. Em Anos letivos, a coluna Ações (Editar) só aparece com `isAdmin`. Em Horários, a coluna Ações (Eliminar) e o botão "Novo horário" só aparecem com `canManageHorarios`. Em Atas, o botão Nova Ata, o empty state "Criar Ata" e os botões Editar/Eliminar por card só aparecem com `canManageAtas` (admin/direção). Em Ocorrências, o botão Nova Ocorrência e as ações Marcar Resolvido/Reabrir e Eliminar por card só aparecem com `canManageOcorrencias` (admin/direção/professor). Em Finanças: Categorias, Lançamentos e Parcelas — a coluna Ações (Editar/Eliminar ou Liquidar) e os botões de criação (Nova Categoria, Novo Lançamento, Gerar Lote de Propinas) só aparecem com `canGerirFinancas` (admin/direção). Em Configuração, o botão "Aplicar Configurações" só aparece com `canGerirFinancas`. Em Relatórios, o botão "Exportar PDF" só aparece com `canGerirFinancas`.
+- **Módulos (Definições):** a página inteira está reservada a admin (`canManageModulos`); utilizadores sem permissão veem a mensagem "Acesso reservado" e um link para voltar ao início. A coluna Ações (Instalar) na lista de módulos disponíveis só aparece para admin.
+- **Presenças:** o link "Registo de chamada →" no header só aparece com `canRegistarFrequencia` (admin/direção/professor).
+- **Notas:** os campos MAC/NPP são só leitura e os botões Reverter/Confirmar e Publicar só aparecem com `canLancarNotas` (admin/direção/professor).
+- **Frequência (relatório):** o botão "Registar Chamada" no header do relatório só aparece com `canRegistarFrequencia`.
+- **Configuração Académica:** o botão "Validar & Salvar Configurações" só aparece com `isAdmin` (admin/direção).
+- **Pautas:** os botões Imprimir e Exportar Excel só aparecem com `canViewNotas`.
+- **Justificativas de Frequência:** o botão "Registar Justificação" só aparece com `canRegistarFrequencia`; os botões Deferir/Indeferir por pedido pendente só aparecem com `isAdmin` (admin/direção).
+- **Recuperação (exames):** o botão Eliminar por registo e o campo nota + botão Lançar por candidato só aparecem com `canLancarNotas`; o campo nota fica só leitura quando o utilizador não pode lançar notas.
+- **Command Palette (⌘K):** as ações "Registar Novo Aluno", "Criar Nova Turma" e "Marcar Presenças" são filtradas por permissão.
+- **Menu Ajuda:** o item "Documentação" abre a navegação e permissões no repositório.
 
 ---
 

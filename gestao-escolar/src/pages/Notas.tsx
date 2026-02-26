@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canLancarNotas } from '@/lib/permissoes'
 import {
   useTurmas,
   usePeriodos,
@@ -43,6 +45,7 @@ type Row = {
 }
 
 export default function Notas() {
+  const { user } = useAuth()
   const [turmaId, setTurmaId] = useState<string>('')
   const [disciplinaId, setDisciplinaId] = useState<string>('')
   const [trimestre, setTrimestre] = useState<number | ''>('')
@@ -289,6 +292,7 @@ export default function Notas() {
                           min={0} max={20} step={0.1}
                           value={r.mac || 0}
                           onChange={(e) => handleUpdateComponent(r.alunoId, 'mac', Number(e.target.value))}
+                          readOnly={!canLancarNotas(user?.papel)}
                           className="w-20 px-3 py-1.5 rounded-lg border border-studio-border/50 text-xs font-black text-center focus:ring-1 focus:ring-studio-brand outline-none transition-all tabular-nums bg-transparent"
                         />
                       </td>
@@ -300,6 +304,7 @@ export default function Notas() {
                           min={0} max={20} step={0.1}
                           value={r.npp || 0}
                           onChange={(e) => handleUpdateComponent(r.alunoId, 'npp', Number(e.target.value))}
+                          readOnly={!canLancarNotas(user?.papel)}
                           className="w-20 px-3 py-1.5 rounded-lg border border-studio-border/50 text-xs font-black text-center focus:ring-1 focus:ring-studio-brand outline-none transition-all tabular-nums bg-transparent"
                         />
                       </td>
@@ -340,6 +345,7 @@ export default function Notas() {
               <span className="opacity-30">|</span>
               <span>Estudantes: {localRows.length}</span>
             </div>
+            {canLancarNotas(user?.papel) && (
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => setLocalRows(rows)} disabled={!isDirty}>Reverter</Button>
               <Button
@@ -353,6 +359,7 @@ export default function Notas() {
                 {isDirty ? 'Confirmar e Publicar (Cmd+S)' : 'Pauta Publicada'}
               </Button>
             </div>
+            )}
           </div>
         </Card>
       )}

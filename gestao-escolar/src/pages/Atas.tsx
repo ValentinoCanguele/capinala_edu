@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { Plus, Search, FileText, Calendar, Users, Trash2, Edit, Save, X, Eye, ShieldCheck, History } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canManageAtas } from '@/lib/permissoes'
 import { useAtas, useTurmas, usePeriodos } from '@/data/escola/queries'
 import { useCreateAta, useUpdateAta, useDeleteAta } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
@@ -15,6 +17,7 @@ import { Textarea } from '@/components/shared/Textarea'
 import EmptyState from '@/components/shared/EmptyState'
 
 export default function Atas() {
+    const { user } = useAuth()
     const [filter, setFilter] = useState('')
     const [turmaId, setTurmaId] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -114,9 +117,11 @@ export default function Atas() {
                 title="Atas de Conselho de Turma"
                 subtitle="Registo digital e oficial de ocorrências, decisões pedagógicas e acompanhamento de turmas."
                 actions={
-                    <Button icon={<Plus className="w-4 h-4" />} onClick={() => handleOpenModal()}>
-                        Nova Ata
-                    </Button>
+                    canManageAtas(user?.papel) ? (
+                        <Button icon={<Plus className="w-4 h-4" />} onClick={() => handleOpenModal()}>
+                            Nova Ata
+                        </Button>
+                    ) : undefined
                 }
             />
 
@@ -168,8 +173,8 @@ export default function Atas() {
                             title="Sem Atas Registadas"
                             description="Nenhum registo de conselho de turma foi encontrado para os filtros selecionados."
                             icon={<History className="w-12 h-12 text-studio-muted" />}
-                            actionLabel="Criar Ata"
-                            onAction={() => handleOpenModal()}
+                            actionLabel={canManageAtas(user?.papel) ? 'Criar Ata' : undefined}
+                            onAction={canManageAtas(user?.papel) ? () => handleOpenModal() : undefined}
                         />
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
@@ -212,12 +217,16 @@ export default function Atas() {
                                         </div>
 
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" size="icon" onClick={() => handleOpenModal(ata)} title="Editar">
-                                                <Edit className="w-4 h-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10" onClick={() => handleDelete(ata.id)} title="Eliminar">
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                                            {canManageAtas(user?.papel) && (
+                                                <>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleOpenModal(ata)} title="Editar">
+                                                        <Edit className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10" onClick={() => handleDelete(ata.id)} title="Eliminar">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </>
+                                            )}
                                             <Button variant="brand" size="icon" title="Ver Detalhes">
                                                 <Eye className="w-4 h-4" />
                                             </Button>

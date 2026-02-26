@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { canGerirFinancas } from '@/lib/permissoes'
 import {
   useFinancasDRE,
   useFinancasFluxoCaixa,
@@ -23,6 +25,7 @@ const defaultDataInicio = (() => {
 const defaultDataFim = new Date().toISOString().slice(0, 10)
 
 export default function FinancasRelatorios() {
+  const { user } = useAuth()
   const [dataInicio, setDataInicio] = useState(defaultDataInicio)
   const [dataFim, setDataFim] = useState(defaultDataFim)
   const [anoLetivoId, setAnoLetivoId] = useState<string>('')
@@ -42,9 +45,11 @@ export default function FinancasRelatorios() {
         title="Relatórios Estruturados"
         subtitle="Analítica institucional: DRE, Fluxo de Caixa e Auditoria de Inadimplência."
         actions={
-          <Button variant="ghost" icon={<FileText className="w-4 h-4" />}>
-            Exportar PDF
-          </Button>
+          canGerirFinancas(user?.papel) ? (
+            <Button variant="ghost" icon={<FileText className="w-4 h-4" />}>
+              Exportar PDF
+            </Button>
+          ) : undefined
         }
       />
 

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { canRegistarFrequencia, isAdmin } from '@/lib/permissoes'
 import {
     useJustificativas,
     useAlunos
@@ -47,6 +49,7 @@ const STATUS_CONFIG: Record<string, { label: string, variant: 'neutral' | 'succe
 }
 
 export default function FrequenciaJustificativas() {
+    const { user } = useAuth()
     const [modalOpen, setModalOpen] = useState(false)
     const [filter, setFilter] = useState('')
     const [statusFilter, setStatusFilter] = useState('todos')
@@ -93,9 +96,11 @@ export default function FrequenciaJustificativas() {
                 title="Gestão de Justificações & Licenças"
                 subtitle="Regularização de faltas, auditoria de atestados e controle de ausências autorizadas."
                 actions={
-                    <Button variant="primary" icon={<Plus className="w-4 h-4" />} onClick={() => setModalOpen(true)}>
-                        Registar Justificação
-                    </Button>
+                    canRegistarFrequencia(user?.papel) ? (
+                        <Button variant="primary" icon={<Plus className="w-4 h-4" />} onClick={() => setModalOpen(true)}>
+                            Registar Justificação
+                        </Button>
+                    ) : undefined
                 }
             />
 
@@ -180,7 +185,7 @@ export default function FrequenciaJustificativas() {
                                     </div>
 
                                     <div className="flex items-center gap-2 md:pl-6 border-l-0 md:border-l border-studio-border/30">
-                                        {j.parecer_direcao === 'pendente' ? (
+                                        {j.parecer_direcao === 'pendente' && isAdmin(user?.papel) ? (
                                             <>
                                                 <Button
                                                     variant="secondary"
@@ -200,12 +205,12 @@ export default function FrequenciaJustificativas() {
                                                     Deferir
                                                 </Button>
                                             </>
-                                        ) : (
+                                        ) : j.parecer_direcao !== 'pendente' ? (
                                             <div className="flex items-center gap-2 opacity-40 grayscale group-hover:grayscale-0 transition-all">
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-studio-foreground-lighter">Processado em {new Date(j.created_at).toLocaleDateString()}</p>
                                                 <ChevronRight className="w-4 h-4" />
                                             </div>
-                                        )}
+                                        ) : null}
                                     </div>
                                 </div>
                             )

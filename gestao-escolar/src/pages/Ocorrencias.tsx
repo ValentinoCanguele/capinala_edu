@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { Plus, Search, ShieldAlert, AlertTriangle, Info, CheckCircle, Trash2, User, Calendar, Filter, FileText, Bell, MessageSquare, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canManageOcorrencias } from '@/lib/permissoes'
 import { useOcorrencias, useTurmas, useTurmaAlunos } from '@/data/escola/queries'
 import { useCreateOcorrencia, useResolveOcorrencia, useDeleteOcorrencia } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
@@ -30,6 +32,7 @@ const GRAVIDADES = [
 ]
 
 export default function Ocorrencias() {
+    const { user } = useAuth()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [filters, setFilters] = useState({ turmaId: '', alunoId: '', resolvido: undefined as boolean | undefined })
 
@@ -85,9 +88,11 @@ export default function Ocorrencias() {
                 title="Gestão Disciplinar"
                 subtitle="Registo formal de ocorrências, medidas corretivas e elogios de mérito."
                 actions={
-                    <Button icon={<Plus className="w-4 h-4" />} onClick={() => setIsModalOpen(true)}>
-                        Nova Ocorrência
-                    </Button>
+                    canManageOcorrencias(user?.papel) ? (
+                        <Button icon={<Plus className="w-4 h-4" />} onClick={() => setIsModalOpen(true)}>
+                            Nova Ocorrência
+                        </Button>
+                    ) : undefined
                 }
             />
 
@@ -204,6 +209,7 @@ export default function Ocorrencias() {
                                                     </div>
                                                 )}
                                             </div>
+                                            {canManageOcorrencias(user?.papel) && (
                                             <div className="flex items-center gap-2">
                                                 <Button
                                                     variant="ghost"
@@ -223,6 +229,7 @@ export default function Ocorrencias() {
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </div>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>

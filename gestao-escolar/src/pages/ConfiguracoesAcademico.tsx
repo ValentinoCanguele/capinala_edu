@@ -15,6 +15,8 @@ import {
     UserX
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { isAdmin } from '@/lib/permissoes'
 import { useAnosLetivos, usePedagogicalConfig } from '@/data/escola/queries'
 import { useUpdatePedagogicalConfig } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
@@ -25,6 +27,7 @@ import { Select } from '@/components/shared/Select'
 import { Badge } from '@/components/shared/Badge'
 
 export default function ConfiguracoesAcademico() {
+    const { user } = useAuth()
     const { data: anosLetivos = [] } = useAnosLetivos()
     const [selectedAnoId, setSelectedAnoId] = useState('')
 
@@ -87,15 +90,17 @@ export default function ConfiguracoesAcademico() {
                 title="Centro de Rigor Pedagógico"
                 subtitle="Configuração técnica do motor de cálculo, pesos institucionais e regras normativas."
                 actions={
-                    <Button
-                        variant="primary"
-                        icon={<Save className="w-4 h-4" />}
-                        onClick={handleSave}
-                        loading={updateConfig.isPending}
-                        disabled={!selectedAnoId}
-                    >
-                        Validar & Salvar Configurações
-                    </Button>
+                    isAdmin(user?.papel) ? (
+                        <Button
+                            variant="primary"
+                            icon={<Save className="w-4 h-4" />}
+                            onClick={handleSave}
+                            loading={updateConfig.isPending}
+                            disabled={!selectedAnoId}
+                        >
+                            Validar & Salvar Configurações
+                        </Button>
+                    ) : undefined
                 }
             />
 

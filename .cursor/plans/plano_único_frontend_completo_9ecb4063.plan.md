@@ -154,3 +154,12 @@ flowchart LR
 - AuthContext e tema (variáveis existentes; sem novo design system).
 - Second bar (tabs) e lógica de [secondBarConfig.ts](gestao-escolar/src/layout/secondBarConfig.ts).
 - Base do projeto e regras em [docs/BASE-PROJETO-ESCOLA.md](docs/BASE-PROJETO-ESCOLA.md).
+
+---
+
+## Estado da implementação (concluído)
+
+- **Parte A e B** implementadas: sidebar agrupada e filtrada por papel, header com zonas e breadcrumbs, barra contextual por contexto/papel, second bar com filtro por permissão (`secondBarPermissions.ts`).
+- **Rotas** aluno/responsável presentes em App.tsx: `/meu-perfil`, `/meu-boletim`, `/aulas-hoje`, `/meus-filhos`.
+- **Permissões na UI** aplicadas em todas as páginas com ações de escrita: Alunos, Turmas, Comunicados, Disciplinas, Anos letivos, Salas, Horários, Matrizes, Utilizadores, Atas, Ocorrências, Finanças (Categorias, Lançamentos, Parcelas, Configuração, Relatórios), Modulos, Presenças, Notas, Frequência, Justificativas, Recuperação, Pautas, Configuração Académica. Página Módulos com acesso reservado (mensagem "Acesso reservado") para não-admin.
+- **Documentação:** [FRONTEND-NAVEGACAO-PERMISSOES.md](docs/FRONTEND-NAVEGACAO-PERMISSOES.md) regista papéis, sidebar, barra contextual, permissões e referência a `permissoes.ts`. Índice em [INDICE-DOCUMENTACAO.md](docs/INDICE-DOCUMENTACAO.md). Link "Documentação" no menu Ajuda do Layout.

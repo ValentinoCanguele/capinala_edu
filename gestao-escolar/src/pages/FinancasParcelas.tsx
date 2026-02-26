@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canGerirFinancas } from '@/lib/permissoes'
 import {
   useFinancasParcelas,
   type ParcelasFilters,
@@ -237,6 +239,7 @@ function PagamentoForm({
 }
 
 export default function FinancasParcelas() {
+  const { user } = useAuth()
   const [filters, setFilters] = useState<ParcelasFilters>({})
   const [modalGerarOpen, setModalGerarOpen] = useState(false)
   const [pagamentoParcela, setPagamentoParcela] = useState<ParcelaRow | null>(null)
@@ -278,12 +281,14 @@ export default function FinancasParcelas() {
         title="Gestão de Parcelas"
         subtitle="Controlo de faturação, propinas e liquidações estruturadas."
         actions={
-          <Button
-            onClick={() => setModalGerarOpen(true)}
-            icon={<Layers className="w-4 h-4" />}
-          >
-            Gerar Lote de Propinas
-          </Button>
+          canGerirFinancas(user?.papel) ? (
+            <Button
+              onClick={() => setModalGerarOpen(true)}
+              icon={<Layers className="w-4 h-4" />}
+            >
+              Gerar Lote de Propinas
+            </Button>
+          ) : undefined
         }
       />
 
@@ -375,7 +380,9 @@ export default function FinancasParcelas() {
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Vencimento</th>
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Status / Auditoria</th>
                   <th scope="col" className="text-right px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Montante</th>
+                  {canGerirFinancas(user?.papel) && (
                   <th scope="col" className="w-28 px-6 py-4" aria-label="Ações" />
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/20">
@@ -425,6 +432,7 @@ export default function FinancasParcelas() {
                       <td className="px-6 py-4 text-right tabular-nums font-bold text-studio-foreground">
                         {formatCurrency(p.valorAtualizado)}
                       </td>
+                      {canGerirFinancas(user?.papel) && (
                       <td className="px-6 py-4">
                         <div className="flex justify-end">
                           {p.status !== 'paga' && p.status !== 'cancelada' && (
@@ -434,11 +442,12 @@ export default function FinancasParcelas() {
                               icon={<CreditCard className="w-4 h-4" />}
                               onClick={() => setPagamentoParcela(p)}
                             >
-                              Liquidat
+                              Liquidar
                             </Button>
                           )}
                         </div>
                       </td>
+                      )}
                     </tr>
                   )
                 })}

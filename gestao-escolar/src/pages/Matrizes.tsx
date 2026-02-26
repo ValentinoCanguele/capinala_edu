@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { isAdmin } from '@/lib/permissoes'
 import {
     useMatrizes,
     useMatriz,
@@ -38,6 +40,7 @@ import {
 } from 'lucide-react'
 
 export default function Matrizes() {
+    const { user } = useAuth()
     const [modalOpen, setModalOpen] = useState(false)
     const [discModalOpen, setDiscModalOpen] = useState(false)
     const [cloneModalOpen, setCloneModalOpen] = useState(false)
@@ -133,9 +136,11 @@ export default function Matrizes() {
                 title="Rigor Curricular & Matrizes"
                 subtitle="Gestão de planos de estudo, fórmulas de avaliação e herança académica."
                 actions={
-                    <Button variant="primary" icon={<Plus className="w-4 h-4" />} onClick={() => setModalOpen(true)}>
-                        Novo Plano Estruturante
-                    </Button>
+                    isAdmin(user?.papel) ? (
+                        <Button variant="primary" icon={<Plus className="w-4 h-4" />} onClick={() => setModalOpen(true)}>
+                            Novo Plano Estruturante
+                        </Button>
+                    ) : undefined
                 }
             />
 

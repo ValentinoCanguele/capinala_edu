@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { canGerirFinancas } from '@/lib/permissoes'
 import { useSaveShortcut } from '@/hooks/useSaveShortcut'
 import {
   useFinancasCategorias,
@@ -116,6 +118,7 @@ function CategoriaForm({
 }
 
 export default function FinancasCategorias() {
+  const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [itemToDelete, setItemToDelete] = useState<CategoriaFinanceira | null>(null)
@@ -177,15 +180,17 @@ export default function FinancasCategorias() {
         title="Categorias Financeiras"
         subtitle="Estrutura de classificação para o plano de contas institucional."
         actions={
-          <Button
-            onClick={() => {
-              setEditingId(null)
-              setModalOpen(true)
-            }}
-            icon={<PlusCircle className="w-4 h-4" />}
-          >
-            Nova Categoria
-          </Button>
+          canGerirFinancas(user?.papel) ? (
+            <Button
+              onClick={() => {
+                setEditingId(null)
+                setModalOpen(true)
+              }}
+              icon={<PlusCircle className="w-4 h-4" />}
+            >
+              Nova Categoria
+            </Button>
+          ) : undefined
         }
       />
       <Modal
@@ -252,7 +257,9 @@ export default function FinancasCategorias() {
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Tipo</th>
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Ordem</th>
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Estado</th>
+                  {canGerirFinancas(user?.papel) && (
                   <th scope="col" className="w-32 px-6 py-4" aria-label="Ações" />
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/20">
@@ -282,6 +289,7 @@ export default function FinancasCategorias() {
                         )}
                       </div>
                     </td>
+                    {canGerirFinancas(user?.papel) && (
                     <td className="px-6 py-4">
                       <div className="flex gap-2 justify-end">
                         <Button
@@ -306,6 +314,7 @@ export default function FinancasCategorias() {
                         </Button>
                       </div>
                     </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
