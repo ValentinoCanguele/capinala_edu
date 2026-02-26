@@ -10,6 +10,7 @@ import { Avatar } from '@/components/shared/Avatar'
 import EmptyState from '@/components/shared/EmptyState'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { Button } from '@/components/shared/Button'
+import { printElement } from '@/utils/print'
 import {
   FileText,
   User,
@@ -83,7 +84,7 @@ export default function Boletim() {
 
         {alunoId && boletim && (
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={() => window.print()} icon={<Printer className="w-4 h-4" />}>
+            <Button variant="secondary" size="sm" onClick={() => printElement('boletim-print-area')} icon={<Printer className="w-4 h-4" />}>
               Imprimir
             </Button>
             <Button variant="primary" size="sm" icon={<Download className="w-4 h-4" />}>
@@ -130,7 +131,7 @@ export default function Boletim() {
       ) : isLoading ? (
         <SkeletonTable rows={10} columns={5} />
       ) : (
-        <div className="space-y-6">
+        <div id="boletim-print-area" className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Média Geral"

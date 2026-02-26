@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { isAdmin } from '@/lib/permissoes'
 import { useAnosLetivos } from '@/data/escola/queries'
@@ -97,7 +99,17 @@ export default function AnosLetivos() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [filter, setFilter] = useState('')
+  const [filterFromUrl, setFilterFromUrl] = useQueryState('q')
+  const [filter, setFilter] = useState(() => searchParams.get('q') ?? '')
+  const debouncedFilter = useDebounce(filter, 400)
+
+  useEffect(() => {
+    setFilter(filterFromUrl)
+  }, [filterFromUrl])
+
+  useEffect(() => {
+    setFilterFromUrl(debouncedFilter)
+  }, [debouncedFilter, setFilterFromUrl])
 
   useEffect(() => {
     if (searchParams.get('acao') === 'novo') {
@@ -118,12 +130,12 @@ export default function AnosLetivos() {
 
   const filtered = useMemo(
     () =>
-      filter
+      debouncedFilter
         ? anos.filter((a) =>
-            a.nome.toLowerCase().includes(filter.toLowerCase())
+            a.nome.toLowerCase().includes(debouncedFilter.toLowerCase())
           )
         : anos,
-    [anos, filter]
+    [anos, debouncedFilter]
   )
 
   const editing = editingId ? anos.find((a) => a.id === editingId) ?? null : null
@@ -189,6 +201,7 @@ export default function AnosLetivos() {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="input max-w-xs"
+          aria-label="Pesquisar anos letivos por nome"
         />
       </div>
 

@@ -18,6 +18,8 @@ Documentação completa do projeto Capinala Edu (Gestão Escolar).
 | [BASE-DADOS.md](BASE-DADOS.md) | Migrations, nano funções SQL, convenções. |
 | [ANALISE-ARQUIVOS-E-FUNCOES.md](ANALISE-ARQUIVOS-E-FUNCOES.md) | Índice de ficheiros e funções (backend e frontend). |
 | [FRONTEND-NAVEGACAO-PERMISSOES.md](FRONTEND-NAVEGACAO-PERMISSOES.md) | Sidebar agrupada por papel, barra contextual, header, permissões no frontend, rotas aluno/responsável. |
+| [FRONTEND-EXPANSAO-SERVICOS-DETALHES.md](FRONTEND-EXPANSAO-SERVICOS-DETALHES.md) | Expansão: mais funções, serviços (storage, print, retry), hooks (useQueryState), UX e tecnologia moderna. |
+| [FRONTEND-IMPLEMENTADO.md](FRONTEND-IMPLEMENTADO.md) | Resumo do que foi implementado: prefetch, filtros na URL, retry, impressão, sidebar, ocorrências. |
 
 ## Contrato e evolução
 

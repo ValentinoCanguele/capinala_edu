@@ -124,6 +124,16 @@ Definidas em `App.tsx`; labels e second bar em `config/routes.ts`.
 
 ---
 
+## Como adicionar uma função à barra contextual
+
+1. Abrir `gestao-escolar/src/layout/contextBarConfig.ts`.
+2. Localizar a entrada cujo `pathPrefix` corresponde ao contexto (ex.: `/alunos`, `/`, `/financas`).
+3. No array `items` dessa entrada, adicionar `{ to: '/rota', label: 'Nome visível' }`.
+4. Se a função só deve aparecer a certos papéis, a entrada já tem `roles`; para restringir um item específico a um subconjunto, pode ser necessário criar uma entrada separada com o mesmo `pathPrefix` e `roles` distintos, ou filtrar itens dentro de `getContextBarItems` (ex.: "Adicionar aluno" filtrado por `canCreateAluno(papel)`).
+5. Opcional: em `Layout.tsx`, adicionar o ícone em `contextBarPathToIcon` para a rota (`to` sem query).
+
+---
+
 ## Referências
 
 - Backend permissões: `server/lib/escola/permissoes.ts`

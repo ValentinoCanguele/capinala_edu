@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus, Search, ShieldAlert, AlertTriangle, Info, CheckCircle, Trash2, User, Calendar, Filter, FileText, Bell, MessageSquare, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { canManageOcorrencias } from '@/lib/permissoes'
 import { useOcorrencias, useTurmas, useTurmaAlunos } from '@/data/escola/queries'
@@ -31,10 +32,28 @@ const GRAVIDADES = [
     { value: 'critica', label: 'Crítica', color: 'bg-red-700' },
 ]
 
+function parseResolvido(s: string): boolean | undefined {
+    if (s === 'true') return true
+    if (s === 'false') return false
+    return undefined
+}
+
 export default function Ocorrencias() {
     const { user } = useAuth()
+    const [turmaIdUrl, setTurmaIdUrl] = useQueryState('turmaId')
+    const [alunoIdUrl, setAlunoIdUrl] = useQueryState('alunoId')
+    const [resolvidoUrl, setResolvidoUrl] = useQueryState('resolvido')
+
+    const filters = useMemo(
+        () => ({
+            turmaId: turmaIdUrl,
+            alunoId: alunoIdUrl,
+            resolvido: parseResolvido(resolvidoUrl),
+        }),
+        [turmaIdUrl, alunoIdUrl, resolvidoUrl]
+    )
+
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [filters, setFilters] = useState({ turmaId: '', alunoId: '', resolvido: undefined as boolean | undefined })
 
     const { data: turmas = [] } = useTurmas()
     const { data: alunos = [] } = useTurmaAlunos(filters.turmaId || null)
@@ -107,14 +126,17 @@ export default function Ocorrencias() {
                     <Select
                         label="Turma"
                         value={filters.turmaId}
-                        onChange={(e) => setFilters({ ...filters, turmaId: e.target.value, alunoId: '' })}
+                        onChange={(e) => {
+                            setTurmaIdUrl(e.target.value)
+                            setAlunoIdUrl('')
+                        }}
                         options={[{ value: '', label: 'Todas as Turmas' }, ...turmas.map(t => ({ value: t.id, label: t.nome }))]}
                     />
 
                     <Select
                         label="Estudante"
                         value={filters.alunoId}
-                        onChange={(e) => setFilters({ ...filters, alunoId: e.target.value })}
+                        onChange={(e) => setAlunoIdUrl(e.target.value)}
                         options={[{ value: '', label: 'Todos os Estudantes' }, ...alunos.map(a => ({ value: a.alunoId, label: a.alunoNome }))]}
                         disabled={!filters.turmaId}
                     />
@@ -123,16 +145,25 @@ export default function Ocorrencias() {
                         <label className="text-[10px] font-bold text-studio-foreground-lighter uppercase tracking-widest px-1">Estado</label>
                         <div className="flex p-1 bg-studio-muted/10 rounded-xl border border-studio-border/50">
                             <button
-                                onClick={() => setFilters({ ...filters, resolvido: undefined })}
+                                type="button"
+                                onClick={() => setResolvidoUrl('')}
                                 className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all ${filters.resolvido === undefined ? 'bg-studio-bg text-studio-brand shadow-sm' : 'text-studio-foreground-lighter'}`}
                             >
                                 Todos
                             </button>
                             <button
-                                onClick={() => setFilters({ ...filters, resolvido: false })}
+                                type="button"
+                                onClick={() => setResolvidoUrl('false')}
                                 className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all ${filters.resolvido === false ? 'bg-studio-bg text-studio-brand shadow-sm' : 'text-studio-foreground-lighter'}`}
                             >
                                 Pendentes
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setResolvidoUrl('true')}
+                                className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all ${filters.resolvido === true ? 'bg-studio-bg text-studio-brand shadow-sm' : 'text-studio-foreground-lighter'}`}
+                            >
+                                Resolvidos
                             </button>
                         </div>
                     </div>

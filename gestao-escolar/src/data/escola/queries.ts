@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 
 const ESCOLA_API = '/api/escola'
@@ -117,6 +117,18 @@ export function useAlunos() {
   })
 }
 
+/** Prefetch para uso em onMouseEnter da sidebar (carregamento mais rápido ao navegar). */
+export function prefetchAlunos(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.alunos,
+    queryFn: async (): Promise<Aluno[]> => {
+      const { data, error } = await api.get<Aluno[]>(`${ESCOLA_API}/alunos`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
 export function useTurmas() {
   return useQuery({
     queryKey: queryKeys.turmas,
@@ -130,6 +142,18 @@ export function useTurmas() {
 
 export function useDisciplinas() {
   return useQuery({
+    queryKey: queryKeys.disciplinas,
+    queryFn: async (): Promise<Disciplina[]> => {
+      const { data, error } = await api.get<Disciplina[]>(`${ESCOLA_API}/disciplinas`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchDisciplinas(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
     queryKey: queryKeys.disciplinas,
     queryFn: async (): Promise<Disciplina[]> => {
       const { data, error } = await api.get<Disciplina[]>(`${ESCOLA_API}/disciplinas`)
@@ -154,6 +178,18 @@ export function useDisciplina(id: string | null) {
 
 export function useAnosLetivos() {
   return useQuery({
+    queryKey: queryKeys.anosLetivos,
+    queryFn: async (): Promise<AnoLetivo[]> => {
+      const { data, error } = await api.get<AnoLetivo[]>(`${ESCOLA_API}/anos-letivos`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchAnosLetivos(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
     queryKey: queryKeys.anosLetivos,
     queryFn: async (): Promise<AnoLetivo[]> => {
       const { data, error } = await api.get<AnoLetivo[]>(`${ESCOLA_API}/anos-letivos`)
@@ -339,6 +375,18 @@ export function useUsuarios(escolaId?: string | null) {
     queryFn: async (): Promise<UsuarioListItem[]> => {
       const params = escolaId ? `?escolaId=${encodeURIComponent(escolaId)}` : ''
       const { data, error } = await api.get<UsuarioListItem[]>(`${ESCOLA_API}/usuarios${params}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar (lista sem filtro de escola). */
+export function prefetchUsuarios(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.usuarios(''),
+    queryFn: async (): Promise<UsuarioListItem[]> => {
+      const { data, error } = await api.get<UsuarioListItem[]>(`${ESCOLA_API}/usuarios`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
@@ -586,6 +634,18 @@ export function useHorarios(turmaId?: string, anoLetivoId?: string) {
   })
 }
 
+/** Prefetch para uso em onMouseEnter da sidebar (lista sem filtros). */
+export function prefetchHorarios(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.horarios(undefined, undefined),
+    queryFn: async (): Promise<HorarioRow[]> => {
+      const { data, error } = await api.get<HorarioRow[]>(`${ESCOLA_API}/horarios`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
 export interface SalaRow {
   id: string
   nome: string
@@ -594,6 +654,18 @@ export interface SalaRow {
 
 export function useSalas() {
   return useQuery({
+    queryKey: queryKeys.salas,
+    queryFn: async (): Promise<SalaRow[]> => {
+      const { data, error } = await api.get<SalaRow[]>(`${ESCOLA_API}/salas`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchSalas(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
     queryKey: queryKeys.salas,
     queryFn: async (): Promise<SalaRow[]> => {
       const { data, error } = await api.get<SalaRow[]>(`${ESCOLA_API}/salas`)
@@ -641,6 +713,18 @@ export function useComunicados() {
   })
 }
 
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchComunicados(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.comunicados,
+    queryFn: async (): Promise<ComunicadoRow[]> => {
+      const { data, error } = await api.get<ComunicadoRow[]>(`${ESCOLA_API}/comunicados`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
 export function useComunicado(id: string | null) {
   return useQuery({
     queryKey: queryKeys.comunicado(id ?? ''),
@@ -666,13 +750,35 @@ export interface DashboardStats {
   alunosPorTurma: { turmaNome: string; total: number }[]
 }
 
+const defaultDashboardStats: DashboardStats = {
+  totalAlunos: 0,
+  totalTurmas: 0,
+  totalProfessores: 0,
+  totalDisciplinas: 0,
+  mediaGeral: null,
+  taxaPresenca: null,
+  alunosPorTurma: [],
+}
+
 export function useDashboardStats() {
   return useQuery({
     queryKey: queryKeys.dashboardStats,
     queryFn: async (): Promise<DashboardStats> => {
       const { data, error } = await api.get<DashboardStats>(`${ESCOLA_API}/dashboard/stats`)
       if (error) throw new Error(error.message)
-      return data ?? { totalAlunos: 0, totalTurmas: 0, totalProfessores: 0, totalDisciplinas: 0, mediaGeral: null, taxaPresenca: null, alunosPorTurma: [] }
+      return data ?? defaultDashboardStats
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchDashboardStats(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.dashboardStats,
+    queryFn: async (): Promise<DashboardStats> => {
+      const { data, error } = await api.get<DashboardStats>(`${ESCOLA_API}/dashboard/stats`)
+      if (error) throw new Error(error.message)
+      return data ?? defaultDashboardStats
     },
   })
 }
@@ -768,6 +874,18 @@ export interface ModulosComDisponiveis {
 
 export function useModulos() {
   return useQuery({
+    queryKey: queryKeys.modulos,
+    queryFn: async (): Promise<ModuloRow[]> => {
+      const { data, error } = await api.get<ModuloRow[]>(`${ESCOLA_API}/modulos`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchModulos(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
     queryKey: queryKeys.modulos,
     queryFn: async (): Promise<ModuloRow[]> => {
       const { data, error } = await api.get<ModuloRow[]>(`${ESCOLA_API}/modulos`)
@@ -888,6 +1006,18 @@ export function useAtas(filters?: { turmaId?: string; periodoId?: string }) {
   })
 }
 
+/** Prefetch para uso em onMouseEnter da sidebar (lista sem filtros). */
+export function prefetchAtas(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.atas(undefined),
+    queryFn: async (): Promise<AtaResult[]> => {
+      const { data, error } = await api.get<AtaResult[]>(`${ESCOLA_API}/atas`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
 export function useAta(id: string | null) {
   return useQuery({
     queryKey: queryKeys.ata(id ?? ''),
@@ -986,8 +1116,32 @@ export function useOcorrencias(filters?: { alunoId?: string, turmaId?: string, r
   })
 }
 
+/** Prefetch para uso em onMouseEnter da sidebar (lista sem filtros). */
+export function prefetchOcorrencias(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.ocorrencias(undefined),
+    queryFn: async () => {
+      const { data, error } = await api.get(`${ESCOLA_API}/ocorrencias`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
 export function useMatrizes() {
   return useQuery({
+    queryKey: queryKeys.matrizes,
+    queryFn: async () => {
+      const { data, error } = await api.get(`${ESCOLA_API}/matrizes`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchMatrizes(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
     queryKey: queryKeys.matrizes,
     queryFn: async () => {
       const { data, error } = await api.get(`${ESCOLA_API}/matrizes`)

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
+import { withRetry } from '@/api/retry'
 import { queryKeys } from './queries'
 
 const ESCOLA_API = '/api/escola'
@@ -27,7 +28,11 @@ export function useCreateAluno() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: AlunoInput) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/alunos`, body)
+      const result = await withRetry(
+        () => api.post(`${ESCOLA_API}/alunos`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -39,7 +44,11 @@ export function useUpdateAluno() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...body }: AlunoInput & { id: string }) => {
-      const { data, error } = await api.put(`${ESCOLA_API}/alunos/${id}`, body)
+      const result = await withRetry(
+        () => api.put(`${ESCOLA_API}/alunos/${id}`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -66,7 +75,11 @@ export function useCreateTurma() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: TurmaInput) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/turmas`, body)
+      const result = await withRetry(
+        () => api.post(`${ESCOLA_API}/turmas`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -78,7 +91,11 @@ export function useUpdateTurma() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...body }: TurmaInput & { id: string }) => {
-      const { data, error } = await api.put(`${ESCOLA_API}/turmas/${id}`, body)
+      const result = await withRetry(
+        () => api.put(`${ESCOLA_API}/turmas/${id}`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -195,7 +212,11 @@ export function useSaveNotasBatch() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: NotaBatchInput) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/notas/batch`, body)
+      const result = await withRetry(
+        () => api.post<unknown>(`${ESCOLA_API}/notas/batch`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -264,7 +285,11 @@ export function useCreateSala() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: { nome: string; capacidade?: number }) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/salas`, body)
+      const result = await withRetry(
+        () => api.post(`${ESCOLA_API}/salas`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -285,7 +310,11 @@ export function useCreateComunicado() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: ComunicadoInput) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/comunicados`, body)
+      const result = await withRetry(
+        () => api.post(`${ESCOLA_API}/comunicados`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -318,7 +347,11 @@ export function useUpdateComunicado() {
       destinatarioTipo?: 'todos' | 'turma' | 'papel'
       turmaId?: string | null
     }) => {
-      const { data, error } = await api.put(`${ESCOLA_API}/comunicados/${id}`, body)
+      const result = await withRetry(
+        () => api.put(`${ESCOLA_API}/comunicados/${id}`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -339,7 +372,11 @@ export function useCreateDisciplina() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: DisciplinaInput) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/disciplinas`, body)
+      const result = await withRetry(
+        () => api.post(`${ESCOLA_API}/disciplinas`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -351,7 +388,11 @@ export function useUpdateDisciplina() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...body }: DisciplinaInput & { id: string }) => {
-      const { data, error } = await api.put(`${ESCOLA_API}/disciplinas/${id}`, body)
+      const result = await withRetry(
+        () => api.put(`${ESCOLA_API}/disciplinas/${id}`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -386,7 +427,11 @@ export function useCreateAnoLetivo() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: AnoLetivoInput) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/anos-letivos`, body)
+      const result = await withRetry(
+        () => api.post(`${ESCOLA_API}/anos-letivos`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },
@@ -605,7 +650,11 @@ export function useCreateUsuario() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (body: UsuarioCreateInput) => {
-      const { data, error } = await api.post(`${ESCOLA_API}/usuarios`, body)
+      const result = await withRetry(
+        () => api.post(`${ESCOLA_API}/usuarios`, body),
+        { attempts: 3, delayMs: 500 }
+      )
+      const { data, error } = result
       if (error) throw new Error(error.message)
       return data
     },

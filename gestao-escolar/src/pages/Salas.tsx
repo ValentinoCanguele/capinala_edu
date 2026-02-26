@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { canManageSalas } from '@/lib/permissoes'
 import { useSalas, useSalasAudit, useAnosLetivos, useInventarioSala } from '@/data/escola/queries'
@@ -69,15 +71,26 @@ const EQUIPAMENTOS_OPCOES = [
 
 export default function Salas() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [logModalOpen, setLogModalOpen] = useState(false)
   const [invModalOpen, setInvModalOpen] = useState(false)
   const [selectedSalaForLog, setSelectedSalaForLog] = useState<any>(null)
   const [selectedSalaForInv, setSelectedSalaForInv] = useState<any>(null)
   const [editingSala, setEditingSala] = useState<any>(null)
-  const [filter, setFilter] = useState('')
+  const [filterFromUrl, setFilterFromUrl] = useQueryState('q')
+  const [filter, setFilter] = useState(() => searchParams.get('q') ?? '')
+  const debouncedFilter = useDebounce(filter, 400)
   const [view, setView] = useState<'list' | 'audit'>('list')
   const [anoAudit, setAnoAudit] = useState('')
+
+  useEffect(() => {
+    setFilter(filterFromUrl)
+  }, [filterFromUrl])
+
+  useEffect(() => {
+    setFilterFromUrl(debouncedFilter)
+  }, [debouncedFilter, setFilterFromUrl])
 
   const { data: salas = [], isLoading } = useSalas()
   const { data: anosLetivos = [] } = useAnosLetivos()
@@ -93,10 +106,10 @@ export default function Salas() {
 
   const filtered = useMemo(() =>
     salas.filter((s: any) =>
-      s.nome.toLowerCase().includes(filter.toLowerCase()) ||
-      (s.equipamentos || []).some((eq: string) => eq.toLowerCase().includes(filter.toLowerCase()))
+      s.nome.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+      (s.equipamentos || []).some((eq: string) => eq.toLowerCase().includes(debouncedFilter.toLowerCase()))
     ),
-    [salas, filter]
+    [salas, debouncedFilter]
   )
 
   const stats = useMemo(() => {
@@ -272,6 +285,7 @@ export default function Salas() {
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="pl-10"
+                aria-label="Filtrar salas por nome, tipo ou ativos técnicos"
               />
             </div>
             <p className="text-[10px] font-black text-studio-foreground-lighter uppercase tracking-widest hidden md:block">Exibindo {filtered.length} unidades funcionais</p>

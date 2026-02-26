@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Search, FileText, Calendar, Users, Trash2, Edit, Save, X, Eye, ShieldCheck, History } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { canManageAtas } from '@/lib/permissoes'
 import { useAtas, useTurmas, usePeriodos } from '@/data/escola/queries'
@@ -18,10 +20,20 @@ import EmptyState from '@/components/shared/EmptyState'
 
 export default function Atas() {
     const { user } = useAuth()
-    const [filter, setFilter] = useState('')
-    const [turmaId, setTurmaId] = useState('')
+    const [filterFromUrl, setFilterFromUrl] = useQueryState('q')
+    const [filter, setFilter] = useState(filterFromUrl)
+    const debouncedFilter = useDebounce(filter, 400)
+    const [turmaId, setTurmaId] = useQueryState('turmaId')
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingAtaId, setEditingAtaId] = useState<string | null>(null)
+
+    useEffect(() => {
+        setFilter(filterFromUrl)
+    }, [filterFromUrl])
+
+    useEffect(() => {
+        setFilterFromUrl(debouncedFilter)
+    }, [debouncedFilter, setFilterFromUrl])
 
     // Queries
     const { data: atas = [], isLoading } = useAtas({ turmaId: turmaId || undefined })
@@ -46,10 +58,10 @@ export default function Atas() {
 
     const filteredAtas = useMemo(() => {
         return atas.filter(a =>
-            a.titulo.toLowerCase().includes(filter.toLowerCase()) ||
-            a.turmaNome?.toLowerCase().includes(filter.toLowerCase())
+            a.titulo.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+            a.turmaNome?.toLowerCase().includes(debouncedFilter.toLowerCase())
         )
-    }, [atas, filter])
+    }, [atas, debouncedFilter])
 
     const handleOpenModal = (ata?: any) => {
         if (ata) {
@@ -136,6 +148,7 @@ export default function Atas() {
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
                                 leftIcon={<Search className="w-4 h-4" />}
+                                aria-label="Procurar atas por título ou turma"
                             />
                         </div>
                         <div className="space-y-1">
@@ -147,6 +160,7 @@ export default function Atas() {
                                     { value: '', label: 'Todas as Turmas' },
                                     ...turmas.map(t => ({ value: t.id, label: t.nome }))
                                 ]}
+                                aria-label="Filtrar atas por turma"
                             />
                         </div>
                     </Card>

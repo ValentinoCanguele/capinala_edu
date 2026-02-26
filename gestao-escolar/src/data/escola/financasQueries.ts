@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 
 const ESCOLA_API = '/api/escola'
@@ -55,6 +55,19 @@ export interface DashboardFinancas {
 
 export function useFinancasDashboard() {
   return useQuery({
+    queryKey: financasQueryKeys.dashboard,
+    queryFn: async (): Promise<DashboardFinancas> => {
+      const { data, error } = await api.get<DashboardFinancas>(`${FINANCAS}/dashboard`)
+      if (error) throw new Error(error.message)
+      if (!data) throw new Error('Sem dados')
+      return data
+    },
+  })
+}
+
+/** Prefetch para uso em onMouseEnter da sidebar. */
+export function prefetchFinancasDashboard(queryClient: QueryClient): void {
+  queryClient.prefetchQuery({
     queryKey: financasQueryKeys.dashboard,
     queryFn: async (): Promise<DashboardFinancas> => {
       const { data, error } = await api.get<DashboardFinancas>(`${FINANCAS}/dashboard`)

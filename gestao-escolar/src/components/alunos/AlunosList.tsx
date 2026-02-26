@@ -76,6 +76,7 @@ export default function AlunosList({
           leftIcon={<Search className="h-4 w-4" />}
           className="max-w-md shadow-sm"
           autoFocus
+          aria-label="Pesquisar estudantes por nome ou email"
         />
       </div>
 

@@ -14,6 +14,7 @@ import { Button } from '@/components/shared/Button'
 import { Badge } from '@/components/shared/Badge'
 import { Avatar } from '@/components/shared/Avatar'
 import EmptyState from '@/components/shared/EmptyState'
+import { printElement } from '@/utils/print'
 import {
     Table,
     FileSpreadsheet,
@@ -54,6 +55,10 @@ export default function Pautas() {
         }
     }, [pauta])
 
+    const handlePrint = () => {
+        printElement('pauta-print-area')
+    }
+
     const handleExport = () => {
         // TODO: Implementar exportação real
         console.log('Exporting broadsheet...')
@@ -71,7 +76,7 @@ export default function Pautas() {
                             variant="outline"
                             size="sm"
                             icon={<Printer className="w-4 h-4" />}
-                            onClick={handleExport}
+                            onClick={handlePrint}
                             disabled={!pauta}
                         >
                             Imprimir
@@ -134,7 +139,7 @@ export default function Pautas() {
                     icon={<AlertCircle className="w-12 h-12 text-studio-muted" />}
                 />
             ) : (
-                <div className="space-y-4">
+                <div id="pauta-print-area" className="space-y-4">
                     {/* Analytics Summary */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <Card className="bg-studio-muted/10">

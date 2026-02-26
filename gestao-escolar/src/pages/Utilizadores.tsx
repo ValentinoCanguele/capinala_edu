@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { canGerirUtilizadores } from '@/lib/permissoes'
 import {
@@ -44,8 +45,17 @@ export default function Utilizadores() {
     telefone: '',
   })
   const [permissoesCodigos, setPermissoesCodigos] = useState<string[]>([])
-  const [filterInput, setFilterInput] = useState('')
+  const [filterFromUrl, setFilterFromUrl] = useQueryState('q')
+  const [filterInput, setFilterInput] = useState(() => searchParams.get('q') ?? '')
   const debouncedFilter = useDebounce(filterInput, 400)
+
+  useEffect(() => {
+    setFilterInput(filterFromUrl)
+  }, [filterFromUrl])
+
+  useEffect(() => {
+    setFilterFromUrl(debouncedFilter)
+  }, [debouncedFilter, setFilterFromUrl])
 
   const escolaId = authUser?.escolaId ?? undefined
   const { data: usuarios = [], isLoading } = useUsuarios(escolaId)

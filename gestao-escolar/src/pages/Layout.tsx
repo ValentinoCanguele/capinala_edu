@@ -41,8 +41,25 @@ import {
   Search,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
+import { prefetchFinancasDashboard } from '@/data/escola/financasQueries'
+import {
+  prefetchAlunos,
+  prefetchAnosLetivos,
+  prefetchAtas,
+  prefetchComunicados,
+  prefetchDashboardStats,
+  prefetchDisciplinas,
+  prefetchHorarios,
+  prefetchMatrizes,
+  prefetchModulos,
+  prefetchOcorrencias,
+  prefetchSalas,
+  prefetchTurmas,
+  prefetchUsuarios,
+} from '@/data/escola/queries'
 import {
   getSecondBarItems,
   isSecondBarItemActive,
@@ -52,8 +69,28 @@ import { getSidebarGroupsForRole } from '@/layout/sidebarConfig'
 import { getContextBarItems } from '@/layout/contextBarConfig'
 import { filterSecondBarByRole } from '@/layout/secondBarPermissions'
 import { getBreadcrumbs } from '@/config/routes'
+import { getItem, setItem } from '@/lib/storage'
 
-const SIDEBAR_COLLAPSED_KEY = 'gestao-escolar-sidebar-collapsed'
+const SIDEBAR_COLLAPSED_KEY_LEGACY = 'gestao-escolar-sidebar-collapsed'
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed'
+
+function getInitialSidebarCollapsed(): boolean {
+  if (typeof window === 'undefined') return false
+  const fromStorage = getItem<boolean>(SIDEBAR_COLLAPSED_STORAGE_KEY)
+  if (fromStorage !== undefined) return fromStorage
+  try {
+    const raw = localStorage.getItem(SIDEBAR_COLLAPSED_KEY_LEGACY)
+    if (raw === 'true' || raw === 'false') {
+      const value = raw === 'true'
+      setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, value)
+      localStorage.removeItem(SIDEBAR_COLLAPSED_KEY_LEGACY)
+      return value
+    }
+  } catch {
+    // ignore
+  }
+  return false
+}
 const SIDEBAR_WIDTH_EXPANDED = 'w-56'
 const SIDEBAR_WIDTH_COLLAPSED = 'w-16'
 const LOGO_URL = '/logo.png'
@@ -110,7 +147,25 @@ const contextBarPathToIcon: Record<string, typeof Home> = {
   '/financas/configuracao': Settings2,
 }
 
+const SIDEBAR_PREFETCH: Record<string, (queryClient: QueryClient) => void> = {
+  '/': prefetchDashboardStats,
+  '/alunos': prefetchAlunos,
+  '/turmas': prefetchTurmas,
+  '/comunicados': prefetchComunicados,
+  '/anos-letivos': prefetchAnosLetivos,
+  '/disciplinas': prefetchDisciplinas,
+  '/salas': prefetchSalas,
+  '/modulos': prefetchModulos,
+  '/utilizadores': prefetchUsuarios,
+  '/financas': prefetchFinancasDashboard,
+  '/ocorrencias': prefetchOcorrencias,
+  '/atas': prefetchAtas,
+  '/matrizes': prefetchMatrizes,
+  '/horarios': prefetchHorarios,
+}
+
 export default function Layout() {
+  const queryClient = useQueryClient()
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const location = useLocation()
@@ -127,22 +182,12 @@ export default function Layout() {
   const [acercaOpen, setAcercaOpen] = useState(false)
   const acercaCloseRef = useRef<HTMLButtonElement>(null)
 
-  const [isCollapsed, setCollapsedState] = useState(() => {
-    try {
-      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
-    } catch {
-      return false
-    }
-  })
+  const [isCollapsed, setCollapsedState] = useState(getInitialSidebarCollapsed)
   const [hoverExpanded, setHoverExpanded] = useState(false)
 
   const setCollapsed = useCallback((value: boolean) => {
     setCollapsedState(value)
-    try {
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(value))
-    } catch {
-      // ignore
-    }
+    setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, value)
   }, [])
 
   const isSidebarNarrow = isCollapsed && !hoverExpanded
@@ -262,11 +307,13 @@ export default function Layout() {
                   to === '/'
                     ? location.pathname === '/'
                     : location.pathname.startsWith(to)
+                const onPrefetch = SIDEBAR_PREFETCH[to]
                 return (
                   <NavLink
                     key={to}
                     to={to}
                     title={isSidebarNarrow ? label : undefined}
+                    onMouseEnter={() => onPrefetch?.(queryClient)}
                     className={`flex items-center gap-2 rounded-md text-sm font-medium transition-colors ${isSidebarNarrow ? 'justify-center px-0 py-2.5' : 'px-3 py-2'
                       } ${isActive
                         ? 'bg-studio-sidebar-active text-studio-brand'

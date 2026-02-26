@@ -166,7 +166,3 @@ export function canManageOcorrencias(papel: string | undefined): boolean {
 export function canGerirFinancas(papel: string | undefined): boolean {
   return isPapel(papel, PAPEIS_ADMIN)
 }
-
-export function canVerRelatorioFrequencia(papel: string | undefined): boolean {
-  return isPapel(papel, PAPEIS_GESTAO)
-}

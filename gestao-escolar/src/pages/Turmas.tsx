@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
 import { canCreateTurma, canDeleteTurma, canManageTurmaAlunos } from '@/lib/permissoes'
 import { useTurmas } from '@/data/escola/queries'
@@ -24,8 +25,17 @@ export default function Turmas() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [gerirTurmaId, setGerirTurmaId] = useState<string | null>(null)
   const [turmaToDelete, setTurmaToDelete] = useState<string | null>(null)
-  const [filterInput, setFilterInput] = useState('')
+  const [filterFromUrl, setFilterFromUrl] = useQueryState('q')
+  const [filterInput, setFilterInput] = useState(() => searchParams.get('q') ?? '')
   const debouncedFilter = useDebounce(filterInput, 400)
+
+  useEffect(() => {
+    setFilterInput(filterFromUrl)
+  }, [filterFromUrl])
+
+  useEffect(() => {
+    setFilterFromUrl(debouncedFilter)
+  }, [debouncedFilter, setFilterFromUrl])
 
   useEffect(() => {
     if (searchParams.get('acao') === 'novo') {
