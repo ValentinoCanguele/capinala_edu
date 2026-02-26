@@ -63,10 +63,10 @@ export interface SaveExamePayload {
 }
 
 export interface CreateMatrizPayload {
-  nome: string
-  grau_escolar: string
-  ano_letivo_inicio: string
-  notas_normativas?: string
+  nome: string | null
+  grau_escolar: string | null
+  ano_letivo_inicio: string | null
+  notas_normativas?: string | null
 }
 
 export interface AddDisciplinaMatrizPayload {
@@ -1015,7 +1015,7 @@ export function useCreateMatriz() {
 export function useAddDisciplinaMatriz() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: AddDisciplinaMatrizPayload) => {
       const { error } = await api.post(`${ESCOLA_API}/matrizes?action=addDisciplina`, data)
       if (error) throw new Error(error.message)
     },
@@ -1040,7 +1040,7 @@ export function useClonarMatriz() {
 export function useAddPrecedencia() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: AddPrecedenciaPayload) => {
       const { error } = await api.post(`${ESCOLA_API}/matrizes?action=addPrecedencia`, data)
       if (error) throw new Error(error.message)
     },
@@ -1062,7 +1062,7 @@ export function useRemovePrecedencia() {
 export function useSaveSala() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: CreateSalaPayload | (CreateSalaPayload & { id: string })) => {
       const { error } = await api.post(`${ESCOLA_API}/salas`, data)
       if (error) throw new Error(error.message)
     },
@@ -1073,7 +1073,7 @@ export function useSaveSala() {
 export function useAddItemInventario() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: AddItemInventarioPayload) => {
       const { error } = await api.post(`${ESCOLA_API}/salas?action=addItemInventario`, data)
       if (error) throw new Error(error.message)
     },
