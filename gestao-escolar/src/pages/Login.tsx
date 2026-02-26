@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Sun, Moon, Mail, Lock, LogIn } from 'lucide-react'
+import { BookOpen, Sun, Moon, Mail, Lock, LogIn, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 
@@ -9,9 +9,14 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [capsLockOn, setCapsLockOn] = useState(false)
   const { login } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+
+  const checkCapsLock = useCallback((e: React.KeyboardEvent) => {
+    setCapsLockOn(e.getModifierState?.('CapsLock') ?? false)
+  }, [])
 
   useEffect(() => {
     document.title = 'Entrar — Gestão Escolar'
@@ -99,13 +104,22 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); if (error) setError('') }}
+                  onKeyDown={checkCapsLock}
+                  onKeyUp={checkCapsLock}
                   required
                   className="input w-full pl-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
                   placeholder="••••••••"
                   aria-invalid={!!error}
+                  aria-describedby={capsLockOn ? 'login-caps-hint' : undefined}
                   autoComplete="current-password"
                 />
               </div>
+              {capsLockOn && (
+                <p id="login-caps-hint" className="mt-1.5 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1" role="status">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
+                  Caps Lock está ativado.
+                </p>
+              )}
             </div>
             <button
               type="submit"

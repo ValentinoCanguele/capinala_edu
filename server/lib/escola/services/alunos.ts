@@ -24,6 +24,49 @@ export async function listAlunos(user: AuthUser) {
   }))
 }
 
+export async function listAlunosFinanceiro(user: AuthUser) {
+  const db = getDb()
+  const escolaId = getEscolaId(user)
+  // Utiliza a visão consolidada financeiro_resumo (SaaS Angola)
+  const result = await db.query(
+    `SELECT 
+       aluno_id AS id, 
+       nome_completo AS nome, 
+       turma,
+       total_faturado AS valor_propina, 
+       total_pago AS valor_pago, 
+       total_divida AS valor_divida
+     FROM financeiro_resumo
+     WHERE escola_id = $1
+     ORDER BY nome_completo`,
+    [escolaId]
+  )
+  return result.rows.map((r) => {
+    // Calculamos o status financeiro dinamicamente
+    const faturado = Number(r.valor_propina)
+    const pago = Number(r.valor_pago)
+    const divida = Number(r.valor_divida)
+    const percentualPago = faturado > 0 ? Math.min(100, Math.round((pago / faturado) * 100)) : 100
+
+    let statusFinanceiro = 'Regularizado'
+    if (divida > 0) {
+      statusFinanceiro = percentualPago > 0 ? 'Pendente' : 'Em Dívida'
+    }
+
+    return {
+      id: r.id,
+      nome: r.nome,
+      email: '', // Pode não ser necessário ou juntar da tabela `pessoas` se obrigatório
+      turma: r.turma || 'Sem Turma',
+      valorPropina: faturado,
+      valorPago: pago,
+      valorDivida: divida,
+      statusFinanceiro,
+      percentualPago
+    }
+  })
+}
+
 export async function createAluno(user: AuthUser, data: AlunoCreate) {
   const db = getDb()
   const escolaId = data.escolaId ?? getEscolaId(user)

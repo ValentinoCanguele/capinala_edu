@@ -48,3 +48,23 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Modo impressão (item 59) – esconder navegação e mostrar só conteúdo principal */
+@media print {
+  .skip-link,
+  aside,
+  header[class*="sticky"],
+  .second-bar-nav,
+  [data-print-hide],
+  .fixed.z-40,
+  nav[aria-label="Menu principal"],
+  button[aria-label="Voltar ao topo"] {
+    display: none !important;
+  }
+  main#main-content {
+    padding: 0;
+  }
+  body {
+    background: #fff;
+  }
+}

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { FileText, CalendarCheck, Users } from 'lucide-react'
@@ -17,7 +17,7 @@ import { Badge } from '@/components/shared/Badge'
 import { Card } from '@/components/shared/Card'
 import { Button } from '@/components/shared/Button'
 import { Avatar } from '@/components/shared/Avatar'
-import { BellRing, ExternalLink, Zap } from 'lucide-react'
+import { BellRing, ExternalLink, Zap, X, Sparkles } from 'lucide-react'
 
 const navCards = [
   { to: '/alunos', title: 'Alunos', description: 'Cadastro e listagem de alunos' },
@@ -43,8 +43,26 @@ const navCards = [
 
 
 const ROLES_ALERTAS: ('admin' | 'direcao')[] = ['admin', 'direcao']
+const WELCOME_DISMISSED_KEY = 'gestao-escolar-welcome-dismissed'
 
 export default function Dashboard() {
+  const [showWelcome, setShowWelcome] = useState(false)
+  useEffect(() => {
+    try {
+      setShowWelcome(!localStorage.getItem(WELCOME_DISMISSED_KEY))
+    } catch {
+      setShowWelcome(false)
+    }
+  }, [])
+  const dismissWelcome = () => {
+    try {
+      localStorage.setItem(WELCOME_DISMISSED_KEY, '1')
+      setShowWelcome(false)
+    } catch {
+      setShowWelcome(false)
+    }
+  }
+
   const { data: stats, isLoading } = useDashboardStats()
   const { data: meuPapel } = useMeuPapel()
   const canViewAlertas =
@@ -90,6 +108,33 @@ export default function Dashboard() {
           </Badge>
         }
       />
+
+      {/* Bem-vindo pela 1ª vez (item 112) */}
+      {showWelcome && (
+        <div
+          className="mb-6 flex items-start gap-3 rounded-xl border border-studio-brand/30 bg-studio-brand/10 px-4 py-3 animate-fade-in"
+          role="status"
+          aria-live="polite"
+        >
+          <Sparkles className="w-5 h-5 text-studio-brand flex-shrink-0 mt-0.5" aria-hidden />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-studio-foreground">
+              Bem-vindo à Gestão Escolar
+            </p>
+            <p className="text-xs text-studio-foreground-light mt-0.5">
+              Use o menu lateral para navegar. Pressione <kbd className="px-1 py-0.5 rounded bg-studio-muted text-[10px]">⌘K</kbd> para pesquisa rápida.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismissWelcome}
+            className="p-1 rounded-md text-studio-foreground-lighter hover:text-studio-foreground hover:bg-studio-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand"
+            aria-label="Fechar mensagem de boas-vindas"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Meus filhos (papel responsável) */}
       {isResponsavel && meusFilhos.length > 0 && (

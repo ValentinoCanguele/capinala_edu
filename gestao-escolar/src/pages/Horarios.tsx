@@ -70,6 +70,28 @@ export default function Horarios() {
         return map
     }, [filtered])
 
+    // M1.1.4: Otimizador Inteligente de Salas
+    const salasOtimizadas = useMemo(() => {
+        const turma = turmas.find(t => t.id === form.turmaId);
+        const inscritos = turma?.alunoIds?.length || 0;
+
+        return [...salas].map(s => {
+            let label = s.nome;
+            if (s.capacidade) {
+                label += ` (${s.capacidade} lugares)`;
+                if (form.turmaId) {
+                    if (s.capacidade < inscritos) label += ' ⚠️ Pequena';
+                    else if (s.capacidade - inscritos >= 15) label += ' ⚠️ Sobredimensionada';
+                    else label += ' ⭐ Otimizada';
+                }
+            }
+            const cap = s.capacidade || 999;
+            const getPenalty = (c: number) => c < inscritos ? 10000 + (inscritos - c) : (c - inscritos);
+            const penalty = form.turmaId ? getPenalty(cap) : 0;
+            return { ...s, label, penalty };
+        }).sort((a, b) => form.turmaId ? a.penalty - b.penalty : a.nome.localeCompare(b.nome));
+    }, [salas, form.turmaId, turmas]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (!form.turmaId || !form.disciplinaId || !form.anoLetivoId) return
@@ -139,13 +161,13 @@ export default function Horarios() {
                     </p>
                 </div>
                 {canManageHorarios(user?.papel) && (
-                <button
-                    type="button"
-                    onClick={() => { setSearchParams({}); setFormOpen(true) }}
-                    className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-                >
-                    Novo horário
-                </button>
+                    <button
+                        type="button"
+                        onClick={() => { setSearchParams({}); setFormOpen(true) }}
+                        className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+                    >
+                        Novo horário
+                    </button>
                 )}
             </div>
 
@@ -217,16 +239,23 @@ export default function Horarios() {
                                 </select>
                             </div>
                             <div>
-                                <label className="label">Sala</label>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="label !mb-0">Sala</label>
+                                    {form.turmaId && (
+                                        <span className="text-[10px] text-studio-brand font-bold uppercase tracking-widest">
+                                            {turmas.find(t => t.id === form.turmaId)?.alunoIds?.length || 0} ESTUDANTES
+                                        </span>
+                                    )}
+                                </div>
                                 <select
                                     value={form.salaId}
                                     onChange={(e) => setForm({ ...form, salaId: e.target.value })}
                                     className="input w-full"
                                 >
                                     <option value="">Nenhuma</option>
-                                    {salas.map((s) => (
+                                    {salasOtimizadas.map((s) => (
                                         <option key={s.id} value={s.id}>
-                                            {s.nome} {s.capacidade ? `(${s.capacidade} lugares)` : ''}
+                                            {s.label}
                                         </option>
                                     ))}
                                 </select>
@@ -342,7 +371,7 @@ export default function Horarios() {
                                             <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Professor</th>
                                             <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Sala</th>
                                             {canManageHorarios(user?.papel) && (
-                                            <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
+                                                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
                                             )}
                                         </tr>
                                     </thead>
@@ -357,15 +386,15 @@ export default function Horarios() {
                                                 <td className="px-4 py-2 text-sm text-studio-foreground-light">{h.professorNome ?? '—'}</td>
                                                 <td className="px-4 py-2 text-sm text-studio-foreground-light">{h.salaNome ?? '—'}</td>
                                                 {canManageHorarios(user?.papel) && (
-                                                <td className="px-4 py-2 text-right">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDelete(h.id)}
-                                                        className="text-red-600 hover:underline text-sm"
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </td>
+                                                    <td className="px-4 py-2 text-right">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDelete(h.id)}
+                                                            className="text-red-600 hover:underline text-sm"
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                    </td>
                                                 )}
                                             </tr>
                                         ))}

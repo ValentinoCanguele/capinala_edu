@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Search, MoreVertical, Edit2, Trash2, UserSearch, Hash, Mail, Calendar, Trash, CheckSquare, Square, UserMinus } from 'lucide-react'
+import { Search, MoreVertical, Edit2, Trash2, UserSearch, Mail, Calendar, Trash, CheckSquare, Square, UserMinus, Filter, X } from 'lucide-react'
 import type { Aluno } from '@/data/escola/queries'
+import { formatAlunoDisplayId } from '@/utils/formatters'
 import EmptyState from '@/components/shared/EmptyState'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { Card } from '@/components/shared/Card'
@@ -8,6 +9,8 @@ import { Input } from '@/components/shared/Input'
 import { Avatar } from '@/components/shared/Avatar'
 import { ContextMenu, type MenuItem } from '@/components/shared/ContextMenu'
 import { Button } from '@/components/shared/Button'
+import { Tooltip } from '@/components/shared/Tooltip'
+import { Select } from '@/components/shared/Select'
 
 interface AlunosListProps {
   alunos: Aluno[]
@@ -68,21 +71,46 @@ export default function AlunosList({
 
   return (
     <>
-      <div className="mb-6">
-        <Input
-          placeholder="Pesquisar estudantes por nome ou email..."
-          value={filter}
-          onChange={(e) => onFilterChange(e.target.value)}
-          leftIcon={<Search className="h-4 w-4" />}
-          className="max-w-md shadow-sm"
-          autoFocus
-          aria-label="Pesquisar estudantes por nome ou email"
-        />
+      <div className="mb-6 flex flex-col gap-4 bg-studio-bg/50 p-4 rounded-2xl border border-studio-border/30">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <Input
+            placeholder="Pesquisar por nome, email ou ID..."
+            value={filter}
+            onChange={(e) => onFilterChange(e.target.value)}
+            onClear={() => onFilterChange('')}
+            showClearButton
+            leftIcon={<Search className="h-4 w-4" />}
+            className="w-full sm:max-w-md bg-white dark:bg-studio-muted/5 border-studio-border/50 shadow-sm"
+            autoFocus
+            aria-label="Pesquisar estudantes"
+          />
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2 text-sm text-studio-foreground-lighter font-medium px-3 py-2 bg-studio-muted/5 rounded-lg border border-studio-border/50">
+              <Filter className="w-4 h-4" />
+              <span>Status:</span>
+              <select className="bg-transparent outline-none cursor-pointer hover:text-studio-brand transition-colors appearance-none pr-4">
+                <option value="todos">Todos</option>
+                <option value="ativos">Matriculados</option>
+                <option value="inativos">Inativos</option>
+                <option value="concluidos">Concluídos</option>
+              </select>
+            </div>
+
+            {hasFilter && (
+              <Button variant="ghost" size="sm" onClick={() => onFilterChange('')} className="text-studio-muted hover:text-red-500 hidden sm:flex">
+                Limpar Filtros
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       <Card noPadding>
         {isLoading ? (
-          <SkeletonTable rows={8} columns={4} />
+          <div role="status" aria-live="polite" aria-label="A carregar lista de alunos">
+            <SkeletonTable rows={8} columns={4} />
+          </div>
         ) : error ? (
           <div className="p-8 text-center text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-500/5" role="alert">
             <p className="font-semibold">Erro ao carregar alunos</p>
@@ -160,17 +188,18 @@ export default function AlunosList({
                             <span className="text-sm font-bold text-studio-foreground group-hover:text-studio-brand transition-colors tracking-tight">
                               {a.nome}
                             </span>
-                            <div className="flex items-center gap-1.5 opacity-50 text-[10px] font-mono uppercase tracking-tighter">
-                              <Hash className="w-2.5 h-2.5" />
-                              <span>ALN-{a.id.slice(-6).toUpperCase()}</span>
-                            </div>
+                            <Tooltip content={<span className="text-xs font-mono break-all">{a.id}</span>} position="top">
+                              <span className="inline-flex items-center gap-1 rounded-md bg-studio-muted/70 px-1.5 py-0.5 text-[10px] font-mono font-medium text-studio-foreground-lighter tabular-nums cursor-default">
+                                {formatAlunoDisplayId(a.id)}
+                              </span>
+                            </Tooltip>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-sm text-studio-foreground-light font-medium">
-                          <Mail className="w-3.5 h-3.5 text-studio-muted" />
-                          <span>{a.email || '—'}</span>
+                      <td className="px-5 py-4 whitespace-nowrap max-w-[200px] sm:max-w-[240px]">
+                        <div className="flex items-center gap-2 text-sm text-studio-foreground-light font-medium min-w-0">
+                          <Mail className="w-3.5 h-3.5 text-studio-muted flex-shrink-0" />
+                          <span className="truncate" title={a.email || undefined}>{a.email || '—'}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
@@ -180,27 +209,33 @@ export default function AlunosList({
                         </div>
                       </td>
                       {(canEdit || canDelete) && (
-                      <td className="px-5 py-4 whitespace-nowrap text-right">
-                        <div className="flex justify-end gap-1">
-                          {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => onEdit(a.id)}
-                              className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity text-studio-muted hover:text-studio-brand"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </Button>
-                          )}
-                          {menuItems.length > 0 && (
-                            <ContextMenu items={menuItems}>
-                              <Button variant="ghost" size="icon" className="w-8 h-8 text-studio-muted hover:text-studio-brand">
-                                <MoreVertical className="h-4 w-4" />
+                        <td className="px-5 py-4 whitespace-nowrap text-right">
+                          <div className="flex justify-end gap-1">
+                            {canEdit && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onEdit(a.id)}
+                                className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity text-studio-muted hover:text-studio-brand"
+                                aria-label={`Editar ${a.nome}`}
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
                               </Button>
-                            </ContextMenu>
-                          )}
-                        </div>
-                      </td>
+                            )}
+                            {menuItems.length > 0 && (
+                              <ContextMenu items={menuItems}>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-8 h-8 text-studio-muted hover:text-studio-brand"
+                                  aria-label={`Mais opções para ${a.nome}`}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </ContextMenu>
+                            )}
+                          </div>
+                        </td>
                       )}
                     </tr>
                   )

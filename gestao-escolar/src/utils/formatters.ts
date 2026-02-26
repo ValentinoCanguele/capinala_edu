@@ -3,6 +3,26 @@
  */
 
 /**
+ * ID encurtado em monospace para listas (item 63).
+ * Ex: formatShortId('ALN', 'abc-123-def-45B2F1') → 'ALN-45B2F1'
+ */
+export function formatShortId(prefix: string, id: string | null | undefined, length = 6): string {
+  if (!id) return '—'
+  const suffix = id.replace(/[-]/g, '').slice(-length).toUpperCase()
+  return `${prefix}-${suffix}`
+}
+
+/**
+ * ID de aluno para exibição: formato curto e legível (# + 4 caracteres).
+ * Ex: formatAlunoDisplayId('uuid-xxx-yyy-a4b2') → '#A4B2'
+ */
+export function formatAlunoDisplayId(id: string | null | undefined): string {
+  if (!id) return '—'
+  const code = id.replace(/[-]/g, '').slice(-4).toUpperCase()
+  return code ? `#${code}` : '—'
+}
+
+/**
  * Formata um valor numérico para moeda Angolana (Kwanzas)
  */
 export function formatKz(valor: number): string {

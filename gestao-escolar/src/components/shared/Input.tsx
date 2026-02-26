@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string
@@ -6,6 +7,9 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     hint?: ReactNode
     leftIcon?: ReactNode
     rightIcon?: ReactNode
+    /** Mostra botão X para limpar quando há valor (item 99 – limpar filtro). */
+    showClearButton?: boolean
+    onClear?: () => void
 }
 
 /**
@@ -14,14 +18,17 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * Suporta ícones Laterais (ex: Search na esquerda), descrições Hint e Mensagens de Erro Semânticas.
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ label, error, hint, leftIcon, rightIcon, className = '', id, ...props }, ref) => {
+    ({ label, error, hint, leftIcon, rightIcon, showClearButton, onClear, className = '', id, value, required, ...props }, ref) => {
         const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
+        const hasValue = value != null && String(value).length > 0
+        const showClear = showClearButton && hasValue && onClear
 
         return (
             <div className={`w-full ${className}`}>
                 {label && (
                     <label htmlFor={inputId} className="block text-sm font-medium text-studio-foreground mb-1">
                         {label}
+                        {required && <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>}
                     </label>
                 )}
 
@@ -36,13 +43,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                         {...props}
                         id={inputId}
                         ref={ref}
+                        value={value}
+                        required={required}
                         className={`
                w-full bg-studio-bg border rounded-lg px-3 py-2 text-sm text-studio-foreground 
                transition-colors duration-200 outline-none
                focus:ring-2 focus:ring-studio-brand focus:border-studio-brand focus:bg-studio-bg focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg
                disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-studio-muted
                ${leftIcon ? 'pl-9' : ''}
-               ${rightIcon ? 'pr-9' : ''}
+               ${rightIcon || showClear ? 'pr-9' : ''}
                ${error
                                 ? 'border-red-500 hover:border-red-600 focus:ring-red-500 focus:border-red-500'
                                 : 'border-studio-border hover:border-studio-foreground-lighter/50 focus:border-studio-brand'
@@ -52,7 +61,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
                     />
 
-                    {rightIcon && (
+                    {showClear && (
+                        <button
+                            type="button"
+                            onClick={onClear}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-studio-foreground-lighter hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-inset rounded-r-lg"
+                            title="Limpar"
+                            aria-label="Limpar campo"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                    {!showClear && rightIcon && (
                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-studio-foreground-lighter">
                             {rightIcon}
                         </div>

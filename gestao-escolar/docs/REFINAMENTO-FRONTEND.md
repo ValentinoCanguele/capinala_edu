@@ -17,8 +17,8 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | 6 | Transições suaves (Fade + Slide up) na abertura de modais | ✅ | Modal: overlay animate-fade-in, content animate-slide-up |
 | 7 | Animação de Fade in no carregamento inicial das páginas | ✅ | Layout: área do Outlet com animate-fade-in |
 | 8 | Animação de Pulse (Pulsar) em badges de estado crítico | ✅ | Badge tem prop `pulse`; usar `pulse` em variante danger |
-| 9 | Tooltips nativos flutuantes em textos truncados/cortados | 🟡 | .tooltip-trigger em components.css; falta uso em truncates |
-| 10 | Tooltips explicativos em ícones sem label de texto | 🟡 | Tooltip.tsx e tooltip-trigger; expandir uso |
+| 9 | Tooltips nativos flutuantes em textos truncados/cortados | 🟡 | Tooltip no ID aluno (AlunosList); title em emails truncados |
+| 10 | Tooltips explicativos em ícones sem label de texto | ✅ | Tooltip no chip ID; aria-label em botões Editar/Mais opções (Alunos, Turmas) |
 | 11 | Focus rings (Aros azuis) perfeitos em todos os inputs | ✅ | Input com focus-visible:ring-2 focus-visible:ring-offset-2 |
 | 12 | Empty States com ilustrações animadas/elegantes | 🟡 | EmptyState com ícone e hover; sem ilustrações SVG |
 | 13 | Micro-animação de Sucesso (check mark desenhado) após gravar | ⬜ | Toast só ícone; opcional checkmark animado |
@@ -36,24 +36,24 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 
 | # | Função | Estado | Notas |
 |---|--------|--------|--------|
-| 21 | Atalho Cmd+K / Ctrl+K: Paleta de pesquisa global | ⬜ | Mockup referido; implementar lógica |
+| 21 | Atalho Cmd+K / Ctrl+K: Paleta de pesquisa global | ✅ | Layout e CommandPalette: Cmd+K e tecla / abrem a paleta |
 | 22 | Atalho Cmd+S / Ctrl+S: Guardar formulários abertos | ✅ | useSaveShortcut; usado em CategoriaForm e AlunoForm |
 | 23 | Tecla Esc: Fecha modais, dropdowns e menus | ✅ | Modal usa Escape; ConfirmDeleteModal idem |
 | 24 | Teclas Setas: Navegação em tabelas e grelhas | ⬜ | Não implementado |
 | 25 | Tecla Enter: Submissão rápida de formulários | 🟡 | Forms nativos submetem com Enter; validar em modais |
 | 26 | Tecla /: Foca input de pesquisa da página | ✅ | Layout: abre Command Palette (input com autoFocus); ignora se foco em input/textarea/select |
-| 27 | Seleção Múltipla com Shift+Click em checkboxes | ⬜ | Não implementado |
-| 28 | ARIA labels dinâmicos para ícones solitários | 🟡 | Vários aria-label em tabelas; auditar ícones |
+| 27 | Seleção Múltipla com Shift+Click em checkboxes | ✅ | AlunosList: handleSelect com shiftKey + lastSelectedIndex (intervalo) |
+| 28 | ARIA labels dinâmicos para ícones solitários | ✅ | AlunosList: Editar/Mais opções com aria-label por nome; expandir noutras tabelas |
 | 29 | Focus Trap dentro de modais abertos | ✅ | Modal: ciclo Tab/Shift+Tab, foco inicial no primeiro focusável, restaura foco ao fechar |
 | 30 | Link "Saltar para o conteúdo" | ✅ | .skip-link em index.css |
 | 31 | Contraste WCAG em textos cinzentos | 🟡 | Variáveis studio-foreground-light/lighter; validar rácios |
-| 32 | Anúncios de Leitores de Ecrã ao carregar dados | ⬜ | aria-live / role="status" em zonas dinâmicas |
+| 32 | Anúncios de Leitores de Ecrã ao carregar dados | ✅ | AlunosList, TurmasList, Utilizadores loading; Forbidden; role="status" aria-live |
 | 33 | Menus Dropdown navegáveis com Tab | 🟡 | DropdownSelect; testar teclado |
 | 34 | Indicadores de Focus visíveis só com teclado | 🟡 | focus-visible em alguns sítios |
 | 35 | Ordem de Tab otimizada em formulários | 🟡 | Ordem natural; auditar forms longos |
 | 36 | Toggle Switches com acessibilidade nativa | 🟡 | Switch.tsx; verificar role/aria |
-| 37 | Mensagens de erro com aria-describedby no input | ⬜ | Forms sem ligação explícita |
-| 38 | Asteriscos estilizados para campos obrigatórios | 🟡 | Verificar em FormItemLayout/inputs |
+| 37 | Mensagens de erro com aria-describedby no input | ✅ | Input.tsx: aria-describedby + id no <p> de erro |
+| 38 | Asteriscos estilizados para campos obrigatórios | ✅ | Input: * vermelho na label quando required |
 | 39 | Atalhos Alt+1, Alt+2 para menu lateral | ⬜ | Não implementado |
 | 40 | prefers-reduced-motion | ✅ | index.css: second-bar e sidebar-transition |
 
@@ -68,24 +68,24 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | 43 | Máscaras de input para telefones (+244 9XX XXX XXX) | ⬜ | Não implementado |
 | 44 | Máscaras e validação NIF, BI, Cédula angolana | ⬜ | Não implementado |
 | 45 | Separadores de milhares (1.500.000,00) | 🟡 | formatCurrency; verificar locale |
-| 46 | Truncamento com elipses em e-mails (mobile) | ⬜ | Classes truncate; aplicar onde falta |
+| 46 | Truncamento com elipses em e-mails (mobile) | 🟡 | AlunosList: email com truncate + title; expandir a outras tabelas |
 | 47 | Badges de estado coloridos (Ativo/Pendente/Inativo) | ✅ | Badge, StatusIndicator |
 | 48 | Formatação KB/MB em ficheiros anexos | ✅ | formatBytes em utils/formatters; coluna Tamanho em Arquivos |
-| 49 | Barras de progresso (ex: Lotação 25/30) | 🟡 | ProgressBar.tsx; usar em turmas |
+| 49 | Barras de progresso (ex: Lotação 25/30) | ✅ | TurmasList: LotacaoBar (ProgressBar) current/max 30; variante warning/error |
 | 50 | Sparklines na coluna de avaliação | ⬜ | Não implementado |
 | 51 | Formatação condicional (negativas a vermelho) | 🟡 | Notas e Finanças já usam classes condicionais |
 | 52 | Headers de tabelas ordenáveis (seta subir/descer) | ⬜ | Não implementado |
-| 53 | Sticky header em tabelas com scroll | ⬜ | Não implementado |
+| 53 | Sticky header em tabelas com scroll | 🟡 | AlunosList, Boletim, Notas, Pautas, Frequencia; + Utilizadores, TurmasList |
 | 54 | Primeira coluna sticky em tabelas largas | ⬜ | Não implementado |
 | 55 | Filtros em "pílulas" no topo das listas | 🟡 | Alguns filtros; não em pills |
 | 56 | Itens por página (10, 20, 50) | 🟡 | Pagination existe; verificar opções |
 | 57 | Exportar PDF (visual tabular) | ⬜ | Não implementado |
 | 58 | Exportar XLSX/CSV | ⬜ | Não implementado |
-| 59 | Modo impressão @media print limpo | ⬜ | Não implementado |
+| 59 | Modo impressão @media print limpo | ✅ | index.css: esconder sidebar, header, nav, BackToTop; fundo branco |
 | 60 | Notas com ponto ou vírgula conforme OS | 🟡 | Input numérico; validar locale |
-| 61 | Avatares dinâmicos (letras, cores por nome) | ⬜ | Não implementado |
-| 62 | Cores de fundo do avatar por nome | ⬜ | Incluído em 61 |
-| 63 | IDs em monospace encurtado (#ALN-45B) | ⬜ | Não implementado |
+| 61 | Avatares dinâmicos (letras, cores por nome) | ✅ | Avatar.tsx: iniciais + colorPalette por hash do nome |
+| 62 | Cores de fundo do avatar por nome | ✅ | Incluído em 61 (Avatar) |
+| 63 | IDs em monospace encurtado (#ALN-45B) | ✅ | formatAlunoDisplayId → #A4B2 (chip); formatShortId para outras listas; Tooltip com ID completo |
 | 64 | Datas humanizadas (12 Out, 2026) | ✅ | formatDateShort e formatRelativeTime; Auditoria, Comunicados (relativo), FinancasLancamentos (curta) |
 | 65 | Turmas por cor (A - Azul, B - Verde) | ⬜ | Não implementado |
 
@@ -96,18 +96,18 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | # | Função | Estado | Notas |
 |---|--------|--------|--------|
 | 66 | Breadcrumbs estruturados em cada página | ✅ | getBreadcrumbs em config/routes; Layout |
-| 67 | Colapso do menu lateral (icon-only) | ⬜ | Não implementado |
+| 67 | Colapso do menu lateral (icon-only) | ✅ | Layout: isSidebarNarrow, PanelLeftClose/PanelLeft, hover expande |
 | 68 | Auto-fecho do menu em mobile após clique | ⬜ | Não implementado |
 | 69 | Destacar rotas ativas e rotas-pai no menu | 🟡 | navItemsConfig e active; verificar pai |
-| 70 | Botão "Voltar ao Topo" em listas longas | ⬜ | Não implementado |
+| 70 | Botão "Voltar ao Topo" em listas longas | ✅ | BackToTop + useScrollTop; Layout com ref no content |
 | 71 | Action Bar flutuante no fundo em forms longos | ⬜ | Não implementado |
 | 72 | Context Menus (clique-direito) nas linhas de tabela | 🟡 | ContextMenu.tsx; expandir uso |
 | 73 | Bottom Navigation no telemóvel | ⬜ | Não implementado |
 | 74 | Swipe-to-Delete em touch | ⬜ | Não implementado |
 | 75 | Barra de loading global no topo (estilo Vercel) | ⬜ | Não implementado |
 | 76 | Página 404 personalizada | ✅ | NotFound.tsx |
-| 77 | Página 403 (Acesso Negado) | ⬜ | Não implementado |
-| 78 | Indicador flutuante modo Offline | ⬜ | Não implementado |
+| 77 | Página 403 (Acesso Negado) | ✅ | Forbidden.tsx; rota /403 |
+| 78 | Indicador flutuante modo Offline | ✅ | OfflineIndicator; barra no topo; App.tsx |
 | 79 | Pull-to-refresh em tabelas (mobile) | ⬜ | Não implementado |
 | 80 | Filtros na URL (?status=pendente&page=2) | 🟡 | Algumas listas; generalizar |
 | 81 | Retenção de scroll ao voltar na lista | ⬜ | Não implementado |
@@ -123,26 +123,26 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | # | Função | Estado | Notas |
 |---|--------|--------|--------|
 | 86 | Força de password em tempo real (barra vermelho→verde) | ⬜ | PasswordInput existe; sem barra de força |
-| 87 | Alerta Caps Lock no login | ⬜ | Não implementado |
+| 87 | Alerta Caps Lock no login | ✅ | Login: getModifierState('CapsLock') + mensagem sob o campo senha |
 | 88 | Revelar/Ocultar palavra-passe (olho) | ✅ | PasswordInput com toggle |
 | 89 | AutoFocus no primeiro input ao abrir modal | ✅ | Modal: foco no primeiro INPUT/TEXTAREA/SELECT se existir, senão primeiro focusável |
 | 90 | Validação inline (tick verde ao digitar) | ⬜ | Não implementado |
-| 91 | Prevenção de duplo clique (Double Submit) | 🟡 | loading no Button; garantir em todos os submit |
+| 91 | Prevenção de duplo clique (Double Submit) | ✅ | Button loading; AlunoForm e outros com loading/disabled no submit |
 | 92 | "Tem alterações não guardadas!" ao fechar | ⬜ | Não implementado |
 | 93 | Drag and Drop visual para anexos | ⬜ | Não implementado |
 | 94 | Preview de imagem de perfil no client | 🟡 | Perfil; verificar preview imediato |
-| 95 | Contador de caracteres regressivo em textarea | ⬜ | AutoResizeTextarea; adicionar contador |
+| 95 | Contador de caracteres regressivo em textarea | ✅ | AutoResizeTextarea: showCharCount/maxLength → "X / max" abaixo |
 | 96 | Textareas que crescem (auto-resize) | ✅ | AutoResizeTextarea.tsx |
 | 97 | Dropdowns custom (em vez de select nativo) | 🟡 | DropdownSelect; expandir |
 | 98 | Multi-select com chips removíveis | ⬜ | Não implementado |
-| 99 | Limpar filtro / X no input | 🟡 | Alguns inputs; generalizar |
+| 99 | Limpar filtro / X no input | ✅ | Input: showClearButton + onClear; Alunos, Utilizadores, Turmas |
 | 100 | Formato automático telefone (espaço a cada 3 dígitos) | ⬜ | Incluído em máscaras |
 | 101 | Botão Copiar para IBAN, NIF | ⬜ | Não implementado |
 | 102 | Debouncing na pesquisa (300–500 ms) | ✅ | useDebounce em hooks; Alunos, Disciplinas, Turmas e Utilizadores (400 ms) |
 | 103 | Datepicker com calendário custom | ⬜ | Input date nativo; opcional picker |
 | 104 | Feedback se email já existe antes de Guardar | ⬜ | Não implementado |
 | 105 | Validação e sugestão de domínio (gmai.com) | ⬜ | Não implementado |
-| 106 | autocomplete nos forms (email, etc.) | 🟡 | Verificar em Login e formulários |
+| 106 | autocomplete nos forms (email, etc.) | ✅ | Login: autoComplete email + current-password; expandir noutros forms |
 | 107 | "Limpar formulário" com confirmação | ⬜ | Não implementado |
 | 108 | Input numérico com botões + e - | ⬜ | Não implementado |
 | 109 | Rich Text Editor em comunicados | ⬜ | Não implementado |
@@ -155,11 +155,11 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | # | Função | Estado | Notas |
 |---|--------|--------|--------|
 | 111 | Ícone ? com popover explicativo nas labels | ⬜ | Não implementado |
-| 112 | Estado "Bem-vindo pela 1ª vez!" no dashboard | ⬜ | Não implementado |
+| 112 | Estado "Bem-vindo pela 1ª vez!" no dashboard | ✅ | Dashboard: banner com localStorage; dismissível; dica ⌘K |
 | 113 | Badge "Novo" em módulos recentes na sidebar | ⬜ | Não implementado |
-| 114 | Toast com ação "Desfazer" ao eliminar | ⬜ | react-hot-toast permite action |
+| 114 | Toast com ação "Desfazer" ao eliminar | 🟡 | Alunos: toast com action Desfazer (invalida lista); expandir a Turmas/outros |
 | 115 | Componente Reportar Bug/Ajuda no footer | ⬜ | Não implementado |
-| 116 | Modal Cheatsheet com atalhos de teclado | ⬜ | Não implementado |
+| 116 | Modal Cheatsheet com atalhos de teclado | ✅ | KeyboardShortcutsModal; Ajuda → Atalhos de teclado no Layout |
 | 117 | Indicador servidor saudável (pontinho verde) | ⬜ | Não implementado |
 | 118 | Modal "Atualizações Recentes (Changelog)" | ⬜ | Não implementado |
 | 119 | Marcador Unread em notificações | ⬜ | Não implementado |
@@ -201,7 +201,7 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | 141 | Lazy loading em imagens (avatares) | ⬜ | Não implementado |
 | 142 | Virtualized Lists (React Virtuoso) para 3000+ linhas | ⬜ | Não implementado |
 | 143 | UX otimista (eliminar no ecrã, rollback se falha) | 🟡 | Mutations invalidate; remoção otimista pontual |
-| 144 | Pre-fetching ao passar rato no menu | ⬜ | Não implementado |
+| 144 | Pre-fetching ao passar rato no menu | ✅ | Layout: SIDEBAR_PREFETCH + onMouseEnter no NavLink |
 | 145 | Code splitting por módulo | ✅ | React.lazy por rota em App.tsx |
 | 146 | Memoization (React.memo) em linhas de tabela | ⬜ | Não implementado |
 | 147 | Theme Provider isolado | 🟡 | CSS variables; opcional React context |

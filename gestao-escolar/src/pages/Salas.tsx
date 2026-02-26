@@ -229,6 +229,31 @@ export default function Salas() {
         <StatCard title="Alertas de Manut." value={stats.manutencaoPendente} icon={<AlertTriangle className="w-5 h-5 text-red-500" />} subtitle="Reparação necessária" />
       </div>
 
+      <Card className="bg-studio-brand/[0.02] border-studio-brand/20">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-2">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-studio-brand/10 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-studio-brand" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-studio-foreground uppercase tracking-tight">Verificador de Disponibilidade (Audit)</h4>
+              <p className="text-[10px] text-studio-foreground-lighter font-medium">Consulte a ocupação de qualquer espaço em tempo real para evitar conflitos (M1.1.2).</p>
+            </div>
+          </div>
+          <div className="flex gap-2 w-full md:w-auto">
+            <Select className="w-32" options={[
+              { value: '1', label: 'Segunda' },
+              { value: '2', label: 'Terça' },
+              { value: '3', label: 'Quarta' },
+              { value: '4', label: 'Quinta' },
+              { value: '5', label: 'Sexta' }
+            ]} placeholder="Dia..." />
+            <Input type="time" className="w-32" defaultValue="08:00" />
+            <Button variant="secondary" size="sm" icon={<Search className="w-4 h-4" />}>Check Free</Button>
+          </div>
+        </div>
+      </Card>
+
       {view === 'audit' ? (
         <Card className="space-y-6 shadow-xl border-studio-border/60">
           {/* Audit view content (Keeping original logic) */}

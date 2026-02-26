@@ -18,9 +18,9 @@ Este documento é a especificação técnica de ultra-alta densidade para o mód
 - [x] **Core**: Mapeamento de salas por lotação, tipo e área m2.
 - [x] **Audit**: Relatórios de ocupação semanal e eficiência de uso.
 - [x] **M1.1.1: Inventário Técnico de Sala**: Listagem exata de hardware (ex: 20 PCs i7, 1 Projetor Epson 4K) com estado de conservação.
-- [ ] **M1.1.2: Motor de Conflitos**: Bloqueio em tempo real de reservas duplicadas por dia/hora/minuto.
+- [x] **M1.1.2: Motor de Conflitos**: Bloqueio em tempo real de reservas duplicadas por dia/hora/minuto.
 - [x] **M1.1.3: Manutenção de Espaços**: Registo de avarias e logs de reparação integrados no dashboard da direção.
-- [ ] **M1.1.4: Otimizador Inteligente**: Sugestão automática de salas com base no número de alunos inscritos na turma (evitar sala grande para 5 alunos).
+- [x] **M1.1.4: Otimizador Inteligente**: Sugestão automática de salas com base no número de alunos inscritos na turma (evitar sala grande para 5 alunos).
 
 ---
 
@@ -29,8 +29,8 @@ Este documento é a especificação técnica de ultra-alta densidade para o mód
 ### A2.0: Cálculo de Médias & Rigor Normativo (60+ Funções)
 - [x] **Core**: Pesos por trimestre e cálculo automático de médias anuais.
 - [x] **A2.0.1: Arredondamento Parametrizável**: Configuração por nível de ensino (ex: 9.5 -> 10 ou 9.5 -> 9 conforme lei local).
-- [ ] **A2.0.2: Gestão de Bónus de Atitude**: Atribuição de pontos extras (0.5 a 2.0) baseados em participação e comportamento.
-- [ ] **A2.0.3: Bloqueio de Notas Pós-Prazo**: Tranca automática de edição de notas após X dias do fim do trimestre (exige token de Diretor para abrir).
+- [x] **A2.0.2: Gestão de Bónus de Atitude**: Atribuição de pontos extras (0.5 a 2.0) baseados em participação e comportamento.
+- [x] **A2.0.3: Bloqueio de Notas Pós-Prazo**: Tranca automática de edição de notas após X dias do fim do trimestre (exige token de Diretor para abrir).
 - [ ] **A2.0.4: Fluxo de Revisão de Prova**: Pedido formal do encarregado, troca de status da nota para "Em Auditoria" e registo de nova nota.
 - [ ] **A2.0.5: Notas de Exame Especial**: Diferenciação clara entre Exame Corrente, Recurso e Época Especial (Militares/Atletas).
 
@@ -50,12 +50,12 @@ Este documento é a especificação técnica de ultra-alta densidade para o mód
 - [x] **T3.0.1: Tolerância de Atraso**: Configuração de janela (ex: 15 min). Atraso > 15 min = Falta; Atraso < 15 min = "Late Arrival".
 - [x] **T3.0.2: Gestão de Justificações Médico-Legais**: Upload de atestado médico com data de início/fim e limpeza automática de faltas no período.
 - [ ] **T3.0.3: Sensor de Geofencing**: Marcação de presença pelo professor válida apenas se estiver dentro do raio GPS da escola.
-- [ ] **T3.0.4: Faltas Coletivas**: Lançamento rápido de falta/presença para toda a turma em eventos específicos (greves, feriados pontuais).
+- [x] **T3.0.4: Faltas Coletivas**: Lançamento rápido de falta/presença para toda a turma em eventos específicos (greves, feriados pontuais).
 
 ### T3.1: Alertas & Prevenção de Abandono (30+ Funções)
 - [x] **Core**: Alerta de limite de 25% de faltas críticas.
 - [ ] **T3.1.1: Notificação Push/SMS Automática**: Envio imediato ao encarregado no momento exato em que a falta é registada.
-- [ ] **T3.1.2: Relatório de Recorrência**: Identificar alunos que faltam sistematicamente às sextas-feiras ou segundas-feiras.
+- [x] **T3.1.2: Relatório de Recorrência**: Identificar alunos que faltam sistematicamente às sextas-feiras ou segundas-feiras.
 - [ ] **T3.1.3: Plano de Recuperação de Faltas**: Atribuição de trabalhos compensatórios para anular efeitos administrativos das faltas.
 
 ---

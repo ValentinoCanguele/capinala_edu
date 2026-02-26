@@ -54,6 +54,7 @@
   --studio-foreground-lighter: #94a3b8; /* Slate-400 */
   
   --studio-brand: #2563eb; /* Blue-600 (Azul institucional) */
+  --studio-brand-rgb: 37 99 235; /* Para Tailwind opacity */
   --studio-brand-hover: #1d4ed8; /* Blue-700 */
   --studio-second-bar-bg: #ffffff; /* Tabs bar branca */
 }

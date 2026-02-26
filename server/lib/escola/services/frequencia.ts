@@ -141,7 +141,9 @@ export async function getRelatorioTurma(
        COUNT(f.id) AS "totalAulas",
        COUNT(f.id) FILTER (WHERE f.status = 'presente') AS "presencas",
        COUNT(f.id) FILTER (WHERE f.status = 'falta') AS "faltas",
-       COUNT(f.id) FILTER (WHERE f.status = 'justificada') AS "justificadas"
+       COUNT(f.id) FILTER (WHERE f.status = 'justificada') AS "justificadas",
+       COUNT(f.id) FILTER (WHERE f.status = 'falta' AND EXTRACT(ISODOW FROM a.data_aula) = 1) AS "faltasSegunda",
+       COUNT(f.id) FILTER (WHERE f.status = 'falta' AND EXTRACT(ISODOW FROM a.data_aula) = 5) AS "faltasSexta"
      FROM matriculas m
      JOIN alunos al ON al.id = m.aluno_id
      JOIN pessoas p ON p.id = al.pessoa_id
@@ -163,6 +165,8 @@ export async function getRelatorioTurma(
       Number(r.justificadas)
     ),
     alunoNome: r.alunoNome,
+    tendenciaSexta: Number(r.faltasSexta),
+    tendenciaSegunda: Number(r.faltasSegunda)
   }))
 
   const mediaPresenca =

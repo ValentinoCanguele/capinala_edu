@@ -9,6 +9,7 @@ export const notaSchema = z.object({
   mac: z.number().min(0).max(20).optional(),
   npp: z.number().min(0).max(20).optional(),
   ne: z.number().min(0).max(20).optional(),
+  bonusAtitude: z.number().min(0).max(2).optional(),
   formula_aplicada: z.string().optional(),
 })
 
@@ -23,6 +24,7 @@ export const notaBatchSchema = z.object({
     mac: z.number().min(0).max(20).optional(),
     npp: z.number().min(0).max(20).optional(),
     ne: z.number().min(0).max(20).optional(),
+    bonusAtitude: z.number().min(0).max(2).optional(),
   })),
 })
 

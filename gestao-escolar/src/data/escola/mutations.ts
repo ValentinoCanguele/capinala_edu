@@ -19,10 +19,10 @@ export interface TurmaInput {
 
 export interface NotaBatchInput {
   turmaId: string
+  disciplinaId?: string
   periodoId?: string
   bimestre?: number
-  disciplinaId?: string
-  notas: { alunoId: string; valor: number }[]
+  notas: { alunoId: string; valor: number; mac?: number; npp?: number; ne?: number; bonusAtitude?: number }[]
 }
 
 export interface CreateJustificativaPayload {

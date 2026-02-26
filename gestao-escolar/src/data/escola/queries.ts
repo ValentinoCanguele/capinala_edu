@@ -6,8 +6,20 @@ const ESCOLA_API = '/api/escola'
 export interface Aluno {
   id: string
   nome: string
+  email?: string
+  dataNascimento?: string
+}
+
+export interface AlunoFinanceiro {
+  id: string
+  nome: string
   email: string
-  dataNascimento: string
+  turma: string
+  valorPropina: number
+  valorPago: number
+  valorDivida: number
+  statusFinanceiro: 'Regularizado' | 'Pendente' | 'Em Dívida'
+  percentualPago: number
 }
 
 export interface Turma {
@@ -46,6 +58,7 @@ export interface NotaRow {
   mac?: number
   npp?: number
   ne?: number
+  bonusAtitude?: number
 }
 
 const queryKeys = {
@@ -123,6 +136,17 @@ export function prefetchAlunos(queryClient: QueryClient): void {
     queryKey: queryKeys.alunos,
     queryFn: async (): Promise<Aluno[]> => {
       const { data, error } = await api.get<Aluno[]>(`${ESCOLA_API}/alunos`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useAlunosFinanceiro() {
+  return useQuery({
+    queryKey: [...queryKeys.alunos, 'financeiro'],
+    queryFn: async (): Promise<AlunoFinanceiro[]> => {
+      const { data, error } = await api.get<AlunoFinanceiro[]>(`${ESCOLA_API}/alunos/financeiro`)
       if (error) throw new Error(error.message)
       return data ?? []
     },
@@ -602,7 +626,11 @@ export function useFrequenciaResumo(
 export interface RelatorioFrequenciaTurma {
   turmaId: string
   turmaNome: string
-  resumos: (ResumoFrequenciaRow & { alunoNome: string })[]
+  resumos: (ResumoFrequenciaRow & {
+    alunoNome: string
+    tendenciaSexta?: number
+    tendenciaSegunda?: number
+  })[]
   mediaPresenca: number
   totalEmRisco: number
 }

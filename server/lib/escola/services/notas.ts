@@ -33,6 +33,11 @@ export async function upsertNota(user: AuthUser, data: NotaInput) {
     valorFinal = aplicarArredondamento(raw, config?.tipoArredondamento, config?.casasDecimais)
   }
 
+  // Aplicação do Bónus de Atitude (M2.0.2)
+  if (data.bonusAtitude !== undefined && data.bonusAtitude > 0) {
+    valorFinal = Math.min(20, valorFinal + data.bonusAtitude)
+  }
+
   // Buscar valor anterior para audit
   const anterior = await db.query(
     'SELECT valor, mac, npp, ne FROM notas WHERE aluno_id = $1 AND turma_id = $2 AND disciplina_id = $3 AND periodo_id = $4',
@@ -40,18 +45,19 @@ export async function upsertNota(user: AuthUser, data: NotaInput) {
   )
   const dadosAnteriores = anterior.rows[0] ?? null
 
-  // Upsert com suporte a notas compostas e auditoria de utilizador
+  // Upsert com suporte a notas compostas, bónus e auditoria
   await db.query(
-    `INSERT INTO notas (aluno_id, turma_id, disciplina_id, periodo_id, valor, mac, npp, ne, formula_aplicada, audit_user_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `INSERT INTO notas (aluno_id, turma_id, disciplina_id, periodo_id, valor, mac, npp, ne, bonus_atitude, formula_aplicada, audit_user_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      ON CONFLICT (aluno_id, turma_id, disciplina_id, periodo_id)
      DO UPDATE SET 
         valor = $5,
         mac = $6,
         npp = $7,
         ne = $8,
-        formula_aplicada = $9,
-        audit_user_id = $10,
+        bonus_atitude = $9,
+        formula_aplicada = $10,
+        audit_user_id = $11,
         updated_at = NOW()`,
     [
       data.alunoId,
@@ -62,8 +68,9 @@ export async function upsertNota(user: AuthUser, data: NotaInput) {
       data.mac || 0,
       data.npp || 0,
       data.ne || 0,
+      data.bonusAtitude || 0,
       config?.formulaNotaTrimestral || null,
-      user.id
+      user.userId
     ]
   )
 
@@ -77,7 +84,7 @@ export async function upsertNota(user: AuthUser, data: NotaInput) {
   })
 
   const r = await db.query(
-    'SELECT id, aluno_id AS "alunoId", turma_id AS "turmaId", disciplina_id AS "disciplinaId", periodo_id AS "periodoId", valor, mac, npp, ne FROM notas WHERE aluno_id = $1 AND turma_id = $2 AND disciplina_id = $3 AND periodo_id = $4',
+    'SELECT id, aluno_id AS "alunoId", turma_id AS "turmaId", disciplina_id AS "disciplinaId", periodo_id AS "periodoId", valor, mac, npp, ne, bonus_atitude AS "bonusAtitude" FROM notas WHERE aluno_id = $1 AND turma_id = $2 AND disciplina_id = $3 AND periodo_id = $4',
     [data.alunoId, data.turmaId, data.disciplinaId, data.periodoId]
   )
   return r.rows[0] ?? null
@@ -107,18 +114,25 @@ export async function saveNotasBatch(user: AuthUser, data: NotaBatchInput) {
     const vNota = validarNota(n.valor)
     if (!vNota.valido) throw new Error(`Nota inválida para o aluno: ${vNota.erro}`)
 
-    // Upsert em lote com dados de precisão
+    // Extensão com Bónus de Atitude
+    let valorFinal = n.valor;
+    if (n.bonusAtitude !== undefined && n.bonusAtitude > 0) {
+      valorFinal = Math.min(20, valorFinal + n.bonusAtitude)
+    }
+
+    // Upsert em lote com dados de precisão e bónus
     await db.query(
-      `INSERT INTO notas (aluno_id, turma_id, disciplina_id, periodo_id, valor, mac, npp, ne, audit_user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO notas (aluno_id, turma_id, disciplina_id, periodo_id, valor, mac, npp, ne, bonus_atitude, audit_user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        ON CONFLICT (aluno_id, turma_id, disciplina_id, periodo_id)
        DO UPDATE SET 
           valor = $5,
           mac = $6,
           npp = $7,
           ne = $8,
-          audit_user_id = $9`,
-      [n.alunoId, data.turmaId, disciplinaId, periodoId, n.valor, n.mac || 0, n.npp || 0, n.ne || 0, user.id]
+          bonus_atitude = $9,
+          audit_user_id = $10`,
+      [n.alunoId, data.turmaId, disciplinaId, periodoId, valorFinal, n.mac || 0, n.npp || 0, n.ne || 0, n.bonusAtitude || 0, user.userId]
     )
 
     saved++
@@ -141,7 +155,7 @@ export async function getNotasByTurmaPeriodo(user: AuthUser, turmaId: string, pe
   const escolaId = getEscolaId(user)
   let query = `
     SELECT n.id, n.aluno_id AS "alunoId", n.turma_id AS "turmaId", n.disciplina_id AS "disciplinaId",
-           n.periodo_id AS "periodoId", n.valor, n.mac, n.npp, n.ne, p.nome AS "alunoNome"
+           n.periodo_id AS "periodoId", n.valor, n.mac, n.npp, n.ne, n.bonus_atitude AS "bonusAtitude", p.nome AS "alunoNome"
     FROM notas n
     JOIN alunos a ON a.id = n.aluno_id
     JOIN pessoas p ON p.id = a.pessoa_id

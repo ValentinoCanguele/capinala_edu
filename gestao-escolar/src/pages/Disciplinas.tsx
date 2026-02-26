@@ -16,6 +16,7 @@ import Modal from '@/components/Modal'
 import EmptyState from '@/components/EmptyState'
 import ListResultSummary from '@/components/ListResultSummary'
 import PageHeader from '@/components/PageHeader'
+import { Input } from '@/components/shared/Input'
 import { TableSkeleton } from '@/components/PageSkeleton'
 
 function DisciplinaForm({
@@ -208,12 +209,14 @@ export default function Disciplinas() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-4">
-        <input
+        <Input
           type="search"
           placeholder="Pesquisar por nome..."
           value={filterInput}
           onChange={(e) => setFilterInput(e.target.value)}
-          className="input max-w-xs"
+          onClear={() => setFilterInput('')}
+          showClearButton
+          className="max-w-xs"
           aria-label="Pesquisar disciplinas por nome"
         />
         <ListResultSummary

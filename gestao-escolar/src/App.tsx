@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import Layout from './pages/Layout'
 import { CommandPalette } from './components/shared/CommandPalette'
+import { OfflineIndicator } from './components/shared/OfflineIndicator'
 
 /* Páginas carregadas sob demanda (code-splitting) */
 const Login = lazy(() => import('./pages/Login'))
@@ -36,6 +37,7 @@ const Utilizadores = lazy(() => import('./pages/Utilizadores'))
 const Modulos = lazy(() => import('./pages/Modulos'))
 const Matrizes = lazy(() => import('./pages/Matrizes'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const Forbidden = lazy(() => import('./pages/Forbidden'))
 
 const Financas = lazy(() => import('./pages/Financas'))
 const FinancasDashboard = lazy(() => import('./pages/FinancasDashboard'))
@@ -83,6 +85,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <>
+      <OfflineIndicator />
       <CommandPalette />
       <Toaster
         position="bottom-right"
@@ -106,6 +109,14 @@ export default function App() {
           element={
             <Suspense fallback={<PageLoadFallback />}>
               <Login />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/403"
+          element={
+            <Suspense fallback={<PageLoadFallback />}>
+              <Forbidden />
             </Suspense>
           }
         />

@@ -235,6 +235,8 @@ export default function Utilizadores() {
           placeholder="Pesquisar por nome, email ou papel..."
           value={filterInput}
           onChange={(e) => setFilterInput(e.target.value)}
+          onClear={() => setFilterInput('')}
+          showClearButton
           leftIcon={<Search className="h-4 w-4" />}
           className="max-w-md"
           aria-label="Pesquisar utilizadores"
@@ -251,7 +253,9 @@ export default function Utilizadores() {
 
       <div className="card overflow-hidden">
         {isLoading ? (
-          <TableSkeleton rows={8} />
+          <div role="status" aria-live="polite" aria-label="A carregar lista de utilizadores">
+            <TableSkeleton rows={8} />
+          </div>
         ) : filteredUsuarios.length === 0 ? (
           <EmptyState
             title={filterInput ? 'Nenhum utilizador encontrado' : 'Nenhum utilizador'}
@@ -270,7 +274,7 @@ export default function Utilizadores() {
           />
         ) : (
           <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de utilizadores">
-            <thead className="bg-studio-muted/50">
+            <thead className="sticky top-0 z-10 bg-studio-bg/95 backdrop-blur-sm border-b border-studio-border">
               <tr>
                 <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">ID / Foto</th>
                 <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Nome</th>
@@ -303,7 +307,9 @@ export default function Utilizadores() {
                     </div>
                   </td>
                   <td className="px-4 py-2 text-studio-foreground">{u.nome}</td>
-                  <td className="px-4 py-2 text-studio-foreground-light">{u.email}</td>
+                  <td className="px-4 py-2 text-studio-foreground-light max-w-[200px] sm:max-w-[240px]">
+                    <span className="truncate block" title={u.email}>{u.email}</span>
+                  </td>
                   <td className="px-4 py-2 text-studio-foreground-light">{u.papel}</td>
                   <td className="px-4 py-2 text-studio-foreground-light">{u.escolaNome ?? '—'}</td>
                   <td className="px-4 py-2 text-studio-foreground-light">{u.bi ?? '—'}</td>

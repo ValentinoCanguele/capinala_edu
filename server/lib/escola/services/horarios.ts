@@ -43,9 +43,43 @@ export async function listHorarios(user: AuthUser, turmaId?: string, anoLetivoId
     return result.rows
 }
 
+async function checkConflicts(db: any, escolaId: string, data: Partial<HorarioCreate> & { id?: string }) {
+    if (!data.anoLetivoId || data.diaSemana === undefined || !data.horaInicio || !data.horaFim) {
+        return; // Partial check bypass if not enough data
+    }
+
+    let query = `
+        SELECT id, turma_id, professor_id, sala_id
+        FROM horarios
+        WHERE escola_id = $1
+          AND ano_letivo_id = $2
+          AND dia_semana = $3
+          AND (
+             (hora_inicio < $5::time AND hora_fim > $4::time)
+          )
+    `;
+    const params: any[] = [escolaId, data.anoLetivoId, data.diaSemana, data.horaInicio, data.horaFim];
+
+    if (data.id) {
+        query += ` AND id != $6`;
+        params.push(data.id);
+    }
+
+    const result = await db.query(query, params);
+
+    for (const row of result.rows) {
+        if (data.salaId && row.sala_id === data.salaId) throw new Error('Conflito de Motor (M1.1.2): Sala reservada neste bloco de tempo.');
+        if (data.professorId && row.professor_id === data.professorId) throw new Error('Conflito de Motor (M1.1.2): Docente alocado noutra turma neste horário.');
+        if (data.turmaId && row.turma_id === data.turmaId) throw new Error('Conflito de Motor (M1.1.2): Turma já tem aula atribuída neste horário.');
+    }
+}
+
 export async function createHorario(user: AuthUser, data: HorarioCreate) {
     const db = getDb()
     const escolaId = getEscolaId(user)
+
+    await checkConflicts(db, escolaId, data);
+
     const result = await db.query(
         `INSERT INTO horarios (escola_id, turma_id, disciplina_id, professor_id, sala_id, dia_semana, hora_inicio, hora_fim, ano_letivo_id)
      VALUES ($1, $2, $3, $4, $5, $6, $7::time, $8::time, $9)
@@ -58,6 +92,22 @@ export async function createHorario(user: AuthUser, data: HorarioCreate) {
 export async function updateHorario(user: AuthUser, id: string, data: HorarioUpdate) {
     const db = getDb()
     const escolaId = getEscolaId(user)
+
+    const existing = await db.query('SELECT * FROM horarios WHERE id = $1 AND escola_id = $2', [id, escolaId]);
+    if (existing.rows.length === 0) throw new Error('Horário não encontrado');
+    const curr = existing.rows[0];
+
+    await checkConflicts(db, escolaId, {
+        id,
+        turmaId: data.turmaId !== undefined ? data.turmaId : curr.turma_id,
+        professorId: data.professorId !== undefined ? data.professorId : curr.professor_id,
+        salaId: data.salaId !== undefined ? data.salaId : curr.sala_id,
+        diaSemana: data.diaSemana !== undefined ? data.diaSemana : curr.dia_semana,
+        horaInicio: data.horaInicio !== undefined ? data.horaInicio : curr.hora_inicio,
+        horaFim: data.horaFim !== undefined ? data.horaFim : curr.hora_fim,
+        anoLetivoId: data.anoLetivoId !== undefined ? data.anoLetivoId : curr.ano_letivo_id
+    } as Partial<HorarioCreate> & { id: string });
+
     const updates: string[] = []
     const values: unknown[] = []
     let i = 1
@@ -72,11 +122,11 @@ export async function updateHorario(user: AuthUser, id: string, data: HorarioUpd
     if (data.anoLetivoId !== undefined) { updates.push(`ano_letivo_id = $${i++}`); values.push(data.anoLetivoId) }
 
     if (updates.length === 0) return null
+
+    const updateQuery = `UPDATE horarios SET ${updates.join(', ')} WHERE id = $${i++} AND escola_id = $${i} RETURNING id`
     values.push(id, escolaId)
-    const result = await db.query(
-        `UPDATE horarios SET ${updates.join(', ')} WHERE id = $${i++} AND escola_id = $${i} RETURNING id`,
-        values
-    )
+
+    const result = await db.query(updateQuery, values)
     return result.rows[0] ?? null
 }
 

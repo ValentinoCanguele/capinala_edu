@@ -59,7 +59,7 @@ import {
   prefetchSalas,
   prefetchTurmas,
   prefetchUsuarios,
-} from '@/data/escola/queries'
+} from '@/data/escola'
 import {
   getSecondBarItems,
   isSecondBarItemActive,
@@ -70,6 +70,9 @@ import { getContextBarItems } from '@/layout/contextBarConfig'
 import { filterSecondBarByRole } from '@/layout/secondBarPermissions'
 import { getBreadcrumbs } from '@/config/routes'
 import { getItem, setItem } from '@/lib/storage'
+import { useScrollTop } from '@/hooks/useScrollTop'
+import { BackToTop } from '@/components/shared/BackToTop'
+import { KeyboardShortcutsModal } from '@/components/shared/KeyboardShortcutsModal'
 
 const SIDEBAR_COLLAPSED_KEY_LEGACY = 'gestao-escolar-sidebar-collapsed'
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed'
@@ -170,6 +173,8 @@ export default function Layout() {
   const { theme, toggleTheme } = useTheme()
   const location = useLocation()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const mainContentRef = useRef<HTMLDivElement>(null)
+  const { showBackToTop, scrollToTop } = useScrollTop(mainContentRef)
 
   useEffect(() => {
     const crumbs = getBreadcrumbs(location.pathname)
@@ -180,6 +185,7 @@ export default function Layout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [acercaOpen, setAcercaOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const acercaCloseRef = useRef<HTMLButtonElement>(null)
 
   const [isCollapsed, setCollapsedState] = useState(getInitialSidebarCollapsed)
@@ -535,6 +541,13 @@ export default function Layout() {
                       <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
                         Ajuda
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => { setHelpOpen(false); setShortcutsOpen(true) }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                      >
+                        Atalhos de teclado
+                      </button>
                   <a
                     href="https://github.com/ValentinoCanguele/capinala_edu/blob/main/docs/FRONTEND-NAVEGACAO-PERMISSOES.md"
                     target="_blank"
@@ -716,10 +729,15 @@ export default function Layout() {
           </div>
         )}
 
-        <div className="flex-1 min-h-0 p-4 sm:p-6 overflow-auto animate-fade-in">
+        <div
+          ref={mainContentRef}
+          className="flex-1 min-h-0 p-4 sm:p-6 overflow-auto animate-fade-in"
+        >
           <Outlet />
         </div>
       </main>
+      <BackToTop visible={showBackToTop} onClick={scrollToTop} />
+      <KeyboardShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   )
 }

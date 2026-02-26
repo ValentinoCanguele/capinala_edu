@@ -136,6 +136,9 @@ function FrequenciaRelatorio() {
                     <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-studio-foreground-light uppercase tracking-widest border-l border-studio-border/30 w-32">
                       Assiduidade
                     </th>
+                    <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-studio-foreground-light uppercase tracking-widest border-l border-studio-border/30">
+                      Recorrência
+                    </th>
                     <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-studio-foreground-light uppercase tracking-widest">
                       Estado de Risco
                     </th>
@@ -180,6 +183,23 @@ function FrequenciaRelatorio() {
                             />
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-center border-l border-studio-border/30">
+                        {r.faltas > 0 ? (
+                          <div className="flex flex-col gap-1 items-center justify-center">
+                            {(r.tendenciaSegunda || 0) > 0 && (
+                              <Badge variant="warning" className="text-[9px] font-black uppercase"><AlertTriangle className="w-3 h-3 mr-1" /> {(r.tendenciaSegunda || 0)} Segundas</Badge>
+                            )}
+                            {(r.tendenciaSexta || 0) > 0 && (
+                              <Badge variant="warning" className="text-[9px] font-black uppercase"><AlertTriangle className="w-3 h-3 mr-1" /> {(r.tendenciaSexta || 0)} Sextas</Badge>
+                            )}
+                            {!(r.tendenciaSegunda || 0) && !(r.tendenciaSexta || 0) && (
+                              <span className="text-[10px] text-studio-foreground-lighter font-medium">Balançado</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-studio-foreground-lighter font-medium">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {nivelRisco === 'critico' ? (
@@ -265,6 +285,10 @@ export default function Frequencia() {
     setLocalRows((prev) =>
       prev.map((r) => (r.alunoId === alunoId ? { ...r, status } : r))
     )
+  }
+
+  const handleMarcarTodos = (status: Status) => {
+    setLocalRows(prev => prev.map(r => ({ ...r, status })))
   }
 
   const isDirty = useMemo(() => {
@@ -429,15 +453,36 @@ export default function Frequencia() {
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                onClick={handleSave}
-                loading={saveFrequencia.isPending}
-                disabled={!isDirty || saveFrequencia.isPending}
-                icon={<Save className="w-4 h-4" />}
-              >
-                {isDirty ? 'Gravar Chamada (Cmd+S)' : 'Dados Guardados'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleMarcarTodos('presente')}
+                  className="text-emerald-600 hover:bg-emerald-50 text-[10px] font-black uppercase tracking-tighter"
+                  icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                >
+                  Presença Coletiva
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleMarcarTodos('falta')}
+                  className="text-red-600 hover:bg-red-50 text-[10px] font-black uppercase tracking-tighter"
+                  icon={<AlertTriangle className="w-3.5 h-3.5" />}
+                >
+                  Falta Coletiva
+                </Button>
+                <div className="w-px h-6 bg-studio-border/50 mx-2" />
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  loading={saveFrequencia.isPending}
+                  disabled={!isDirty || saveFrequencia.isPending}
+                  icon={<Save className="w-4 h-4" />}
+                >
+                  {isDirty ? 'Gravar Chamada (Cmd+S)' : 'Dados Guardados'}
+                </Button>
+              </div>
             </div>
 
             <div className="overflow-x-auto max-h-[60vh] overflow-y-auto custom-scrollbar">

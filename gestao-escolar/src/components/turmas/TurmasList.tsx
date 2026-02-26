@@ -7,7 +7,26 @@ import { Card } from '@/components/shared/Card'
 import { ContextMenu, type MenuItem } from '@/components/shared/ContextMenu'
 import { Button } from '@/components/shared/Button'
 import { Input } from '@/components/shared/Input'
+import { ProgressBar } from '@/components/shared/ProgressBar'
 import ListResultSummary from '@/components/shared/ListResultSummary'
+
+const LOTACAO_MAX = 30
+
+function LotacaoBar({ current, max = LOTACAO_MAX }: { current: number; max?: number }) {
+  const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0
+  const variant = pct >= 100 ? 'error' : pct >= 80 ? 'warning' : 'brand'
+  return (
+    <div className="w-24 min-w-[6rem]">
+      <ProgressBar
+        value={pct}
+        size="sm"
+        variant={variant}
+        label={`${current}/${max}`}
+        className="text-xs"
+      />
+    </div>
+  )
+}
 
 interface TurmasListProps {
   turmas: Turma[]
@@ -52,6 +71,8 @@ export default function TurmasList({
             placeholder="Pesquisar por nome ou ano letivo..."
             value={filter}
             onChange={(e) => onFilterChange(e.target.value)}
+            onClear={() => onFilterChange('')}
+            showClearButton
             leftIcon={<Search className="h-4 w-4" />}
             className="max-w-md"
             aria-label="Pesquisar turmas"
@@ -68,7 +89,9 @@ export default function TurmasList({
       )}
     <Card noPadding>
       {isLoading ? (
-        <SkeletonTable rows={8} columns={4} />
+        <div role="status" aria-live="polite" aria-label="A carregar lista de turmas">
+          <SkeletonTable rows={8} columns={4} />
+        </div>
       ) : error ? (
         <div className="p-8 text-center text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-500/5" role="alert">
           <p className="font-semibold">Erro ao carregar turmas</p>
@@ -84,7 +107,7 @@ export default function TurmasList({
         />
       ) : (
         <table className="min-w-full divide-y divide-studio-border/50" aria-label="Lista de turmas">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-studio-bg/95 backdrop-blur-sm">
             <tr className="bg-studio-muted/10">
               <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-studio-foreground-light uppercase tracking-wider">
                 Turma
@@ -125,16 +148,18 @@ export default function TurmasList({
                     {t.anoLetivo}
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-sm text-studio-foreground-lighter">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-studio-brand" />
-                      {t.alunoIds?.length ?? 0} alunos
-                    </span>
+                    <LotacaoBar current={t.alunoIds?.length ?? 0} max={30} />
                   </td>
                   {showActions && (
                   <td className="px-5 py-4 whitespace-nowrap text-right">
                     {menuItems.length > 0 ? (
                       <ContextMenu items={menuItems}>
-                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`Mais opções para turma ${t.nome}`}
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </ContextMenu>
