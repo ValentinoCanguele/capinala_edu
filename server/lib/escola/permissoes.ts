@@ -7,7 +7,7 @@ import type { AuthUser } from '@/lib/db'
 type Papel = AuthUser['papel']
 
 export const PAPEIS_ADMIN: Papel[] = ['admin', 'direcao']
-const PAPEIS_GESTAO: Papel[] = ['admin', 'direcao', 'professor']
+export const PAPEIS_GESTAO: Papel[] = ['admin', 'direcao', 'professor']
 const TODOS_PAPEIS: Papel[] = ['admin', 'direcao', 'professor', 'responsavel', 'aluno']
 
 /* ── Helpers ── */
@@ -112,6 +112,18 @@ export function canDeleteComunicado(user: AuthUser, autorId?: string): boolean {
 
 export function canViewComunicados(user: AuthUser): boolean {
   return isPapel(user, TODOS_PAPEIS)
+}
+
+/* ── Atas de conselho ── */
+
+export function canManageAtas(user: AuthUser): boolean {
+  return isPapel(user, PAPEIS_ADMIN)
+}
+
+/* ── Ocorrências disciplinares ── */
+
+export function canManageOcorrencias(user: AuthUser): boolean {
+  return isPapel(user, PAPEIS_GESTAO)
 }
 
 /* ── Salas ── */

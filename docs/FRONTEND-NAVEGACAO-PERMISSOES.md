@@ -1,6 +1,6 @@
 # Navegação e permissões no frontend
 
-Registo único da estrutura de navegação (sidebar, barra contextual, header), filtro por papel e camada de permissões no frontend. A autoridade para as APIs continua a ser o backend (`server/lib/escola/permissoes.ts`).
+Registo único da estrutura de navegação (sidebar, barra contextual, header), filtro por papel e camada de permissões no frontend. A autoridade para as APIs continua a ser o backend (`server/lib/escola/permissoes.ts`). As rotas de atas (criar/atualizar/eliminar), ocorrências (criar/resolver/eliminar) e exames (lançar/eliminar) aplicam `assertPermissao` e devolvem 403 quando o papel não tem permissão.
 
 ---
 

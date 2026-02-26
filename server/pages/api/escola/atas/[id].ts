@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { requireAuth } from '@/lib/auth'
 import { jsonSuccess, jsonError } from '@/lib/apiWrapper'
+import { assertPermissao, PAPEIS_ADMIN } from '@/lib/escola/permissoes'
 import * as atasService from '@/lib/escola/services/atas'
 import { ataUpdateSchema } from '@/lib/escola/schemas'
 
@@ -22,6 +23,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PATCH' || req.method === 'PUT') {
         return requireAuth(req, res, async (user) => {
+            try {
+                assertPermissao(user, PAPEIS_ADMIN, 'atualizar ata')
+            } catch (e) {
+                return jsonError(res, e instanceof Error ? e.message : 'Sem permissão', 403)
+            }
             const parsed = ataUpdateSchema.safeParse(req.body)
             if (!parsed.success) {
                 return jsonError(res, parsed.error.issues[0].message, 400)
@@ -38,6 +44,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'DELETE') {
         return requireAuth(req, res, async (user) => {
+            try {
+                assertPermissao(user, PAPEIS_ADMIN, 'eliminar ata')
+            } catch (e) {
+                return jsonError(res, e instanceof Error ? e.message : 'Sem permissão', 403)
+            }
             try {
                 const ok = await atasService.deleteAta(user, id)
                 if (!ok) return jsonError(res, 'Ata não encontrada', 404)

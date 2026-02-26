@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { requireAuth } from '@/lib/auth'
 import { jsonSuccess, jsonError } from '@/lib/apiWrapper'
+import { assertPermissao, PAPEIS_ADMIN } from '@/lib/escola/permissoes'
 import * as atasService from '@/lib/escola/services/atas'
 import { ataCreateSchema } from '@/lib/escola/schemas'
 
@@ -22,6 +23,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
         return requireAuth(req, res, async (user) => {
+            try {
+                assertPermissao(user, PAPEIS_ADMIN, 'criar ata')
+            } catch (e) {
+                return jsonError(res, e instanceof Error ? e.message : 'Sem permissão', 403)
+            }
             const parsed = ataCreateSchema.safeParse(req.body)
             if (!parsed.success) {
                 return jsonError(res, parsed.error.issues[0].message, 400)

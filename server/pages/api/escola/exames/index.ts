@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { requireAuth } from '@/lib/auth'
 import { jsonSuccess, jsonError } from '@/lib/apiWrapper'
+import { assertPermissao, PAPEIS_GESTAO } from '@/lib/escola/permissoes'
 import * as examesService from '@/lib/escola/services/exames'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -22,6 +23,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
         return requireAuth(req, res, async (user) => {
             try {
+                assertPermissao(user, PAPEIS_GESTAO, 'lançar nota de exame')
+            } catch (e) {
+                return jsonError(res, e instanceof Error ? e.message : 'Sem permissão', 403)
+            }
+            try {
                 const ok = await examesService.upsertExame(user, req.body)
                 jsonSuccess(res, { ok })
             } catch (e) {
@@ -32,6 +38,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'DELETE') {
         return requireAuth(req, res, async (user) => {
+            try {
+                assertPermissao(user, PAPEIS_GESTAO, 'eliminar exame')
+            } catch (e) {
+                return jsonError(res, e instanceof Error ? e.message : 'Sem permissão', 403)
+            }
             const { id } = req.query
             if (!id) return jsonError(res, 'ID é obrigatório', 400)
             try {
