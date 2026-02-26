@@ -326,15 +326,15 @@ export default function Horarios() {
                                 <div className="px-4 py-2 bg-studio-muted border-b border-studio-border">
                                     <h3 className="text-sm font-semibold text-studio-foreground">{DIAS[dia]}</h3>
                                 </div>
-                                <table className="min-w-full divide-y divide-studio-border">
+                                <table className="min-w-full divide-y divide-studio-border" aria-label="Horário da turma">
                                     <thead className="bg-studio-muted/50">
                                         <tr>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Hora</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Disciplina</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Turma</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Professor</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Sala</th>
-                                            <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
+                                            <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Hora</th>
+                                            <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Disciplina</th>
+                                            <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Turma</th>
+                                            <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Professor</th>
+                                            <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Sala</th>
+                                            <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-studio-border">

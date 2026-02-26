@@ -1,11 +1,21 @@
+@import '@fontsource/outfit/400.css';
+@import '@fontsource/outfit/500.css';
+@import '@fontsource/outfit/600.css';
+@import '@fontsource/outfit/700.css';
+
 @import './theme/index.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth scroll (Item 17) – respeitado por prefers-reduced-motion abaixo */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-studio-bg-alt text-studio-foreground antialiased;
+  @apply bg-studio-bg-alt text-studio-foreground font-sans antialiased;
 }
 
 /* Skip link: oculto até receber foco (acessibilidade) */
@@ -28,6 +38,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   .second-bar-nav a {
     transition: none;
   }

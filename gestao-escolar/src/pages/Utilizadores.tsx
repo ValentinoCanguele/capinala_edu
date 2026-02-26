@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   useUsuarios,
@@ -18,7 +19,9 @@ import PageHeader from '@/components/PageHeader'
 import EmptyState from '@/components/EmptyState'
 import Modal from '@/components/Modal'
 import { TableSkeleton } from '@/components/PageSkeleton'
-import { User } from 'lucide-react'
+import { Input } from '@/components/shared/Input'
+import ListResultSummary from '@/components/shared/ListResultSummary'
+import { User, Search } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -40,9 +43,24 @@ export default function Utilizadores() {
     telefone: '',
   })
   const [permissoesCodigos, setPermissoesCodigos] = useState<string[]>([])
+  const [filterInput, setFilterInput] = useState('')
+  const debouncedFilter = useDebounce(filterInput, 400)
 
   const escolaId = authUser?.escolaId ?? undefined
   const { data: usuarios = [], isLoading } = useUsuarios(escolaId)
+
+  const filteredUsuarios = useMemo(
+    () =>
+      debouncedFilter
+        ? usuarios.filter(
+            (u) =>
+              (u.nome ?? '').toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+              (u.email ?? '').toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+              (u.papel ?? '').toLowerCase().includes(debouncedFilter.toLowerCase())
+          )
+        : usuarios,
+    [usuarios, debouncedFilter]
+  )
   const { data: usuarioEdit } = useUsuario(editingUserId)
   const { data: permissoesList = [] } = usePermissoes()
   const { data: usuarioPerms } = useUsuarioPermissoes(permissoesUserId)
@@ -199,38 +217,59 @@ export default function Utilizadores() {
         }
       />
 
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <Input
+          placeholder="Pesquisar por nome, email ou papel..."
+          value={filterInput}
+          onChange={(e) => setFilterInput(e.target.value)}
+          leftIcon={<Search className="h-4 w-4" />}
+          className="max-w-md"
+          aria-label="Pesquisar utilizadores"
+        />
+        <ListResultSummary
+          count={filteredUsuarios.length}
+          total={usuarios.length}
+          label="utilizador"
+          hasFilter={filterInput.length > 0}
+          onClearFilter={() => setFilterInput('')}
+          isLoading={isLoading}
+        />
+      </div>
+
       <div className="card overflow-hidden">
         {isLoading ? (
           <TableSkeleton rows={8} />
-        ) : usuarios.length === 0 ? (
+        ) : filteredUsuarios.length === 0 ? (
           <EmptyState
-            title="Nenhum utilizador"
-            description="Crie o primeiro utilizador."
+            title={filterInput ? 'Nenhum utilizador encontrado' : 'Nenhum utilizador'}
+            description={filterInput ? 'Tente outro termo de pesquisa.' : 'Crie o primeiro utilizador.'}
             action={
-              <button
-                type="button"
-                onClick={() => setFormOpen(true)}
-                className="btn-primary"
-              >
-                Novo utilizador
-              </button>
+              !filterInput ? (
+                <button
+                  type="button"
+                  onClick={() => setFormOpen(true)}
+                  className="btn-primary"
+                >
+                  Novo utilizador
+                </button>
+              ) : undefined
             }
           />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de utilizadores">
             <thead className="bg-studio-muted/50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">ID / Foto</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Nome</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Email</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Papel</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Escola</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">BI</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">ID / Foto</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Nome</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Email</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Papel</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Escola</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">BI</th>
+                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-studio-border">
-              {usuarios.map((u) => (
+              {filteredUsuarios.map((u) => (
                 <tr key={u.userId} className="hover:bg-studio-muted/30">
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">

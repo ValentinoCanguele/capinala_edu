@@ -1,29 +1,28 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useTurmas, useTurmaAlunos, useAlunos } from '@/data/escola/queries'
+import { useDebounce } from '@/hooks/useDebounce'
+import { useTurmas } from '@/data/escola/queries'
 import {
   useCreateTurma,
   useUpdateTurma,
   useDeleteTurma,
-  useAddMatricula,
-  useRemoveMatricula,
 } from '@/data/escola/mutations'
 import type { TurmaFormValues } from '@/schemas/turma'
-import TurmaForm from '@/components/TurmaForm'
+import { TurmaForm, TurmasList, GerirMatriculasModal } from '@/components/turmas'
 import Modal from '@/components/Modal'
-import EmptyState from '@/components/EmptyState'
 import PageHeader from '@/components/PageHeader'
-import { TableSkeleton } from '@/components/PageSkeleton'
+import { Button } from '@/components/shared/Button'
+import { PlusCircle } from 'lucide-react'
 
 export default function Turmas() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [gerirTurmaId, setGerirTurmaId] = useState<string | null>(null)
-  const [alunoToAdd, setAlunoToAdd] = useState('')
-  const [alunoToRemove, setAlunoToRemove] = useState<string | null>(null)
   const [turmaToDelete, setTurmaToDelete] = useState<string | null>(null)
+  const [filterInput, setFilterInput] = useState('')
+  const debouncedFilter = useDebounce(filterInput, 400)
 
   useEffect(() => {
     if (searchParams.get('acao') === 'novo') {
@@ -42,66 +41,28 @@ export default function Turmas() {
   const createTurma = useCreateTurma()
   const updateTurma = useUpdateTurma()
   const deleteTurma = useDeleteTurma()
-  const addMatricula = useAddMatricula()
-  const removeMatricula = useRemoveMatricula()
 
-  const gerirTurma = gerirTurmaId ? turmas.find((t) => t.id === gerirTurmaId) ?? null : null
-  const { data: turmaAlunos = [], isLoading: alunosLoading } = useTurmaAlunos(gerirTurmaId)
-  const { data: todosAlunos = [] } = useAlunos()
-  const alunosForaDaTurma = useMemo(() => {
-    if (!gerirTurmaId) return []
-    const idsInTurma = new Set(turmaAlunos.map((a) => a.alunoId))
-    return todosAlunos.filter((a) => !idsInTurma.has(a.id))
-  }, [gerirTurmaId, turmaAlunos, todosAlunos])
-
-  const handleAddAluno = () => {
-    if (!gerirTurmaId || !alunoToAdd) return
-    addMatricula.mutate(
-      { turmaId: gerirTurmaId, alunoId: alunoToAdd },
-      {
-        onSuccess: () => {
-          toast.success('Aluno adicionado à turma.')
-          setAlunoToAdd('')
-        },
-        onError: (err) => toast.error(err.message),
-      }
-    )
-  }
-
-  const confirmRemoveAluno = () => {
-    if (!gerirTurmaId || !alunoToRemove) return
-    removeMatricula.mutate(
-      { turmaId: gerirTurmaId, alunoId: alunoToRemove },
-      {
-        onSuccess: () => {
-          toast.success('Aluno removido da turma.')
-          setAlunoToRemove(null)
-        },
-        onError: (err) => {
-          toast.error(err.message)
-          setAlunoToRemove(null)
-        },
-      }
-    )
-  }
-
-  const handleRemoveAluno = (alunoId: string) => {
-    setAlunoToRemove(alunoId)
-  }
+  const filteredTurmas = useMemo(
+    () =>
+      debouncedFilter
+        ? turmas.filter(
+            (t) =>
+              t.nome.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+              (t.anoLetivo ?? '').toLowerCase().includes(debouncedFilter.toLowerCase())
+          )
+        : turmas,
+    [turmas, debouncedFilter]
+  )
 
   const editingTurma = editingId
     ? turmas.find((t) => t.id === editingId) ?? null
     : null
+  const gerirTurma = gerirTurmaId ? turmas.find((t) => t.id === gerirTurmaId) ?? null : null
 
   const handleCreate = () => {
     setEditingId(null)
     setFormOpen(true)
     setSearchParams({})
-  }
-
-  const handleEdit = (id: string) => {
-    setEditingId(id)
-    setFormOpen(true)
   }
 
   const handleSubmit = (data: TurmaFormValues) => {
@@ -144,10 +105,6 @@ export default function Turmas() {
     })
   }
 
-  const handleDelete = (id: string) => {
-    setTurmaToDelete(id)
-  }
-
   const isFormLoading = createTurma.isPending || updateTurma.isPending
 
   return (
@@ -161,28 +118,18 @@ export default function Turmas() {
         <p className="text-sm text-studio-foreground-light mb-4">
           Tem a certeza que deseja eliminar esta turma? Esta ação não pode ser desfeita e removerá todas as matrículas associadas.
         </p>
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={() => setTurmaToDelete(null)} className="btn-secondary">Cancelar</button>
-          <button type="button" onClick={confirmDeleteTurma} disabled={deleteTurma.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
-            {deleteTurma.isPending ? 'A eliminar...' : 'Eliminar'}
-          </button>
-        </div>
-      </Modal>
-
-      <Modal
-        title="Remover aluno"
-        open={!!alunoToRemove}
-        onClose={() => setAlunoToRemove(null)}
-        size="sm"
-      >
-        <p className="text-sm text-studio-foreground-light mb-4">
-          Tem a certeza que deseja remover este aluno da turma?
-        </p>
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={() => setAlunoToRemove(null)} className="btn-secondary">Cancelar</button>
-          <button type="button" onClick={confirmRemoveAluno} disabled={removeMatricula.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
-            {removeMatricula.isPending ? 'A remover...' : 'Remover'}
-          </button>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="ghost" onClick={() => setTurmaToDelete(null)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            onClick={confirmDeleteTurma}
+            loading={deleteTurma.isPending}
+            disabled={deleteTurma.isPending}
+          >
+            Eliminar Turma
+          </Button>
         </div>
       </Modal>
 
@@ -190,13 +137,12 @@ export default function Turmas() {
         title="Turmas"
         subtitle="Listagem e cadastro de turmas e matrículas."
         actions={
-          <button
-            type="button"
+          <Button
             onClick={handleCreate}
-            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            icon={<PlusCircle className="w-4 h-4" />}
           >
-            Nova turma
-          </button>
+            Nova Turma
+          </Button>
         }
       />
 
@@ -217,149 +163,29 @@ export default function Turmas() {
         />
       </Modal>
 
-      <Modal
-        open={!!gerirTurmaId}
-        onClose={() => {
-          setGerirTurmaId(null)
-          setAlunoToAdd('')
-        }}
-        title={gerirTurma ? `Gerir alunos — ${gerirTurma.nome}` : 'Gerir alunos'}
-        size="lg"
-      >
-        <div className="space-y-4">
-          <div className="flex gap-2 flex-wrap items-end">
-            <div className="flex-1 min-w-[200px]">
-              <label className="label">Adicionar aluno</label>
-              <select
-                value={alunoToAdd}
-                onChange={(e) => setAlunoToAdd(e.target.value)}
-                className="input w-full"
-              >
-                <option value="">Selecionar aluno</option>
-                {alunosForaDaTurma.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddAluno}
-              disabled={!alunoToAdd || addMatricula.isPending}
-              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50"
-            >
-              {addMatricula.isPending ? 'A adicionar...' : 'Adicionar'}
-            </button>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-studio-foreground mb-2">
-              Alunos na turma ({turmaAlunos.length})
-            </h4>
-            {alunosLoading ? (
-              <div className="py-4 text-studio-foreground-lighter text-sm">A carregar...</div>
-            ) : turmaAlunos.length === 0 ? (
-              <p className="text-studio-foreground-light text-sm">Nenhum aluno. Use o campo acima para adicionar.</p>
-            ) : (
-              <ul className="border border-studio-border rounded-lg divide-y divide-studio-border max-h-64 overflow-y-auto">
-                {turmaAlunos.map((a) => (
-                  <li
-                    key={a.id}
-                    className="flex items-center justify-between px-3 py-2 hover:bg-studio-muted/50"
-                  >
-                    <span className="text-sm text-studio-foreground">{a.alunoNome}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAluno(a.alunoId)}
-                      disabled={removeMatricula.isPending}
-                      className="text-red-600 hover:underline text-sm"
-                    >
-                      Remover
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </Modal>
+      {gerirTurmaId && gerirTurma && (
+        <GerirMatriculasModal
+          turmaId={gerirTurmaId}
+          turmaNome={gerirTurma.nome}
+          onClose={() => setGerirTurmaId(null)}
+        />
+      )}
 
-      <div className="bg-studio-bg border border-studio-border rounded-lg overflow-hidden">
-        {isLoading ? (
-          <TableSkeleton rows={6} />
-        ) : error ? (
-          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
-            Erro: {(error as Error).message}
-          </div>
-        ) : turmas.length === 0 ? (
-          <EmptyState
-            title="Nenhuma turma registada"
-            description={'Clique em "Nova turma" para começar.'}
-            action={
-              <button
-                type="button"
-                onClick={handleCreate}
-                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-              >
-                Nova turma
-              </button>
-            }
-          />
-        ) : (
-          <table className="min-w-full divide-y divide-studio-border">
-            <thead className="bg-studio-muted">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Nome
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Ano letivo
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
-                  N.º alunos
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-studio-border">
-              {turmas.map((t) => (
-                <tr key={t.id} className="hover:bg-studio-muted/50">
-                  <td className="px-4 py-3 text-sm text-studio-foreground">{t.nome}</td>
-                  <td className="px-4 py-3 text-sm text-studio-foreground-light">{t.anoLetivo}</td>
-                  <td className="px-4 py-3 text-sm text-studio-foreground-light">
-                    {t.alunoIds?.length ?? 0}
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm">
-                    <button
-                      type="button"
-                      onClick={() => setGerirTurmaId(t.id)}
-                      className="text-studio-foreground-light hover:underline mr-3"
-                    >
-                      Gerir alunos
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(t.id)}
-                      className="text-studio-brand hover:underline mr-3"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(t.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <TurmasList
+        turmas={filteredTurmas}
+        filter={filterInput}
+        onFilterChange={setFilterInput}
+        onGerirAlunos={setGerirTurmaId}
+        onEdit={(id) => {
+          setEditingId(id)
+          setFormOpen(true)
+        }}
+        onDelete={setTurmaToDelete}
+        onCreate={handleCreate}
+        isLoading={isLoading}
+        error={error ?? null}
+        totalCount={turmas.length}
+      />
     </div>
   )
 }

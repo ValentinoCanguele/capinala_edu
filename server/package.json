@@ -8,6 +8,7 @@
     "start": "next start -p 8082",
     "lint": "next lint",
     "db:migrate": "node scripts/run-migrations.js",
+    "db:seed": "node scripts/run-seed-completo.js",
     "db:migrate:010": "node scripts/run-migration-010.js",
     "db:migrate:004": "node scripts/run-one-migration.js 003_financas.sql 004_financas_parcelas_lancamentos.sql",
     "test": "npx vitest run"

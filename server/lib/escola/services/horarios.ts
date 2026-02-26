@@ -1,11 +1,8 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { HorarioCreate, HorarioUpdate } from '../schemas/horario'
+import { getEscolaId } from '../core/authContext'
 
-function getEscolaId(user: AuthUser): string {
-    if (user.escolaId) return user.escolaId
-    throw new Error('Usuário sem escola definida')
-}
 
 export async function listHorarios(user: AuthUser, turmaId?: string, anoLetivoId?: string) {
     const db = getDb()

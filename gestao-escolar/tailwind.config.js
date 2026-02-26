@@ -3,6 +3,9 @@ export default {
   darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
+    fontFamily: {
+      sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+    },
     extend: {
       colors: {
         brand: {
@@ -24,7 +27,7 @@ export default {
         },
         /* Supabase Studio – layout e UI (precisão visual dark/light) */
         studio: {
-          bg: 'var(--studio-bg)',
+          bg: 'rgb(var(--studio-bg-rgb) / <alpha-value>)',
           'bg-alt': 'var(--studio-bg-alt)',
           muted: 'var(--studio-bg-muted)',
           'sidebar-bg': 'var(--studio-sidebar-bg)',
@@ -36,10 +39,45 @@ export default {
           foreground: 'var(--studio-foreground)',
           'foreground-light': 'var(--studio-foreground-light)',
           'foreground-lighter': 'var(--studio-foreground-lighter)',
-          brand: 'var(--studio-brand)',
+          brand: 'rgb(var(--studio-brand-rgb) / <alpha-value>)',
           'brand-hover': 'var(--studio-brand-hover)',
         },
       },
+      boxShadow: {
+        'soft': '0 2px 10px rgba(0, 0, 0, 0.05)',
+        'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+        'glow': '0 0 15px rgba(37, 99, 235, 0.5)',
+      },
+      keyframes: {
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: 0 },
+          '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
+        fadeIn: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-5px)' },
+          '40%, 80%': { transform: 'translateX(5px)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' }
+        },
+        toastProgress: {
+          '0%': { width: '100%' },
+          '100%': { width: '0%' }
+        }
+      },
+      animation: {
+        'slide-up': 'slideUp 0.3s ease-out forwards',
+        'fade-in': 'fadeIn 0.2s ease-out forwards',
+        'shake': 'shake 0.4s ease-in-out',
+        'shimmer': 'shimmer 1.5s infinite',
+        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'toast-progress': 'toastProgress var(--toast-duration, 4s) linear forwards',
+      }
     },
   },
   plugins: [],

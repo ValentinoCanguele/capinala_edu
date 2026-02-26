@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useComunicados, useTurmas } from '@/data/escola/queries'
 import { useCreateComunicado, useUpdateComunicado, useDeleteComunicado } from '@/data/escola/mutations'
+import { formatRelativeTime } from '@/utils/formatters'
 import EmptyState from '@/components/EmptyState'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
@@ -314,7 +315,7 @@ export default function Comunicados() {
                                     <div className="flex items-center gap-3 mt-1 text-xs text-studio-foreground-lighter">
                                         <span>{c.autorNome}</span>
                                         <span>·</span>
-                                        <span>{formatDate(c.publicadoEm)}</span>
+                                        <span title={formatDate(c.publicadoEm)}>{formatRelativeTime(c.publicadoEm)}</span>
                                         {c.turmaNome && (
                                             <>
                                                 <span>·</span>

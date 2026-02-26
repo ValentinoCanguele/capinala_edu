@@ -15,13 +15,16 @@
   font-weight: 500;
   transition: background-color 0.2s;
 }
+
 .btn-primary:hover {
   background-color: var(--gibbon-brand-2);
 }
+
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .btn-primary:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--studio-bg), 0 0 0 4px var(--studio-brand);
@@ -37,31 +40,50 @@
   font-weight: 500;
   transition: background-color 0.2s, border-color 0.2s;
 }
+
 .btn-secondary:hover {
   background-color: var(--gibbon-bg-soft);
 }
+
 .btn-secondary:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--studio-bg), 0 0 0 4px var(--studio-border);
 }
 
+/* Hover suave em linhas de tabela (Item 1 – Micro-Interações) */
+table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+table tbody tr:hover {
+  background-color: var(--studio-bg-muted);
+}
+
 /* ----- Cards / superfícies ----- */
 .card {
-  background-color: var(--gibbon-bg);
-  border: 1px solid var(--gibbon-border);
-  border-radius: var(--gibbon-radius-lg);
+  background-color: var(--studio-bg);
+  border: 1px solid var(--studio-border);
+  border-radius: 0.75rem;
+  /* rounded-xl */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  /* shadow-soft */
   overflow: hidden;
 }
 
 .card-interactive {
-  background-color: var(--gibbon-bg);
-  border: 1px solid var(--gibbon-border);
-  border-radius: var(--gibbon-radius-lg);
+  background-color: var(--studio-bg);
+  border: 1px solid var(--studio-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 }
+
 .card-interactive:hover {
-  border-color: var(--gibbon-brand-1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-color: rgba(37, 99, 235, 0.3);
+  /* hover:border-studio-brand/30 */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  /* hover:shadow-md */
 }
 
 /* ----- Formulários (compatível Studio) ----- */
@@ -75,14 +97,17 @@
   border-radius: var(--gibbon-radius);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .input::placeholder {
   color: var(--studio-foreground-lighter);
 }
+
 .input:focus {
   outline: none;
   border-color: var(--studio-brand);
   box-shadow: 0 0 0 1px var(--studio-brand);
 }
+
 .input:focus-visible {
   outline: none;
   border-color: var(--studio-brand);
@@ -104,6 +129,7 @@
   border-radius: var(--gibbon-radius-lg);
   overflow: hidden;
 }
+
 .table-header {
   background-color: var(--gibbon-bg-soft);
   font-size: 0.75rem;
@@ -113,15 +139,18 @@
   padding: 0.75rem 1rem;
   text-align: left;
 }
+
 .table-header:last-child {
   text-align: right;
 }
+
 .table-cell {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: var(--gibbon-text-1);
   border-top: 1px solid var(--gibbon-divider);
 }
+
 .table-row:hover {
   background-color: var(--gibbon-bg-soft);
 }
@@ -135,6 +164,7 @@
   border: 1px solid var(--gibbon-brand-3);
   border-radius: var(--gibbon-radius);
 }
+
 .alert-warning {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
@@ -159,9 +189,11 @@
   text-decoration: none;
   transition: color 0.15s, border-color 0.15s;
 }
+
 .second-bar-nav a:hover {
   color: var(--studio-foreground);
 }
+
 .second-bar-nav a[aria-current="page"] {
   color: var(--studio-brand);
   border-bottom-color: var(--studio-brand);
@@ -174,22 +206,223 @@
   transition: opacity 0.2s;
   border-radius: 0.25rem;
 }
+
 .link-action:focus {
   outline: none;
 }
+
 .link-action:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--studio-bg), 0 0 0 4px var(--studio-brand);
 }
+
 .link-action-primary {
   color: var(--gibbon-brand-1);
 }
+
 .link-action-primary:hover {
   color: var(--gibbon-brand-2);
 }
+
 .link-action-danger {
   color: var(--gibbon-danger);
 }
+
 .link-action-danger:hover {
   opacity: 0.8;
+}
+
+/* ----- 150 PREMIUM FEATURES B2B: Utilitários Visuais ----- */
+
+/* 1. Animações e UX Base */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom Scrollbar Premium (Mac-like) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--studio-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--studio-foreground-lighter);
+}
+
+/* Botões Scale-down Active (Item 2) */
+button {
+  transition: transform 0.1s ease, background-color 0.2s, box-shadow 0.2s;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Skeleton Shimmer Flow (Item 4) */
+.skeleton-bg {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--studio-bg-muted);
+}
+
+.skeleton-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0));
+  animation: shimmer 2s infinite;
+}
+
+.dark .skeleton-bg::after {
+  background-image: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.05) 20%,
+      rgba(255, 255, 255, 0.1) 60%,
+      rgba(255, 255, 255, 0));
+}
+
+/* Tooltips Nativos em CSS p/ Icones (Item 9 e 10) */
+.tooltip-trigger {
+  position: relative;
+}
+
+.tooltip-trigger:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--studio-foreground);
+  color: var(--studio-bg);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+  animation: slideUp 0.2s ease forwards;
+}
+
+/* Truncamento c/ Elipse (Item 46) */
+.truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+}
+
+/* Keyframes for Premium Transitions */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-4px);
+  }
+
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+/* Custom Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--studio-border);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--studio-foreground-lighter);
 }

@@ -1,11 +1,8 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
+import { getEscolaId } from '../../core/authContext'
 import { hojeISO } from '../../regras/financas'
 
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
-}
 
 export interface FluxoCaixaRow {
   data: string

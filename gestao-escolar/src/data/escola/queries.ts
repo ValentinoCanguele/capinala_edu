@@ -43,6 +43,9 @@ export interface NotaRow {
   alunoId: string
   alunoNome: string
   valor: number
+  mac?: number
+  npp?: number
+  ne?: number
 }
 
 const queryKeys = {
@@ -53,8 +56,8 @@ const queryKeys = {
   disciplinas: ['escola', 'disciplinas'] as const,
   anosLetivos: ['escola', 'anosLetivos'] as const,
   periodos: (anoLetivoId: string) => ['escola', 'periodos', anoLetivoId] as const,
-  notas: (turmaId: string, periodoId: string) =>
-    ['escola', 'notas', turmaId, periodoId] as const,
+  notas: (turmaId: string, periodoId: string, disciplinaId?: string) =>
+    ['escola', 'notas', turmaId, periodoId, disciplinaId].filter(Boolean) as string[],
   boletim: (alunoId: string, anoLetivoId?: string) =>
     ['escola', 'boletim', alunoId, anoLetivoId] as const,
   meuPapel: ['escola', 'meu-papel'] as const,
@@ -64,6 +67,18 @@ const queryKeys = {
   salas: ['escola', 'salas'] as const,
   comunicados: ['escola', 'comunicados'] as const,
   comunicado: (id: string) => ['escola', 'comunicado', id] as const,
+  atas: (filters?: { turmaId?: string; periodoId?: string }) =>
+    ['escola', 'atas', filters] as const,
+  ata: (id: string) => ['escola', 'ata', id] as const,
+  pedagogicalConfig: (anoLetivoId: string) =>
+    ['escola', 'pedagogical-config', anoLetivoId] as const,
+  exames: (filters?: { turmaId?: string; disciplinaId?: string }) =>
+    ['escola', 'exames', filters] as const,
+  pautaGeral: (turmaId: string, periodoId: string) =>
+    ['escola', 'pauta-geral', turmaId, periodoId] as const,
+  accessLogs: (limit?: number) => ['escola', 'access-logs', limit] as const,
+  ocorrencias: (filters?: any) => ['escola', 'ocorrencias', filters] as const,
+  studentCard: (alunoId: string) => ['escola', 'student-card', alunoId] as const,
   anoLetivo: (id: string) => ['escola', 'anoLetivo', id] as const,
   dashboardStats: ['escola', 'dashboard-stats'] as const,
   auditLog: (entidade?: string) => ['escola', 'audit', entidade] as const,
@@ -82,6 +97,13 @@ const queryKeys = {
   usuario: (id: string) => ['escola', 'usuario', id] as const,
   permissoes: ['escola', 'permissoes'] as const,
   usuarioPermissoes: (userId: string) => ['escola', 'usuarios', userId, 'permissoes'] as const,
+  modulos: ['escola', 'modulos'] as const,
+  modulosCatalogo: ['escola', 'modulos', 'catalogo'] as const,
+  modulo: (id: string) => ['escola', 'modulo', id] as const,
+  professores: ['escola', 'professores'] as const,
+  matrizes: ['escola', 'matrizes'] as const,
+  matriz: (id: string) => ['escola', 'matriz', id] as const,
+  salasAudit: (anoId: string) => ['escola', 'salas-audit', anoId] as const,
 }
 
 export function useAlunos() {
@@ -257,6 +279,19 @@ export function useResumoFrequenciaAluno(alunoId: string | null, anoLetivoId?: s
   })
 }
 
+export function useJustificativas(alunoId?: string) {
+  return useQuery({
+    queryKey: ['escola', 'justificativas', alunoId] as const,
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      if (alunoId) params.set('alunoId', alunoId)
+      const { data, error } = await api.get(`${ESCOLA_API}/frequencia/justificativas?${params.toString()}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
 export interface DocumentoRow {
   id: string
   titulo: string
@@ -386,13 +421,19 @@ export function useTurmaAlunos(turmaId: string | null) {
   })
 }
 
-export function useNotas(turmaId: string | null, periodoId: string | null) {
+export function useNotas(turmaId: string | null, periodoId: string | null, disciplinaId?: string) {
   return useQuery({
-    queryKey: queryKeys.notas(turmaId ?? '', periodoId ?? ''),
+    queryKey: queryKeys.notas(turmaId ?? '', periodoId ?? '', disciplinaId ?? ''),
     queryFn: async (): Promise<NotaRow[]> => {
       if (!turmaId || !periodoId) return []
+      const params = new URLSearchParams({
+        turmaId,
+        periodoId
+      })
+      if (disciplinaId) params.append('disciplinaId', disciplinaId)
+
       const { data, error } = await api.get<NotaRow[]>(
-        `${ESCOLA_API}/notas?turmaId=${encodeURIComponent(turmaId)}&periodoId=${encodeURIComponent(periodoId)}`
+        `${ESCOLA_API}/notas?${params.toString()}`
       )
       if (error) throw new Error(error.message)
       return data ?? []
@@ -562,6 +603,19 @@ export function useSalas() {
   })
 }
 
+export function useInventarioSala(salaId: string | null) {
+  return useQuery({
+    queryKey: ['escola', 'inventario', salaId] as const,
+    queryFn: async (): Promise<any[]> => {
+      if (!salaId) return []
+      const { data, error } = await api.get<any[]>(`${ESCOLA_API}/salas?action=inventario&id=${salaId}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+    enabled: !!salaId,
+  })
+}
+
 /* ── Comunicados ── */
 
 export interface ComunicadoRow {
@@ -677,6 +731,295 @@ export function useAlertas(enabled = true) {
       return data ?? []
     },
     enabled,
+  })
+}
+
+/* ── Módulos ── */
+
+export interface ModuloRow {
+  id: string
+  chave: string
+  nome: string
+  descricao: string | null
+  ativo: boolean
+  ordem: number
+  config: Record<string, unknown>
+  permissoes: string[]
+  imagem: string | null
+  icone: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ModuloCatalogoEntry {
+  chave: string
+  nome: string
+  descricao: string
+  imagem?: string | null
+  icone: string
+  ordemDefault: number
+  permissoesDefault: string[]
+}
+
+export interface ModulosComDisponiveis {
+  instalados: ModuloRow[]
+  disponiveis: ModuloCatalogoEntry[]
+}
+
+export function useModulos() {
+  return useQuery({
+    queryKey: queryKeys.modulos,
+    queryFn: async (): Promise<ModuloRow[]> => {
+      const { data, error } = await api.get<ModuloRow[]>(`${ESCOLA_API}/modulos`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useModulosComDisponiveis() {
+  return useQuery({
+    queryKey: queryKeys.modulosCatalogo,
+    queryFn: async (): Promise<ModulosComDisponiveis> => {
+      const { data, error } = await api.get<ModulosComDisponiveis>(
+        `${ESCOLA_API}/modulos?catalogo=1`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? { instalados: [], disponiveis: [] }
+    },
+  })
+}
+
+export function useModulo(id: string | null) {
+  return useQuery({
+    queryKey: queryKeys.modulo(id ?? ''),
+    queryFn: async (): Promise<ModuloRow | null> => {
+      if (!id) return null
+      const { data, error } = await api.get<ModuloRow>(`${ESCOLA_API}/modulos/${id}`)
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!id,
+  })
+}
+
+/* ── Professores ── */
+
+export interface ProfessorRow {
+  id: string
+  nome: string
+  email: string
+}
+
+export function useProfessores() {
+  return useQuery({
+    queryKey: queryKeys.professores,
+    queryFn: async (): Promise<ProfessorRow[]> => {
+      const { data, error } = await api.get<ProfessorRow[]>(`${ESCOLA_API}/professores`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+/* ── Pautas ── */
+
+export interface PautaGeralRow {
+  alunoId: string
+  alunoNome: string
+  notas: Record<string, number>
+  mediaGeral: number | null
+  aprovado: boolean
+}
+
+export interface PautaGeralResult {
+  turmaId: string
+  periodoId: string
+  disciplinas: { id: string; nome: string }[]
+  rows: PautaGeralRow[]
+}
+
+export function usePautaGeral(turmaId: string | null, periodoId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.pautaGeral(turmaId ?? '', periodoId ?? ''),
+    queryFn: async (): Promise<PautaGeralResult | null> => {
+      if (!turmaId || !periodoId) return null
+      const { data, error } = await api.get<PautaGeralResult>(
+        `${ESCOLA_API}/pautas?turmaId=${encodeURIComponent(turmaId)}&periodoId=${encodeURIComponent(periodoId)}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!turmaId && !!periodoId,
+  })
+}
+
+/* ── Atas ── */
+
+export interface AtaResult {
+  id: string
+  turmaId: string
+  turmaNome: string
+  periodoId: string | null
+  periodoNome: string | null
+  titulo: string
+  conteudo: string
+  dataReuniao: string
+  participantes: string[]
+  decisoes: string[]
+  assinaturaDigital: string | null
+  criadoPor: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export function useAtas(filters?: { turmaId?: string; periodoId?: string }) {
+  return useQuery({
+    queryKey: queryKeys.atas(filters),
+    queryFn: async (): Promise<AtaResult[]> => {
+      const params = new URLSearchParams()
+      if (filters?.turmaId) params.set('turmaId', filters.turmaId)
+      if (filters?.periodoId) params.set('periodoId', filters.periodoId)
+      const qs = params.toString()
+      const { data, error } = await api.get<AtaResult[]>(`${ESCOLA_API}/atas${qs ? `?${qs}` : ''}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useAta(id: string | null) {
+  return useQuery({
+    queryKey: queryKeys.ata(id ?? ''),
+    queryFn: async (): Promise<AtaResult | null> => {
+      if (!id) return null
+      const { data, error } = await api.get<AtaResult>(`${ESCOLA_API}/atas/${id}`)
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!id,
+  })
+}
+
+/* ── Configurações e Exames ── */
+
+export interface ConfigPedagogica {
+  id: string
+  escolaId: string
+  anoLetivoId: string
+  pesoT1: number
+  pesoT2: number
+  pesoT3: number
+  minimaAprovacaoDireta: number
+  minimaAcessoExame: number
+  pesoMfaNoExame: number
+  pesoExameFinal: number
+}
+
+export function usePedagogicalConfig(anoLetivoId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.pedagogicalConfig(anoLetivoId ?? ''),
+    queryFn: async (): Promise<ConfigPedagogica | null> => {
+      if (!anoLetivoId) return null
+      const { data, error } = await api.get<ConfigPedagogica>(
+        `${ESCOLA_API}/configuracoes/pedagogica?anoLetivoId=${anoLetivoId}`
+      )
+      if (error) throw new Error(error.message)
+      return data ?? null
+    },
+    enabled: !!anoLetivoId,
+  })
+}
+
+export interface ExameResult {
+  id: string
+  alunoId: string
+  studentName: string
+  turmaId: string
+  disciplinaId: string
+  subjectName: string
+  periodoId: string | null
+  tipo: string
+  valor: number
+  dataExame: string
+}
+
+export function useExames(filters?: { turmaId?: string; disciplinaId?: string }) {
+  return useQuery({
+    queryKey: queryKeys.exames(filters),
+    queryFn: async (): Promise<ExameResult[]> => {
+      const params = new URLSearchParams()
+      if (filters?.turmaId) params.set('turmaId', filters.turmaId)
+      if (filters?.disciplinaId) params.set('disciplinaId', filters.disciplinaId)
+      const qs = params.toString()
+      const { data, error } = await api.get<ExameResult[]>(`${ESCOLA_API}/exames${qs ? `?${qs}` : ''}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useAccessLogs(limit = 20) {
+  return useQuery({
+    queryKey: queryKeys.accessLogs(limit),
+    queryFn: async () => {
+      const { data, error } = await api.get<any[]>(`${ESCOLA_API}/frequencia/logs?limit=${limit}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useOcorrencias(filters?: { alunoId?: string, turmaId?: string, resolvido?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.ocorrencias(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      if (filters?.alunoId) params.set('alunoId', filters.alunoId)
+      if (filters?.turmaId) params.set('turmaId', filters.turmaId)
+      if (filters?.resolvido !== undefined) params.set('resolvido', String(filters.resolvido))
+      const qs = params.toString()
+      const { data, error } = await api.get(`${ESCOLA_API}/ocorrencias${qs ? `?${qs}` : ''}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useMatrizes() {
+  return useQuery({
+    queryKey: queryKeys.matrizes,
+    queryFn: async () => {
+      const { data, error } = await api.get(`${ESCOLA_API}/matrizes`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+  })
+}
+
+export function useMatriz(id: string | null) {
+  return useQuery({
+    queryKey: id ? queryKeys.matriz(id) : ['escola', 'matriz', 'none'],
+    queryFn: async () => {
+      if (!id) return null
+      const { data, error } = await api.get(`${ESCOLA_API}/matrizes?id=${id}`)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    enabled: !!id,
+  })
+}
+
+export function useSalasAudit(anoId: string | null) {
+  return useQuery({
+    queryKey: anoId ? queryKeys.salasAudit(anoId) : ['escola', 'salas-audit', 'none'],
+    queryFn: async () => {
+      if (!anoId) return []
+      const { data, error } = await api.get(`${ESCOLA_API}/salas?action=audit&anoLetivoId=${anoId}`)
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+    enabled: !!anoId,
   })
 }
 

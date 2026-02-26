@@ -163,6 +163,34 @@ export function useSaveFrequencia() {
   })
 }
 
+export function useCreateJustificativa() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await api.post(`${ESCOLA_API}/frequencia/justificativas`, data)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'justificativas'] })
+      queryClient.invalidateQueries({ queryKey: ['escola', 'frequencia'] })
+    },
+  })
+}
+
+export function useApproveJustificativa() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, acao }: { id: string; acao: 'deferido' | 'indeferido' }) => {
+      const { error } = await api.post(`${ESCOLA_API}/frequencia/justificativas?action=approve&id=${id}`, { acao })
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'justificativas'] })
+      queryClient.invalidateQueries({ queryKey: ['escola', 'frequencia'] })
+    },
+  })
+}
+
 export function useSaveNotasBatch() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -172,13 +200,13 @@ export function useSaveNotasBatch() {
       return data
     },
     onSuccess: (_, variables) => {
-      if (variables.turmaId && variables.periodoId) {
+      if (variables.turmaId && (variables.periodoId || variables.bimestre)) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.notas(variables.turmaId, variables.periodoId),
+          queryKey: ['escola', 'notas', variables.turmaId]
         })
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.turmas })
-      queryClient.invalidateQueries({ queryKey: ['escola', 'boletim'], refetchType: 'active' })
+      queryClient.invalidateQueries({ queryKey: ['escola', 'boletim'] })
     },
   })
 }
@@ -638,5 +666,299 @@ export function useSetUsuarioPermissoes() {
     onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarioPermissoes(userId) })
     },
+  })
+}
+
+/* ── Módulos ── */
+
+export function useInstallModulo() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (chave: string) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/modulos/instalar`, { chave })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulos })
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulosCatalogo })
+    },
+  })
+}
+
+export interface ModuloUpdateInput {
+  nome?: string
+  descricao?: string | null
+  ativo?: boolean
+  ordem?: number
+  config?: Record<string, unknown>
+  permissoes?: string[]
+  imagem?: string | null
+  icone?: string | null
+}
+
+export function useUpdateModulo() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...body }: ModuloUpdateInput & { id: string }) => {
+      const { data, error } = await api.patch(`${ESCOLA_API}/modulos/${id}`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulos })
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulosCatalogo })
+      queryClient.invalidateQueries({ queryKey: queryKeys.modulo(id) })
+    },
+  })
+}
+
+/* ── Atas ── */
+
+export interface AtaInput {
+  turmaId: string
+  periodoId?: string
+  titulo: string
+  conteudo: string
+  dataReuniao?: string
+  participantes?: string[]
+  decisoes?: string[]
+  assinaturaDigital?: string
+}
+
+export function useCreateAta() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: AtaInput) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/atas`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'atas'] }),
+  })
+}
+
+export function useUpdateAta() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...body }: Partial<AtaInput> & { id: string }) => {
+      const { data, error } = await api.patch(`${ESCOLA_API}/atas/${id}`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'atas'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.ata(id) })
+    },
+  })
+}
+
+export function useDeleteAta() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.delete(`${ESCOLA_API}/atas/${id}`)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'atas'] }),
+  })
+}
+
+/* ── Configurações e Exames ── */
+
+export function useUpdatePedagogicalConfig() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: any) => {
+      const { data, error } = await api.patch(`${ESCOLA_API}/configuracoes/pedagogica`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.pedagogicalConfig(vars.anoLetivoId) })
+      queryClient.invalidateQueries({ queryKey: ['escola', 'boletim'] })
+    },
+  })
+}
+
+export function useSaveExame() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: any) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/exames`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'exames'] })
+      queryClient.invalidateQueries({ queryKey: ['escola', 'boletim'] })
+    },
+  })
+}
+
+export function useDeleteExame() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.delete(`${ESCOLA_API}/exames?id=${id}`)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'exames'] })
+      queryClient.invalidateQueries({ queryKey: ['escola', 'boletim'] })
+    },
+  })
+}
+
+/* ── T3.0: Biometria e QR Code ── */
+
+export function useProcessarAcessoQR() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ identifier, sentido }: { identifier: string; sentido?: 'entrada' | 'saida' }) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/frequencia/scanner`, { identifier, sentido })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'access-logs'] })
+      if (data?.aulaMarcada) {
+        queryClient.invalidateQueries({ queryKey: ['escola', 'frequencia'] })
+        queryClient.invalidateQueries({ queryKey: ['escola', 'relatorio-frequencia-turma'] })
+      }
+    },
+  })
+}
+
+/* ── Ocorrências Disciplinares ── */
+
+export function useCreateOcorrencia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: any) => {
+      const { data, error } = await api.post(`${ESCOLA_API}/ocorrencias`, body)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'ocorrencias'] }),
+  })
+}
+
+export function useResolveOcorrencia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, resolvido }: { id: string, resolvido: boolean }) => {
+      const { data, error } = await api.patch(`${ESCOLA_API}/ocorrencias`, { id, resolvido })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'ocorrencias'] }),
+  })
+}
+
+export function useDeleteOcorrencia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.delete(`${ESCOLA_API}/ocorrencias?id=${id}`)
+      if (error) throw new Error(error.message)
+      return data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'ocorrencias'] }),
+  })
+}
+
+/* ── Matrizes e Espaços ── */
+
+export function useCreateMatriz() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await api.post(`${ESCOLA_API}/matrizes`, data)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'matrizes'] }),
+  })
+}
+
+export function useAddDisciplinaMatriz() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await api.post(`${ESCOLA_API}/matrizes?action=addDisciplina`, data)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'matriz'] }),
+  })
+}
+
+export function useClonarMatriz() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { matrizOrigemId: string; novoNome: string; novoAnoLetivoId?: string }) => {
+      const { data: res, error } = await api.post(`${ESCOLA_API}/matrizes?action=clonar`, data)
+      if (error) throw new Error(error.message)
+      return res
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['escola', 'matrizes'] })
+    },
+  })
+}
+
+export function useAddPrecedencia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await api.post(`${ESCOLA_API}/matrizes?action=addPrecedencia`, data)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'matriz'] }),
+  })
+}
+
+export function useRemovePrecedencia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await api.delete(`${ESCOLA_API}/matrizes?action=removePrecedencia&id=${id}`)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'matriz'] }),
+  })
+}
+
+export function useSaveSala() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await api.post(`${ESCOLA_API}/salas`, data)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'salas'] }),
+  })
+}
+
+export function useAddItemInventario() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await api.post(`${ESCOLA_API}/salas?action=addItemInventario`, data)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'inventario'] }),
+  })
+}
+
+export function useRemoveItemInventario() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await api.delete(`${ESCOLA_API}/salas?action=removeItemInventario&id=${id}`)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['escola', 'inventario'] }),
   })
 }

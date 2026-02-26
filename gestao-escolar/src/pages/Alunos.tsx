@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useAlunos } from '@/data/escola/queries'
 import {
   useCreateAluno,
@@ -8,17 +9,18 @@ import {
   useDeleteAluno,
 } from '@/data/escola/mutations'
 import type { AlunoFormValues } from '@/schemas/aluno'
-import AlunoForm from '@/components/AlunoForm'
+import { AlunoForm, AlunosList } from '@/components/alunos'
 import Modal from '@/components/Modal'
-import EmptyState from '@/components/EmptyState'
 import PageHeader from '@/components/PageHeader'
-import { TableSkeleton } from '@/components/PageSkeleton'
+import { Button } from '@/components/shared/Button'
+import { UserPlus } from 'lucide-react'
 
 export default function Alunos() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [filter, setFilter] = useState('')
+  const [filterInput, setFilterInput] = useState('')
+  const debouncedFilter = useDebounce(filterInput, 400)
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 
   useEffect(() => {
@@ -41,12 +43,12 @@ export default function Alunos() {
 
   const filteredAlunos = useMemo(
     () =>
-      filter
+      debouncedFilter
         ? alunos.filter((a) =>
-          a.nome.toLowerCase().includes(filter.toLowerCase())
+          a.nome.toLowerCase().includes(debouncedFilter.toLowerCase())
         )
         : alunos,
-    [alunos, filter]
+    [alunos, debouncedFilter]
   )
 
   const editingAluno = editingId
@@ -57,11 +59,6 @@ export default function Alunos() {
     setEditingId(null)
     setFormOpen(true)
     setSearchParams({})
-  }
-
-  const handleEdit = (id: string) => {
-    setEditingId(id)
-    setFormOpen(true)
   }
 
   const handleSubmit = (data: AlunoFormValues) => {
@@ -101,10 +98,6 @@ export default function Alunos() {
     })
   }
 
-  const handleDelete = (id: string) => {
-    setItemToDelete(id)
-  }
-
   const isFormLoading = createAluno.isPending || updateAluno.isPending
 
   return (
@@ -118,11 +111,18 @@ export default function Alunos() {
         <p className="text-sm text-studio-foreground-light mb-4">
           Tem a certeza que deseja eliminar este aluno? Esta ação não pode ser desfeita.
         </p>
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={() => setItemToDelete(null)} className="btn-secondary">Cancelar</button>
-          <button type="button" onClick={confirmDelete} disabled={deleteAluno.isPending} className="btn-primary bg-red-600 hover:bg-red-700 text-white disabled:opacity-50">
-            {deleteAluno.isPending ? 'A eliminar...' : 'Eliminar'}
-          </button>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="ghost" onClick={() => setItemToDelete(null)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            onClick={confirmDelete}
+            loading={deleteAluno.isPending}
+            disabled={deleteAluno.isPending}
+          >
+            Eliminar Aluno
+          </Button>
         </div>
       </Modal>
 
@@ -130,25 +130,14 @@ export default function Alunos() {
         title="Alunos"
         subtitle="Listagem e cadastro de alunos."
         actions={
-          <button
-            type="button"
+          <Button
             onClick={handleCreate}
-            className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            icon={<UserPlus className="w-4 h-4" />}
           >
-            Novo aluno
-          </button>
+            Novo Aluno
+          </Button>
         }
       />
-
-      <div className="mb-4">
-        <input
-          type="search"
-          placeholder="Pesquisar por nome..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="input max-w-xs"
-        />
-      </div>
 
       <Modal
         open={formOpen}
@@ -172,77 +161,19 @@ export default function Alunos() {
         />
       </Modal>
 
-      <div className="bg-studio-bg border border-studio-border rounded-lg overflow-hidden">
-        {isLoading ? (
-          <TableSkeleton rows={6} />
-        ) : error ? (
-          <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
-            Erro: {(error as Error).message}
-          </div>
-        ) : filteredAlunos.length === 0 ? (
-          <EmptyState
-            title={filter ? 'Nenhum aluno encontrado' : 'Nenhum aluno registado'}
-            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em "Novo aluno" para começar.'}
-            action={
-              !filter ? (
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-                >
-                  Novo aluno
-                </button>
-              ) : undefined
-            }
-          />
-        ) : (
-          <table className="min-w-full divide-y divide-studio-border">
-            <thead className="bg-studio-muted">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Nome
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Data nasc.
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-studio-border">
-              {filteredAlunos.map((a) => (
-                <tr key={a.id} className="hover:bg-studio-muted/50">
-                  <td className="px-4 py-3 text-sm text-studio-foreground">{a.nome}</td>
-                  <td className="px-4 py-3 text-sm text-studio-foreground-light">{a.email}</td>
-                  <td className="px-4 py-3 text-sm text-studio-foreground-light">
-                    {a.dataNascimento}
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(a.id)}
-                      className="text-studio-brand hover:underline mr-3"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(a.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <AlunosList
+        alunos={filteredAlunos}
+        filter={filterInput}
+        onFilterChange={setFilterInput}
+        onEdit={(id) => {
+          setEditingId(id)
+          setFormOpen(true)
+        }}
+        onDelete={setItemToDelete}
+        onCreate={handleCreate}
+        isLoading={isLoading}
+        error={error ?? null}
+      />
     </div>
   )
 }

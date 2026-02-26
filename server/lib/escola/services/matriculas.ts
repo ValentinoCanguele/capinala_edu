@@ -1,11 +1,8 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { MatriculaCreate } from '../schemas'
-
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
-}
+import { getEscolaId } from '../core/authContext'
+import { validarPodeMatricular } from '../regras/matricula_rules'
 
 export async function listMatriculasByTurma(user: AuthUser, turmaId: string) {
   const db = getDb()
@@ -26,12 +23,11 @@ export async function listMatriculasByTurma(user: AuthUser, turmaId: string) {
 export async function createMatricula(user: AuthUser, data: MatriculaCreate) {
   const db = getDb()
   const escolaId = getEscolaId(user)
+  const v = await validarPodeMatricular(db, data.alunoId, data.turmaId, escolaId)
+  if (!v.valido) throw new Error(v.erro)
   await db.query(
-    `INSERT INTO matriculas (aluno_id, turma_id)
-     SELECT $1, $2
-     WHERE EXISTS (SELECT 1 FROM alunos a WHERE a.id = $1 AND a.escola_id = $3)
-     AND EXISTS (SELECT 1 FROM turmas t WHERE t.id = $2 AND t.escola_id = $3)`,
-    [data.alunoId, data.turmaId, escolaId]
+    `INSERT INTO matriculas (aluno_id, turma_id) VALUES ($1, $2)`,
+    [data.alunoId, data.turmaId]
   )
   const r = await db.query(
     'SELECT id, aluno_id AS "alunoId", turma_id AS "turmaId" FROM matriculas WHERE aluno_id = $1 AND turma_id = $2',

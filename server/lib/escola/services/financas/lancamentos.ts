@@ -1,11 +1,8 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { LancamentoCreate, LancamentoUpdate } from '../../schemas'
+import { getEscolaId } from '../../core/authContext'
 
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
-}
 
 export async function listLancamentos(
   user: AuthUser,

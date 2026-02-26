@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useDocumentos, useMeusFilhos } from '@/data/escola/queries'
 import { useUploadDocumento, useDeleteDocumento } from '@/data/escola/mutations'
 import { getAuthHeader } from '@/lib/auth'
+import { formatBytes } from '@/utils/formatters'
 import PageHeader from '@/components/PageHeader'
 import EmptyState from '@/components/EmptyState'
 import Modal from '@/components/Modal'
@@ -180,13 +181,13 @@ export default function Arquivos() {
             }
           />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de documentos">
             <thead className="bg-studio-muted/50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Título / Ficheiro</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Tipo</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Tamanho</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Título / Ficheiro</th>
+                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Tipo</th>
+                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Tamanho</th>
+                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-studio-border">
@@ -197,8 +198,8 @@ export default function Arquivos() {
                     <span className="block text-xs text-studio-foreground-lighter">{d.nomeFicheiro}</span>
                   </td>
                   <td className="px-4 py-2 text-sm text-studio-foreground-light">{d.tipoMime ?? '—'}</td>
-                  <td className="px-4 py-2 text-right text-sm text-studio-foreground-light">
-                    {d.tamanho != null ? `${(d.tamanho / 1024).toFixed(1)} KB` : '—'}
+                  <td className="px-4 py-2 text-right text-sm text-studio-foreground-light tabular-nums">
+                    {d.tamanho != null ? formatBytes(d.tamanho) : '—'}
                   </td>
                   <td className="px-4 py-2 text-right">
                     <button

@@ -159,3 +159,26 @@ export function isAdmin(user: AuthUser): boolean {
 export function canManageModulos(user: AuthUser): boolean {
   return user.papel === 'admin'
 }
+
+/* ── Nano: checagens simples por papel ── */
+
+export function canEditComunicado(user: AuthUser, autorId: string): boolean {
+  if (isPapel(user, PAPEIS_ADMIN)) return true
+  return autorId === user.userId
+}
+
+export function canAcederAuditoria(user: AuthUser): boolean {
+  return canViewAuditLog(user)
+}
+
+export function canGerirUtilizadores(user: AuthUser): boolean {
+  return isPapel(user, PAPEIS_ADMIN)
+}
+
+export function canGerirFinancas(user: AuthUser): boolean {
+  return isPapel(user, PAPEIS_ADMIN)
+}
+
+export function canVerRelatorioFrequencia(user: AuthUser): boolean {
+  return isPapel(user, PAPEIS_GESTAO)
+}

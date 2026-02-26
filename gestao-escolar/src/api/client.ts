@@ -9,6 +9,9 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
 const AUTH_UNAUTHORIZED_EVENT = 'auth:unauthorized'
 
+/** Timeout em ms para evitar que o login fique parado se o backend não responder */
+const REQUEST_TIMEOUT_MS = 20000
+
 export type ApiError = { message: string }
 
 async function request<T>(
@@ -16,15 +19,32 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<{ data?: T; error?: ApiError }> {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-      ...options.headers,
-    },
-    credentials: 'include',
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  let res: Response
+  try {
+    res = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+        ...options.headers,
+      },
+      credentials: 'include',
+    })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    const isAbort = err instanceof Error && err.name === 'AbortError'
+    return {
+      error: {
+        message: isAbort
+          ? 'Servidor não respondeu. Verifique se o backend está a correr (porta 8082).'
+          : err instanceof Error ? err.message : 'Erro de ligação.',
+      },
+    }
+  }
+  clearTimeout(timeoutId)
   if (res.status === 401) {
     clearToken()
     if (typeof window !== 'undefined') {

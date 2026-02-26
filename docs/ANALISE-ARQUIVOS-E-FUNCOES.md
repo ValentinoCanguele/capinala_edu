@@ -28,8 +28,17 @@
 - **perfil.ts** — perfilUpdateSchema, alterarSenhaSchema.
 - **usuario.ts** — usuarioCreateSchema, usuarioUpdateSchema, resetPasswordSchema, setPermissoesSchema.
 
+### lib/escola/core/
+- **authContext.ts** — `getEscolaId(user)`, `getEscolaIdOrNull(user)`, `temEscola(user)` — contexto de autenticação centralizado.
+- **index.ts** — re-exporta core.
+
 ### lib/escola/regras/
-- **medias.ts** — `calcularMedia(notas)`, `mediaAprovacao(media, minima)`.
+- **medias.ts** — `calcularMedia`, `calcularMediaPonderada`, `classificarNota`, `resultadoTrimestral`, `calcularMFA`, `calcularResultadoFinal`, `calcularNotaFinalComExame`, `mediaAprovacao`, `validarNota`; nano: `arredondarEscala`, `mediaSimples`, `menorNota`, `maiorNota`, `contarAbaixoMinimo`.
+- **frequencia_rules.ts** — `calcularPercentagemPresenca`, `estaEmRisco`, `nivelRiscoFrequencia`, `montarResumoFrequencia`, `filtrarAlunosEmRisco`, `validarFrequenciaParaAprovacao`.
+- **validacoes.ts** — `validarTurmaPertenceEscola`, `validarAlunoMatriculadoTurma`, `validarPeriodoDoAnoLetivo`, `validarDisciplinaNaTurma`, `validarContextoNota`, `validarAlunoPertenceEscola`.
+- **aluno_rules.ts** — `podeEliminarAluno(db, alunoId)`, `contarMatriculasAluno(db, alunoId)`.
+- **matricula_rules.ts** — `alunoJaMatriculadoNaTurma(db, alunoId, turmaId)`, `validarPodeMatricular(db, alunoId, turmaId, escolaId)`.
+- **financas.ts** — `calcularValorComMultaEJuros`, `parcelaEstaAtrasada`, `hojeISO`.
 
 ### lib/escola/services/
 - **alunos.ts** — listAlunos, createAluno, getAluno, updateAluno, deleteAluno.
@@ -50,7 +59,8 @@
 - **permissoesService.ts** — listPermissoes, getPermissoesUsuario, setPermissoesUsuario, userHasPermissao.
 
 ### lib/escola/permissoes.ts
-- canDeleteAluno, canDeleteTurma, canManageDisciplinas, canLancarNotas, canVerBoletim.
+- canDeleteAluno, canDeleteTurma, canManageDisciplinas, canLancarNotas, canVerBoletim; canCreateComunicado, canDeleteComunicado, canViewComunicados; canManageHorarios, canViewHorarios; canManageSalas; canViewDashboard; canViewAuditLog; isResponsavel, isAluno, isProfessor, isAdmin; canManageModulos.
+- Nano: canEditComunicado(user, autorId), canAcederAuditoria, canGerirUtilizadores, canGerirFinancas, canVerRelatorioFrequencia.
 
 ### pages/api/auth/login.ts
 - POST — body: email, password; resposta: { token, papel, userId }.

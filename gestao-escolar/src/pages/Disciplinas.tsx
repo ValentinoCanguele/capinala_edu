@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useDisciplinas } from '@/data/escola/queries'
 import {
   useCreateDisciplina,
@@ -68,7 +69,8 @@ export default function Disciplinas() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [filter, setFilter] = useState('')
+  const [filterInput, setFilterInput] = useState('')
+  const debouncedFilter = useDebounce(filterInput, 400)
   const [itemToDelete, setItemToDelete] = useState<{ id: string, nome: string } | null>(null)
 
   useEffect(() => {
@@ -91,12 +93,12 @@ export default function Disciplinas() {
 
   const filtered = useMemo(
     () =>
-      filter
+      debouncedFilter
         ? disciplinas.filter((d) =>
-          d.nome.toLowerCase().includes(filter.toLowerCase())
-        )
+            d.nome.toLowerCase().includes(debouncedFilter.toLowerCase())
+          )
         : disciplinas,
-    [disciplinas, filter]
+    [disciplinas, debouncedFilter]
   )
 
   const editing = editingId
@@ -194,8 +196,8 @@ export default function Disciplinas() {
         <input
           type="search"
           placeholder="Pesquisar por nome..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          value={filterInput}
+          onChange={(e) => setFilterInput(e.target.value)}
           className="input max-w-xs"
           aria-label="Pesquisar disciplinas por nome"
         />
@@ -203,8 +205,8 @@ export default function Disciplinas() {
           count={filtered.length}
           total={disciplinas.length}
           label="disciplina"
-          hasFilter={filter.length > 0}
-          onClearFilter={() => setFilter('')}
+          hasFilter={filterInput.length > 0}
+          onClearFilter={() => setFilterInput('')}
           isLoading={isLoading}
         />
       </div>
@@ -231,9 +233,9 @@ export default function Disciplinas() {
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            title={filter ? 'Nenhuma disciplina encontrada' : 'Nenhuma disciplina registada'}
-            description={filter ? 'Tente outro termo de pesquisa.' : 'Clique em "Nova disciplina" para começar.'}
-            action={!filter ? (
+            title={filterInput ? 'Nenhuma disciplina encontrada' : 'Nenhuma disciplina registada'}
+            description={filterInput ? 'Tente outro termo de pesquisa.' : 'Clique em "Nova disciplina" para começar.'}
+            action={!filterInput ? (
               <button
                 type="button"
                 onClick={handleCreate}

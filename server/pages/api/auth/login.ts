@@ -5,22 +5,29 @@ import { signToken } from '@/lib/auth'
 import { jsonSuccess, jsonError } from '@/lib/apiWrapper'
 
 const bodySchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(1, 'Senha é obrigatória'),
 })
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST')
-    return jsonError(res, 'Method not allowed', 405)
-  }
-  const parsed = bodySchema.safeParse(req.body)
-  if (!parsed.success) {
-    return jsonError(res, parsed.error.flatten().message as unknown as string, 400)
-  }
-  const { email, password } = parsed.data
+function zodMessage(err: z.ZodError): string {
+  const first = err.issues[0]
+  return first?.message ?? err.message ?? 'Dados inválidos'
+}
 
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    if (req.method !== 'POST') {
+      res.setHeader('Allow', 'POST')
+      return jsonError(res, 'Method not allowed', 405)
+    }
+
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body ?? {}
+    const parsed = bodySchema.safeParse(body)
+    if (!parsed.success) {
+      return jsonError(res, zodMessage(parsed.error), 400)
+    }
+    const { email, password } = parsed.data
+
     const db = getDb()
     const pessoaResult = await db.query(
       'SELECT id FROM pessoas WHERE email = $1',
@@ -38,17 +45,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return jsonError(res, 'Email ou senha inválidos', 401)
     }
     const row = userResult.rows[0]
-    if (row.password_hash !== password) {
+    const storedPassword = row.password_hash == null ? '' : String(row.password_hash)
+    if (storedPassword !== password) {
       return jsonError(res, 'Email ou senha inválidos', 401)
     }
     const token = await signToken({
-      sub: row.id,
-      pessoaId,
+      sub: String(row.id),
+      pessoaId: String(pessoaId),
       escolaId: row.escola_id,
-      papel: row.papel,
+      papel: String(row.papel) as 'admin' | 'direcao' | 'professor' | 'responsavel' | 'aluno',
     })
     return jsonSuccess(res, { token, papel: row.papel, userId: row.id })
   } catch (err) {
+    if (res.writableEnded) return
     const message =
       err instanceof Error && err.message === 'DATABASE_URL is not set'
         ? 'Base de dados não configurada. Defina DATABASE_URL em server/.env'

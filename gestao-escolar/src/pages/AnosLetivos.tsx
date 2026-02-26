@@ -231,19 +231,19 @@ export default function AnosLetivos() {
             ) : undefined}
           />
         ) : (
-          <table className="min-w-full divide-y divide-studio-border">
+          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de anos letivos">
             <thead className="bg-studio-muted">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Nome
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Início
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
                   Fim
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
+                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
                   Ações
                 </th>
               </tr>

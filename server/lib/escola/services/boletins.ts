@@ -1,29 +1,38 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
-import {
-  calcularMedia,
-  mediaAprovacao,
-  classificarNota,
-  resultadoTrimestral,
-  mediaFinalAnual,
-} from '../regras/medias'
+import { getEscolaId } from '../core/authContext'
 import {
   calcularPercentagemPresenca,
   nivelRiscoFrequencia,
 } from '../regras/frequencia_rules'
+import {
+  classificarNota,
+  resultadoTrimestral,
+  calcularMFA,
+  calcularResultadoFinal,
+  aplicarArredondamento,
+  mediaSimples,
+  ResultadoFinal
+} from '../regras/medias'
+import { getConfigPedagogica } from './configuracoes'
 
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
+
+interface TrimestreDetalhe {
+  valor: number | null
+  mac: number | null
+  npp: number | null
+  ne: number | null
+  classificacao: string | null
+  resultado: string
 }
 
 interface DisciplinaBoletim {
   disciplinaId: string
   nome: string
-  notasPorTrimestre: Record<number, number>
-  mediaTrimestres: Record<number, { media: number | null; classificacao: string | null; resultado: string }>
+  detalhesPorTrimestre: Record<number, TrimestreDetalhe>
   mediaFinal: number | null
   classificacaoFinal: string | null
+  resultadoFinal: ResultadoFinal | null
   aprovado: boolean
 }
 
@@ -68,13 +77,28 @@ export async function getBoletim(user: AuthUser, alunoId: string, anoLetivoId?: 
     anoLetivoId ? [alunoId, escolaId, anoLetivoId] : [alunoId, escolaId]
   )
 
+  // Obter configurações pedagógicas (usar o primeiro ano letivo da matrícula se não fornecido)
+  const mainAnoLetivoId = anoLetivoId || (matriculas.rows[0]?.anoLetivoId)
+  const config = mainAnoLetivoId ? await getConfigPedagogica(user, mainAnoLetivoId) : null
+
+  // Buscar exames
+  const examesResult = await db.query(
+    `SELECT disciplina_id AS "disciplinaId", valor, tipo
+     FROM exames WHERE aluno_id = $1`,
+    [alunoId]
+  )
+  const examesMap: Record<string, number> = {}
+  for (const row of examesResult.rows) {
+    examesMap[row.disciplinaId] = Number(row.valor)
+  }
+
   // Buscar TODAS as notas do aluno organizadas por turma > disciplina > trimestre
   const disciplinasMap: Record<string, DisciplinaBoletim> = {}
 
   for (const mat of matriculas.rows) {
     const notas = await db.query(
       `SELECT n.disciplina_id AS "disciplinaId", d.nome AS "disciplinaNome",
-              p.numero AS "trimestre", n.valor
+              p.numero AS "trimestre", n.valor, n.mac, n.npp, n.ne
        FROM notas n
        JOIN disciplinas d ON d.id = n.disciplina_id
        JOIN periodos p ON p.id = n.periodo_id
@@ -89,38 +113,47 @@ export async function getBoletim(user: AuthUser, alunoId: string, anoLetivoId?: 
         disciplinasMap[key] = {
           disciplinaId: key,
           nome: row.disciplinaNome,
-          notasPorTrimestre: {},
-          mediaTrimestres: {},
+          detalhesPorTrimestre: {},
           mediaFinal: null,
           classificacaoFinal: null,
+          resultadoFinal: null,
           aprovado: false,
         }
       }
-      disciplinasMap[key].notasPorTrimestre[row.trimestre] = Number(row.valor)
+
+      const media = Number(row.valor)
+      disciplinasMap[key].detalhesPorTrimestre[row.trimestre] = {
+        valor: aplicarArredondamento(media, config?.tipoArredondamento, config?.casasDecimais),
+        mac: row.mac != null ? Number(row.mac) : null,
+        npp: row.npp != null ? Number(row.npp) : null,
+        ne: row.ne != null ? Number(row.ne) : null,
+        classificacao: classificarNota(media),
+        resultado: resultadoTrimestral(media, config?.minimaAprovacaoDireta),
+      }
     }
   }
 
-  // Calcular médias por trimestre e média final por disciplina
+  // Calcular média final por disciplina
   for (const disc of Object.values(disciplinasMap)) {
-    const trimestres = [1, 2, 3]
-    const mediasTrimestres: (number | null)[] = []
+    const mfaInputs: { valor: number | null; peso: number }[] = []
 
-    for (const tri of trimestres) {
-      const nota = disc.notasPorTrimestre[tri]
-      if (nota !== undefined) {
-        const media = nota // num cenário simples, a nota = média do trimestre
-        disc.mediaTrimestres[tri] = {
-          media,
-          classificacao: classificarNota(media),
-          resultado: resultadoTrimestral(media),
-        }
-        mediasTrimestres.push(media)
-      }
+    for (const tri of [1, 2, 3]) {
+      const detalhe = disc.detalhesPorTrimestre[tri]
+      const peso = tri === 1 ? (config?.pesoT1 || 1) : tri === 2 ? (config?.pesoT2 || 1) : (config?.pesoT3 || 1)
+      mfaInputs.push({ valor: detalhe?.valor ?? null, peso })
     }
 
-    disc.mediaFinal = mediaFinalAnual(mediasTrimestres)
+    disc.mediaFinal = aplicarArredondamento(calcularMFA(mfaInputs) || 0, config?.tipoArredondamento, config?.casasDecimais)
     disc.classificacaoFinal = classificarNota(disc.mediaFinal)
-    disc.aprovado = mediaAprovacao(disc.mediaFinal)
+
+    // Decisão Final
+    const resultado = calcularResultadoFinal(disc.mediaFinal, {
+      minimaAprovacao: config?.minimaAprovacaoDireta || 10,
+      minimaExame: config?.minimaAcessoExame || 7
+    })
+
+    disc.resultadoFinal = resultado
+    disc.aprovado = resultado === 'Aprovado'
   }
 
   // Calcular frequência
@@ -162,9 +195,9 @@ export async function getBoletim(user: AuthUser, alunoId: string, anoLetivoId?: 
   const todasMedias = Object.values(disciplinasMap)
     .map((d) => d.mediaFinal)
     .filter((m): m is number => m !== null)
-  const mediaGeral = calcularMedia(todasMedias)
+  const mediaGeral = mediaSimples(todasMedias, config?.tipoArredondamento, config?.casasDecimais) || 0
   const classificacaoGeral = classificarNota(mediaGeral)
-  const aprovadoGeral = mediaAprovacao(mediaGeral) && (!frequencia || frequencia.percentagem >= 75)
+  const aprovadoGeral = (mediaGeral >= (config?.minimaAprovacaoDireta || 10)) && (!frequencia || frequencia.percentagem >= 75)
 
   return {
     alunoId,
@@ -179,8 +212,7 @@ export async function getBoletim(user: AuthUser, alunoId: string, anoLetivoId?: 
     disciplinas: Object.values(disciplinasMap).map((d) => ({
       disciplinaId: d.disciplinaId,
       nome: d.nome,
-      notasPorTrimestre: d.notasPorTrimestre,
-      mediaTrimestres: d.mediaTrimestres,
+      detalhesPorTrimestre: d.detalhesPorTrimestre,
       mediaFinal: d.mediaFinal,
       classificacaoFinal: d.classificacaoFinal,
       aprovado: d.aprovado,
@@ -196,3 +228,78 @@ export async function getBoletim(user: AuthUser, alunoId: string, anoLetivoId?: 
     },
   }
 }
+
+export interface PautaGeralRow {
+  alunoId: string
+  alunoNome: string
+  notas: Record<string, number> // disciplinaId -> valor
+  mediaGeral: number | null
+  aprovado: boolean
+}
+
+export async function getPautaGeral(user: AuthUser, turmaId: string, periodoId: string) {
+  const db = getDb()
+  const escolaId = getEscolaId(user)
+
+  // 1. Alunos da turma
+  const alunosResult = await db.query(
+    `SELECT a.id, p.nome
+     FROM matriculas m
+     JOIN alunos a ON a.id = m.aluno_id
+     JOIN pessoas p ON p.id = a.pessoa_id
+     WHERE m.turma_id = $1 AND a.escola_id = $2
+     ORDER BY p.nome`,
+    [turmaId, escolaId]
+  )
+  const alunos = alunosResult.rows
+
+  // 2. Disciplinas vinculadas à turma (através de turma_disciplina ou horários)
+  // Nota: De acordo com o sistema, usamos turma_disciplina se existir, senão disciplinas globais.
+  // Vamos buscar as disciplinas que têm pelo menos um horário ou uma nota nesta turma.
+  const disciplinasResult = await db.query(
+    `SELECT DISTINCT d.id, d.nome
+     FROM disciplinas d
+     LEFT JOIN turma_disciplina td ON td.disciplina_id = d.id
+     LEFT JOIN horarios h ON h.disciplina_id = d.id
+     WHERE (td.turma_id = $1 OR h.turma_id = $1) AND d.escola_id = $2
+     ORDER BY d.nome`,
+    [turmaId, escolaId]
+  )
+  const disciplinas = disciplinasResult.rows
+
+  // 3. Notas do período
+  const notasResult = await db.query(
+    `SELECT aluno_id AS "alunoId", disciplina_id AS "disciplinaId", valor
+     FROM notas
+     WHERE turma_id = $1 AND periodo_id = $2`,
+    [turmaId, periodoId]
+  )
+  const notasMap = new Map<string, Record<string, number>>()
+  for (const n of notasResult.rows) {
+    if (!notasMap.has(n.alunoId)) notasMap.set(n.alunoId, {})
+    notasMap.get(n.alunoId)![n.disciplinaId] = Number(n.valor)
+  }
+
+  // 4. Montar linhas
+  const rows: PautaGeralRow[] = alunos.map((aluno) => {
+    const alunoNotas = notasMap.get(aluno.id) || {}
+    const vals = Object.values(alunoNotas)
+    const mediaGeral = vals.length > 0 ? mediaSimples(vals) : null
+
+    return {
+      alunoId: aluno.id,
+      alunoNome: aluno.nome,
+      notas: alunoNotas,
+      mediaGeral,
+      aprovado: mediaGeral !== null && mediaGeral >= 10,
+    }
+  })
+
+  return {
+    turmaId,
+    periodoId,
+    disciplinas,
+    rows,
+  }
+}
+

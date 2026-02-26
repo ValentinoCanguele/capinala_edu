@@ -157,14 +157,14 @@ export default function Presencas() {
             {resumo.porTurma.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-studio-foreground mb-3">Por turma</h3>
-                <table className="min-w-full divide-y divide-studio-border">
+                <table className="min-w-full divide-y divide-studio-border" aria-label="Resumo de presenças por turma">
                   <thead className="bg-studio-muted">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Turma</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Aulas</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Presenças</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Faltas</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">%</th>
+                      <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Turma</th>
+                      <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Aulas</th>
+                      <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Presenças</th>
+                      <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Faltas</th>
+                      <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">%</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-studio-border">

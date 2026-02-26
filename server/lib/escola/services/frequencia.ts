@@ -4,14 +4,12 @@ import {
   montarResumoFrequencia,
   type ResumoFrequencia,
 } from '../regras/frequencia_rules'
+import { getEscolaId } from '../core/authContext'
 import { criarAlerta } from './audit'
+import { getConfigPedagogica } from './configuracoes'
+import { getAnoLetivoByTurma } from './turmas'
 
 type StatusFrequencia = 'presente' | 'falta' | 'justificada'
-
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
-}
 
 export async function getFrequenciaByAula(user: AuthUser, aulaId: string) {
   const db = getDb()
@@ -253,25 +251,23 @@ export async function getResumoFrequenciaAluno(
     turmaNome: r.turmaNome,
   }))
 
-  const totais = porTurma.reduce(
+  const totaisAgregados = porTurma.reduce(
     (acc, t) => ({
-      alunoId,
       totalAulas: acc.totalAulas + t.totalAulas,
       presencas: acc.presencas + t.presencas,
       faltas: acc.faltas + t.faltas,
       justificadas: acc.justificadas + t.justificadas,
-      percentagemPresenca: 0,
-      emRisco: false,
     }),
-    { alunoId, totalAulas: 0, presencas: 0, faltas: 0, justificadas: 0, percentagemPresenca: 0, emRisco: false }
+    { totalAulas: 0, presencas: 0, faltas: 0, justificadas: 0 }
   )
-  totais.percentagemPresenca =
-    totais.totalAulas > 0
-      ? Math.round(
-          ((totais.presencas + totais.justificadas) / totais.totalAulas) * 1000
-        ) / 10
-      : 100
-  totais.emRisco = totais.percentagemPresenca < 75
+
+  const totais = montarResumoFrequencia(
+    alunoId,
+    totaisAgregados.totalAulas,
+    totaisAgregados.presencas,
+    totaisAgregados.faltas,
+    totaisAgregados.justificadas
+  )
 
   return { alunoId, alunoNome, totais, porTurma }
 }
@@ -333,4 +329,223 @@ async function verificarAlertasFrequencia(user: AuthUser, aulaId: string): Promi
       }
     }
   }
+}
+
+/* ── T3.0: Biometria e QR Code ── */
+
+/**
+ * Processa um acesso via scanner (QR ou BI).
+ * Se houver uma aula a decorrer agora para este aluno, marca presença automaticamente.
+ */
+export async function processarAcessoQR(user: AuthUser, identifier: string, sentido: 'entrada' | 'saida' = 'entrada') {
+  const db = getDb()
+  const escolaId = getEscolaId(user)
+
+  // 1. Identificar o aluno pelo ID ou BI
+  const alunoResult = await db.query(
+    `SELECT a.id, a.pessoa_id, p.nome, p.bi
+     FROM alunos a
+     JOIN pessoas p ON p.id = a.pessoa_id
+     WHERE a.escola_id = $1 AND (a.id::text = $2 OR p.bi = $2 OR p.email = $2)`,
+    [escolaId, identifier]
+  )
+  if (alunoResult.rows.length === 0) throw new Error('Estudante não identificado')
+  const aluno = alunoResult.rows[0]
+
+  // 2. Registar no log de acessos bruto
+  await db.query(
+    `INSERT INTO registros_acesso (escola_id, pessoa_id, sentido, tipo_dispositivo, local)
+     VALUES ($1, $2, $3, 'scanner_qr', 'Entrada Principal')`,
+    [escolaId, aluno.pessoa_id, sentido]
+  )
+
+  // 3. Verificar se há aula agora para este aluno
+  const agora = new Date()
+  const diaSemana = agora.getDay() // 0=Domingo, 1=Segunda...
+  const horaAtual = agora.toTimeString().slice(0, 5) // "HH:MM"
+
+  const horarioResult = await db.query(
+    `SELECT h.id, h.turma_id, h.disciplina_id, h.hora_inicio, h.hora_fim
+     FROM horarios h
+     JOIN matriculas m ON m.turma_id = h.turma_id
+     WHERE m.aluno_id = $1 AND h.dia_semana = $2 
+       AND $3 BETWEEN h.hora_inicio AND h.hora_fim`,
+    [aluno.id, diaSemana, horaAtual]
+  )
+
+  let statusFrequencia: StatusFrequencia = 'presente'
+  let msgAtraso = ''
+
+  if (horarioResult.rows.length > 0) {
+    const h = horarioResult.rows[0]
+    const dataHoje = agora.toISOString().split('T')[0]
+
+    // Obter tolerância configurada
+    const anoId = await getAnoLetivoByTurma(h.turma_id)
+    const config = anoId ? await getConfigPedagogica(user, anoId) : null
+    const tolerancia = config?.toleranciaAtrasoMinutos || 15
+
+    // Verificar atraso
+    const [hInicio, mInicio] = h.hora_inicio.split(':').map(Number)
+    const [hAgora, mAgora] = horaAtual.split(':').map(Number)
+    const minutosAtraso = (hAgora * 60 + mAgora) - (hInicio * 60 + mInicio)
+
+    if (minutosAtraso > tolerancia) {
+      statusFrequencia = 'falta'
+      msgAtraso = `Atraso crítico: ${minutosAtraso}min (Máx: ${tolerancia})`
+    } else if (minutosAtraso > 0) {
+      msgAtraso = `Entrada com atraso de ${minutosAtraso}min`
+    }
+
+    // Criar ou obter a aula de hoje
+    const aulaResult = await db.query(
+      `INSERT INTO aulas (turma_id, disciplina_id, data_aula)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (turma_id, disciplina_id, data_aula) DO UPDATE SET created_at = now()
+       RETURNING id`,
+      [h.turma_id, h.disciplina_id, dataHoje]
+    )
+    const aulaId = aulaResult.rows[0].id
+
+    // Marcar frequência com rigor de tolerância
+    await db.query(
+      `INSERT INTO frequencia (aula_id, aluno_id, status)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (aula_id, aluno_id) DO UPDATE SET status = $3`,
+      [aulaId, aluno.id, statusFrequencia]
+    )
+    aulaMarcada = true
+  }
+
+  // 4. Análise de Risco em Tempo Real (Assiduidade)
+  const resumoResult = await db.query(
+    `SELECT 
+           COUNT(f.id) AS total_aulas,
+           COUNT(f.id) FILTER (WHERE f.status = 'falta') AS faltas
+         FROM frequencia f
+         WHERE f.aluno_id = $1`,
+    [aluno.id]
+  )
+  const { total_aulas, faltas } = resumoResult.rows[0]
+  const percentagemFaltas = total_aulas > 0 ? (Number(faltas) / Number(total_aulas)) * 100 : 0
+
+  return {
+    success: true,
+    studentName: aluno.nome,
+    timestamp: agora.toISOString(),
+    aulaMarcada,
+    status: statusFrequencia,
+    msgAtraso,
+    riskLevel: percentagemFaltas > 25 ? 'CRÍTICO' : percentagemFaltas > 15 ? 'ATENÇÃO' : 'NORMAL',
+    absenceRate: Math.round(percentagemFaltas)
+  }
+}
+
+export async function getJustificativas(user: AuthUser, alunoId?: string) {
+  const db = getDb()
+  const escolaId = getEscolaId(user)
+
+  let query = `
+    SELECT j.*, p.nome as "alunoNome", a.data_aula as "dataAula"
+    FROM justificativas_falta j
+    JOIN alunos al ON al.id = j.aluno_id
+    JOIN pessoas p ON p.id = al.pessoa_id
+    LEFT JOIN aulas a ON a.id = j.aula_id
+    WHERE j.escola_id = $1
+  `
+  const params: any[] = [escolaId]
+  if (alunoId) {
+    params.push(alunoId)
+    query += ` AND j.aluno_id = $2`
+  }
+  query += ` ORDER BY j.data_submissao DESC`
+
+  const result = await db.query(query, params)
+  return result.rows
+}
+
+export async function createJustificativa(user: AuthUser, data: {
+  aluno_id: string,
+  motivo: string,
+  aula_id?: string,
+  data_inicio?: string,
+  data_fim?: string,
+  descricao?: string,
+  documento_url?: string
+}) {
+  const db = getDb()
+  const escolaId = getEscolaId(user)
+
+  // 1. Inserir justificação
+  const result = await db.query(
+    `INSERT INTO justificativas_falta (escola_id, aluno_id, aula_id, motivo, descricao, data_inicio, data_fim)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING *`,
+    [escolaId, data.aluno_id, data.aula_id || null, data.motivo, data.descricao || '', data.data_inicio || null, data.data_fim || null]
+  )
+  const j = result.rows[0]
+
+  // 2. Se for aprovado automaticamente (ex: admin inserindo) ou em auditoria, 
+  // já podemos marcar as faltas como justificadas se houver datas.
+  // Por agora deixamos como 'pendente' e criamos uma função de aprovação.
+
+  return j
+}
+
+export async function processarAprovacaoJustificativa(user: AuthUser, id: string, acao: 'deferido' | 'indeferido') {
+  const db = getDb()
+  const escolaId = getEscolaId(user)
+
+  await db.query('BEGIN')
+  try {
+    // 1. Atualizar status
+    const upd = await db.query(
+      `UPDATE justificativas_falta SET parecer_direcao = $1 WHERE id = $2 AND escola_id = $3 RETURNING *`,
+      [acao, id, escolaId]
+    )
+    if (upd.rowCount === 0) throw new Error('Justificativa não encontrada')
+    const j = upd.rows[0]
+
+    if (acao === 'deferido') {
+      // 2. Limpar faltas (Update frequency status to 'justificada')
+      if (j.aula_id) {
+        await db.query(
+          `UPDATE frequencia SET status = 'justificada' WHERE aula_id = $1 AND aluno_id = $2 AND status = 'falta'`,
+          [j.aula_id, j.aluno_id]
+        )
+      } else if (j.data_inicio && j.data_fim) {
+        await db.query(
+          `UPDATE frequencia f
+                     SET status = 'justificada'
+                     FROM aulas a
+                     WHERE f.aula_id = a.id
+                       AND f.aluno_id = $1
+                       AND f.status = 'falta'
+                       AND a.data_aula BETWEEN $2 AND $3`,
+          [j.aluno_id, j.data_inicio, j.data_fim]
+        )
+      }
+    }
+
+    await db.query('COMMIT')
+    return upd.rows[0]
+  } catch (e) {
+    await db.query('ROLLBACK')
+    throw e
+  }
+}
+
+export async function getAccessLogs(user: AuthUser, limit = 50) {
+  const db = getDb()
+  const escolaId = getEscolaId(user)
+  const result = await db.query(
+    `SELECT r.id, p.nome AS "studentName", r.data_hora AS "timestamp", r.sentido, r.tipo_dispositivo AS "type"
+     FROM registros_acesso r
+     JOIN pessoas p ON p.id = r.pessoa_id
+     WHERE r.escola_id = $1
+     ORDER BY r.data_hora DESC
+     LIMIT $2`,
+    [escolaId, limit]
+  )
+  return result.rows
 }

@@ -1,12 +1,8 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { TurmaCreate, TurmaUpdate } from '../schemas'
+import { getEscolaId } from '../core/authContext'
 import { emit } from '@/lib/core/events/bus'
-
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
-}
 
 export async function listTurmas(user: AuthUser) {
   const db = getDb()
@@ -30,7 +26,7 @@ export async function listTurmas(user: AuthUser) {
       'SELECT aluno_id AS "alunoId" FROM matriculas WHERE turma_id = $1',
       [t.id]
     )
-    ;(t as Record<string, unknown>).alunoIds = mat.rows.map((r) => r.alunoId)
+      ; (t as Record<string, unknown>).alunoIds = mat.rows.map((r) => r.alunoId)
   }
   return turmas
 }
@@ -159,4 +155,10 @@ export async function deleteTurma(user: AuthUser, id: string): Promise<boolean> 
     [id, escolaId]
   )
   return result.rowCount !== null && result.rowCount > 0
+}
+
+export async function getAnoLetivoByTurma(turmaId: string): Promise<string | null> {
+  const db = getDb()
+  const r = await db.query('SELECT ano_letivo_id FROM turmas WHERE id = $1', [turmaId])
+  return r.rows[0]?.ano_letivo_id ?? null
 }

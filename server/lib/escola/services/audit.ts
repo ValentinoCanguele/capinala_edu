@@ -4,14 +4,20 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 
-export type AcaoAudit = 'criar' | 'atualizar' | 'eliminar' | 'lancar_nota' | 'registar_frequencia' | 'publicar_comunicado'
+export type AcaoAudit =
+    | 'criar' | 'atualizar' | 'eliminar'
+    | 'lancar_nota' | 'registar_frequencia' | 'publicar_comunicado'
+    | 'criar_ata' | 'atualizar_ata' | 'eliminar_ata'
+    | 'lancar_exame' | 'eliminar_exame'
+    | 'ocorrencia_disciplinar'
+    | 'configurar'
 
 export interface AuditEntry {
     acao: AcaoAudit
     entidade: string
     entidadeId?: string
-    dadosAntes?: Record<string, unknown>
-    dadosDepois?: Record<string, unknown>
+    dadosAntes?: any
+    dadosDepois?: any
     ip?: string
 }
 

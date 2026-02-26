@@ -1,12 +1,9 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { AlunoCreate, AlunoUpdate } from '../schemas'
+import { getEscolaId } from '../core/authContext'
+import { podeEliminarAluno } from '../regras/aluno_rules'
 import { emit } from '@/lib/core/events/bus'
-
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
-}
 
 export async function listAlunos(user: AuthUser) {
   const db = getDb()
@@ -113,6 +110,8 @@ export async function updateAluno(user: AuthUser, id: string, data: AlunoUpdate)
 export async function deleteAluno(user: AuthUser, id: string): Promise<boolean> {
   const db = getDb()
   const escolaId = getEscolaId(user)
+  const pode = await podeEliminarAluno(db, id)
+  if (!pode.ok) throw new Error(pode.motivo)
   const result = await db.query(
     'DELETE FROM alunos WHERE id = $1 AND escola_id = $2 RETURNING id',
     [id, escolaId]

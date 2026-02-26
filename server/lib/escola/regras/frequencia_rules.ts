@@ -11,6 +11,7 @@ export interface ResumoFrequencia {
     justificadas: number
     percentagemPresenca: number
     emRisco: boolean
+    nivelRisco: NivelRisco
 }
 
 export type NivelRisco = 'normal' | 'atencao' | 'critico'
@@ -71,6 +72,7 @@ export function montarResumoFrequencia(
         justificadas,
         percentagemPresenca,
         emRisco: estaEmRisco(percentagemPresenca),
+        nivelRisco: nivelRiscoFrequencia(percentagemPresenca),
     }
 }
 

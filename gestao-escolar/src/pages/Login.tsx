@@ -24,13 +24,18 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const result = await login(email, password)
-    setLoading(false)
-    if (result.error) {
-      setError(result.error)
-      return
+    try {
+      const result = await login(email, password)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao entrar. Tente de novo.')
+    } finally {
+      setLoading(false)
     }
-    navigate('/', { replace: true })
   }
 
   return (

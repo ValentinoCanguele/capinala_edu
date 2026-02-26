@@ -1,14 +1,11 @@
 import { getDb } from '@/lib/db'
 import type { AuthUser } from '@/lib/db'
 import type { ParcelaCreate, PagamentoCreate } from '../../schemas'
+import { getEscolaId } from '../../core/authContext'
 import * as configService from './configuracao'
 import * as matriculasService from '../matriculas'
 import { calcularValorComMultaEJuros, hojeISO } from '../../regras/financas'
 
-function getEscolaId(user: AuthUser): string {
-  if (user.escolaId) return user.escolaId
-  throw new Error('Usuário sem escola definida')
-}
 
 /** Adiciona n meses a uma data ISO (YYYY-MM-DD). */
 function addMonths(isoDate: string, n: number): string {

@@ -19,10 +19,14 @@ import {
   BookMarked,
   Calendar,
   DoorOpen,
-  History,
+  History as HistoryIcon,
+  Layers,
   Sun,
   Moon,
   LogOut,
+  Table,
+  Settings2,
+  TrendingUp,
   PanelLeftClose,
   PanelLeft,
   ChevronDown,
@@ -31,8 +35,10 @@ import {
   User,
   FolderOpen,
   Shield,
+  ShieldAlert,
   DollarSign,
   Puzzle,
+  Search,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
@@ -42,99 +48,59 @@ import {
   isSecondBarItemActive,
   getActiveSecondBarLabel,
 } from '@/layout/secondBarConfig'
+import { navItemsConfig, getBreadcrumbs } from '@/config/routes'
 
 const SIDEBAR_COLLAPSED_KEY = 'gestao-escolar-sidebar-collapsed'
 const SIDEBAR_WIDTH_EXPANDED = 'w-56'
 const SIDEBAR_WIDTH_COLLAPSED = 'w-16'
 const LOGO_URL = '/logo.png'
 
+const pathToIcon: Record<string, typeof Home> = {
+  '/': Home,
+  '/alunos': Users,
+  '/turmas': BookOpen,
+  '/notas': ClipboardList,
+  '/recuperacao': TrendingUp,
+  '/pautas': Table,
+  '/atas': HistoryIcon,
+  '/frequencia': CalendarCheck,
+  '/configuracoes': Settings2,
+  '/boletim': FileText,
+  '/horarios': Clock,
+  '/comunicados': Megaphone,
+  '/ocorrencias': ShieldAlert,
+  '/disciplinas': BookMarked,
+  '/anos-letivos': Calendar,
+  '/salas': DoorOpen,
+  '/matrizes': Layers,
+  '/auditoria': HistoryIcon,
+  '/financas': DollarSign,
+  '/modulos': Puzzle,
+  '/perfil': User,
+  '/meu-boletim': FileText,
+  '/presencas': CalendarCheck,
+  '/meus-filhos': Users,
+  '/arquivos': FolderOpen,
+  '/utilizadores': Shield,
+}
+
 type NavItem = {
   to: string
   label: string
   icon: typeof Home
-  /** Se definido, apenas estes papéis veem o item. */
   roles?: readonly ('admin' | 'direcao' | 'responsavel')[]
 }
 
-const navItems: NavItem[] = [
-  { to: '/', label: 'Início', icon: Home },
-  { to: '/alunos', label: 'Alunos', icon: Users },
-  { to: '/turmas', label: 'Turmas', icon: BookOpen },
-  { to: '/notas', label: 'Notas', icon: ClipboardList },
-  { to: '/frequencia', label: 'Frequência', icon: CalendarCheck },
-  { to: '/boletim', label: 'Boletim', icon: FileText },
-  { to: '/horarios', label: 'Horários', icon: Clock },
-  { to: '/comunicados', label: 'Comunicados', icon: Megaphone },
-  { to: '/disciplinas', label: 'Disciplinas', icon: BookMarked },
-  { to: '/anos-letivos', label: 'Anos letivos', icon: Calendar },
-  { to: '/salas', label: 'Salas', icon: DoorOpen },
-  { to: '/auditoria', label: 'Auditoria', icon: History, roles: ['admin', 'direcao'] },
-  { to: '/financas', label: 'Finanças', icon: DollarSign, roles: ['admin', 'direcao'] },
-  { to: '/modulos', label: 'Módulos', icon: Puzzle, roles: ['admin'] },
-  { to: '/perfil', label: 'Perfil', icon: User },
-  { to: '/meu-boletim', label: 'Meu boletim', icon: FileText },
-  { to: '/presencas', label: 'Presenças', icon: CalendarCheck },
-  { to: '/meus-filhos', label: 'Meus filhos', icon: Users, roles: ['responsavel'] },
-  { to: '/arquivos', label: 'Arquivos', icon: FolderOpen },
-  { to: '/utilizadores', label: 'Utilizadores', icon: Shield, roles: ['admin', 'direcao'] },
-]
+const navItems: NavItem[] = navItemsConfig.map((item) => ({
+  ...item,
+  icon: pathToIcon[item.to] ?? Home,
+}))
 
 function getVisibleNavItems(papel: string | undefined) {
   return navItems.filter((item) => {
     if (!item.roles) return true
     return papel && item.roles.includes(papel as 'admin' | 'direcao' | 'responsavel')
   })
-}
-
-function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
-  const segments = pathname.split('/').filter(Boolean)
-  const crumbs: { label: string; href: string }[] = [{ label: 'Início', href: '/' }]
-  let acc = ''
-  for (const seg of segments) {
-    acc += `/${seg}`
-    const label =
-      seg === 'alunos'
-        ? 'Alunos'
-        : seg === 'turmas'
-          ? 'Turmas'
-          : seg === 'notas'
-            ? 'Notas'
-            : seg === 'frequencia'
-              ? 'Frequência'
-              : seg === 'boletim'
-                ? 'Boletim'
-                : seg === 'horarios'
-                  ? 'Horários'
-                  : seg === 'comunicados'
-                    ? 'Comunicados'
-                    : seg === 'disciplinas'
-                      ? 'Disciplinas'
-                      : seg === 'anos-letivos'
-                        ? 'Anos letivos'
-                        : seg === 'salas'
-                          ? 'Salas'
-                          : seg === 'auditoria'
-                            ? 'Auditoria'
-                            : seg === 'financas'
-                              ? 'Finanças'
-                              : seg === 'modulos'
-                                ? 'Módulos'
-                                : seg === 'perfil'
-                              ? 'Perfil'
-                              : seg === 'meu-boletim'
-                                ? 'Meu boletim'
-                                : seg === 'presencas'
-                                  ? 'Presenças'
-                                  : seg === 'meus-filhos'
-                                    ? 'Meus filhos'
-                                    : seg === 'arquivos'
-                                      ? 'Arquivos'
-                                      : seg === 'utilizadores'
-                                        ? 'Utilizadores'
-                                        : seg
-    crumbs.push({ label, href: acc })
-  }
-  return crumbs
 }
 
 export default function Layout() {
@@ -182,20 +148,39 @@ export default function Layout() {
   const currentSearch = location.search
   const activeSecondBarLabel = getActiveSecondBarLabel(location.pathname, currentSearch)
 
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      setUserMenuOpen(false)
-      setNotificationsOpen(false)
-      setHelpOpen(false)
-      setAcercaOpen((open) => (open ? false : open))
+      // Escape
+      if (e.key === 'Escape') {
+        setUserMenuOpen(false)
+        setNotificationsOpen(false)
+        setHelpOpen(false)
+        setAcercaOpen(false)
+        setCommandPaletteOpen(false)
+      }
+
+      // Cmd/Ctrl + K para Command Palette (Search Global)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen((prev) => !prev)
+      }
+
+      // Atalho Global de Busca com '/' (sem estar focado em input/textarea/select)
+      const target = document.activeElement as HTMLElement | null
+      const isInField = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.tagName === 'SELECT' || target?.getAttribute('contenteditable') === 'true'
+      if (e.key === '/' && !isInField) {
+        e.preventDefault()
+        setCommandPaletteOpen(true)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   return (
-    <div className="min-h-screen flex bg-studio-bg-alt">
+    <div className="min-h-screen flex bg-studio-bg-alt selection:bg-studio-brand/20">
       {/* Skip link: acessibilidade — foco visível ao navegar por teclado */}
       <a
         href="#main-content"
@@ -205,12 +190,12 @@ export default function Layout() {
       </a>
       {/* Sidebar: retrai para ícones; no hover expande com transition e shadow (estilo Studio) */}
       <aside
-        className={`sidebar-transition ${sidebarWidth} flex-shrink-0 bg-studio-sidebar-bg flex flex-col border-r border-white/10 overflow-hidden transition-[width,box-shadow] duration-200 ease-out ${isSidebarHoverExpanded ? 'z-20 shadow-xl' : 'z-10'}`}
+        className={`sidebar-transition ${sidebarWidth} flex-shrink-0 bg-studio-sidebar-bg flex flex-col border-r border-studio-border overflow-hidden transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${isSidebarHoverExpanded ? 'z-20 shadow-glass' : 'z-10'}`}
         onMouseEnter={() => isCollapsed && setHoverExpanded(true)}
         onMouseLeave={() => setHoverExpanded(false)}
         aria-label="Menu principal"
       >
-        <div className="flex items-center justify-between border-b border-white/10 min-h-[3.25rem]">
+        <div className="flex items-center justify-between border-b border-studio-border min-h-[3.5rem]">
           <Link to="/" className="flex items-center gap-2 py-3 pl-3 pr-2 min-w-0 rounded-md hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-sidebar-bg">
             {!logoError ? (
               <img
@@ -268,7 +253,7 @@ export default function Layout() {
           })}
         </nav>
 
-        <div className="p-2 border-t border-white/10 space-y-0.5">
+        <div className="p-3 border-t border-studio-border space-y-1">
           {isSidebarNarrow ? (
             <div
               className="px-2 py-2 flex justify-center"
@@ -310,18 +295,18 @@ export default function Layout() {
 
       {/* Área principal */}
       <main id="main-content" className="flex-1 flex flex-col min-w-0" tabIndex={-1}>
-        <header className="h-14 flex-shrink-0 bg-studio-bg border-b border-studio-border flex items-center px-4 sm:px-6 gap-3">
+        <header className="h-14 flex-shrink-0 bg-studio-bg/80 backdrop-blur-md border-b border-studio-border flex items-center px-4 sm:px-6 gap-3 z-10 sticky top-0">
           {/* Logo + Home */}
           <Link
             to="/"
-            className="flex-shrink-0 flex items-center gap-2 rounded-md py-1.5 pr-2 -ml-1 hover:bg-studio-muted/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
+            className="flex-shrink-0 flex items-center gap-2 rounded-lg py-1.5 pr-2 -ml-1 hover:bg-studio-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
             title="Ir para início"
           >
             {!logoError ? (
               <img
                 src={LOGO_URL}
                 alt=""
-                className="w-7 h-7 rounded object-contain"
+                className="w-7 h-7 rounded-md object-contain"
                 decoding="async"
                 onError={() => setLogoError(true)}
               />
@@ -335,49 +320,72 @@ export default function Layout() {
           <span className={`flex-shrink-0 w-px h-5 bg-studio-border ${location.pathname === '/' ? 'hidden' : 'hidden sm:block'}`} aria-hidden />
           {/* Breadcrumbs: ocultos na home para evitar redundância com logo "Início" */}
           {location.pathname !== '/' && (
-          <nav className="flex items-center gap-1.5 text-sm text-studio-foreground-light min-w-0" aria-label="Navegação">
-            {breadcrumbs.map((crumb, i) => (
-              <span key={crumb.href} className="flex items-center gap-1.5 min-w-0">
-                {i > 0 && (
-                  <span className="text-studio-foreground-lighter flex-shrink-0" aria-hidden>/</span>
-                )}
-                {i === breadcrumbs.length - 1 && !activeSecondBarLabel ? (
-                  <span className="font-medium text-studio-foreground truncate">
-                    {crumb.label}
-                  </span>
-                ) : i === breadcrumbs.length - 1 && activeSecondBarLabel ? (
-                  <span className="truncate">
-                    <NavLink to={crumb.href} className="hover:text-studio-foreground transition-colors">
+            <nav className="flex items-center gap-1.5 text-sm text-studio-foreground-light min-w-0" aria-label="Navegação">
+              {breadcrumbs.map((crumb, i) => (
+                <span key={crumb.href} className="flex items-center gap-1.5 min-w-0">
+                  {i > 0 && (
+                    <span className="text-studio-foreground-lighter flex-shrink-0" aria-hidden>/</span>
+                  )}
+                  {i === breadcrumbs.length - 1 && !activeSecondBarLabel ? (
+                    <span className="font-medium text-studio-foreground truncate">
+                      {crumb.label}
+                    </span>
+                  ) : i === breadcrumbs.length - 1 && activeSecondBarLabel ? (
+                    <span className="truncate">
+                      <NavLink to={crumb.href} className="hover:text-studio-foreground transition-colors">
+                        {crumb.label}
+                      </NavLink>
+                      <span className="text-studio-foreground-lighter flex-shrink-0 mx-1" aria-hidden>/</span>
+                      <span className="font-medium text-studio-foreground">{activeSecondBarLabel}</span>
+                    </span>
+                  ) : (
+                    <NavLink
+                      to={crumb.href}
+                      className="truncate hover:text-studio-foreground transition-colors"
+                    >
                       {crumb.label}
                     </NavLink>
-                    <span className="text-studio-foreground-lighter flex-shrink-0 mx-1" aria-hidden>/</span>
-                    <span className="font-medium text-studio-foreground">{activeSecondBarLabel}</span>
-                  </span>
-                ) : (
-                  <NavLink
-                    to={crumb.href}
-                    className="truncate hover:text-studio-foreground transition-colors"
-                  >
-                    {crumb.label}
-                  </NavLink>
-                )}
-              </span>
-            ))}
-          </nav>
+                  )}
+                </span>
+              ))}
+            </nav>
           )}
-          <div className="flex-1 min-w-2" />
+          {/* Search Palette (Simulado) */}
+          <div className="hidden md:flex flex-1 max-w-md mx-4 items-center">
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex items-center justify-between w-full h-9 px-3 text-sm text-studio-foreground-lighter bg-studio-muted/50 border border-studio-border hover:border-studio-brand/50 hover:text-studio-foreground transition-colors rounded-lg focus:outline-none focus:ring-2 focus:ring-studio-brand group"
+            >
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4" />
+                <span>Pesquisar alunos, finanças...</span>
+              </div>
+              <div className="flex flex-shrink-0 items-center gap-1 font-sans">
+                <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-medium text-studio-foreground-light bg-studio-bg border border-studio-border rounded shadow-sm opacity-80 group-hover:opacity-100 transition-opacity">⌘</kbd>
+                <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-medium text-studio-foreground-light bg-studio-bg border border-studio-border rounded shadow-sm opacity-80 group-hover:opacity-100 transition-opacity">K</kbd>
+              </div>
+            </button>
+          </div>
+
+          <div className="flex-1 md:hidden" />
+
           {/* Notificações */}
           <div className="relative">
             <button
               type="button"
               onClick={() => { setNotificationsOpen((o) => !o); setUserMenuOpen(false) }}
-              className="p-2 rounded-md text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
+              className="relative p-2 rounded-md text-studio-foreground-light hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg"
               title="Notificações"
               aria-label="Notificações"
               aria-expanded={notificationsOpen}
               aria-haspopup="true"
             >
               <Bell className="w-4 h-4" />
+              <span className="absolute top-2 right-2 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-studio-bg"></span>
+              </span>
             </button>
             {notificationsOpen && (
               <>
@@ -451,6 +459,53 @@ export default function Layout() {
               </div>
             </>
           )}
+          {/* Command Palette (Global Search) */}
+          {commandPaletteOpen && (
+            <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] sm:pt-[15vh]">
+              <div
+                className="fixed inset-0 bg-studio-bg/80 backdrop-blur-sm transition-opacity animate-fade-in"
+                aria-hidden="true"
+                onClick={() => setCommandPaletteOpen(false)}
+              />
+              <div
+                className="relative w-full max-w-xl bg-studio-bg rounded-xl shadow-2xl ring-1 ring-studio-border overflow-hidden animate-slide-up"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div className="flex items-center border-b border-studio-border px-4 py-3">
+                  <Search className="w-5 h-5 text-studio-foreground-lighter mr-3" />
+                  <input
+                    type="text"
+                    className="flex-1 bg-transparent border-0 focus:ring-0 text-studio-foreground placeholder:text-studio-foreground-lighter sm:text-lg focus:outline-none"
+                    placeholder="Pesquisar página, aluno, ou ação..."
+                    autoFocus
+                  />
+                  <kbd className="hidden sm:inline-block px-2 py-0.5 text-xs font-medium text-studio-foreground-lighter bg-studio-muted border border-studio-border rounded-md">ESC</kbd>
+                </div>
+                <div className="max-h-72 overflow-y-auto p-2">
+                  <div className="px-3 py-2 text-xs font-semibold text-studio-foreground-lighter uppercase tracking-wider">
+                    Ações Rápidas
+                  </div>
+                  <Link
+                    to="/alunos"
+                    onClick={() => setCommandPaletteOpen(false)}
+                    className="flex items-center w-full px-3 py-2.5 text-sm text-studio-foreground hover:bg-studio-muted/50 hover:text-studio-brand rounded-lg transition-colors group"
+                  >
+                    <Users className="w-4 h-4 mr-3 text-studio-foreground-lighter group-hover:text-studio-brand" />
+                    Listar Turmas e Alunos
+                  </Link>
+                  <Link
+                    to="/financas"
+                    onClick={() => setCommandPaletteOpen(false)}
+                    className="flex items-center w-full px-3 py-2.5 text-sm text-studio-foreground hover:bg-studio-muted/50 hover:text-studio-brand rounded-lg transition-colors group"
+                  >
+                    <DollarSign className="w-4 h-4 mr-3 text-studio-foreground-lighter group-hover:text-studio-brand" />
+                    Consultar Finanças
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
           <button
             type="button"
             onClick={toggleTheme}
@@ -476,7 +531,7 @@ export default function Layout() {
               aria-haspopup="true"
             >
               <span className="font-medium">{user?.papel}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-studio-foreground-lighter transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
             </button>
             {userMenuOpen && (
               <>
@@ -485,7 +540,7 @@ export default function Layout() {
                   aria-hidden
                   onClick={() => setUserMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 py-1 w-48 rounded-lg border border-studio-border bg-studio-bg shadow-lg z-20">
+                <div className="absolute right-0 top-full mt-2 py-1 w-56 rounded-xl border border-studio-border bg-studio-bg shadow-glass z-20 overflow-hidden">
                   <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
                     Sessão
                   </div>
@@ -529,11 +584,10 @@ export default function Layout() {
                     key={`${item.to}-${item.label}`}
                     to={item.to}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-[color,border-color] duration-150 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-muted rounded-t-md ${
-                      isActive
-                        ? 'border-studio-brand text-studio-brand'
-                        : 'border-transparent text-studio-foreground-light hover:text-studio-foreground hover:border-studio-border'
-                    }`}
+                    className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-[color,border-color] duration-150 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 focus-visible:ring-offset-studio-muted rounded-t-md ${isActive
+                      ? 'border-studio-brand text-studio-brand'
+                      : 'border-transparent text-studio-foreground-light hover:text-studio-foreground hover:border-studio-border'
+                      }`}
                   >
                     {item.label}
                   </NavLink>
@@ -543,7 +597,7 @@ export default function Layout() {
           </div>
         )}
 
-        <div className="flex-1 min-h-0 p-4 sm:p-6 overflow-auto">
+        <div className="flex-1 min-h-0 p-4 sm:p-6 overflow-auto animate-fade-in">
           <Outlet />
         </div>
       </main>
