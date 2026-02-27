@@ -58,11 +58,12 @@ export default function AlunoForm({
           label="Email Institucional / Pessoal"
           help="Endereço usado pela escola para comunicados e acesso à plataforma. Opcional."
           type="email"
+          autoComplete="email"
           {...form.register('email')}
           placeholder="email@exemplo.com"
           error={form.formState.errors.email?.message}
           leftIcon={<Mail className="w-4 h-4" />}
-          hint="Opcional."
+          hint="Opcional, usado para notificações e acesso ao portal."
         />
         <Input
           label="Telefone de Contacto"

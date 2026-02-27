@@ -33,7 +33,7 @@ export default function ListResultSummary({
       : `${count} ${count === 1 ? label : labelPlural}`
 
   return (
-    <div className="flex flex-wrap items-center gap-3 text-sm text-studio-foreground-light">
+    <div className="flex flex-wrap items-center gap-3 text-sm text-studio-foreground-light" role="status" aria-live="polite" aria-label={isLoading ? 'A carregar' : text}>
       {!isLoading && <span>{text}</span>}
       {hasFilter && (
         <button

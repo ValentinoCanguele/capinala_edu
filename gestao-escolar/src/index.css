@@ -49,22 +49,27 @@ body {
   }
 }
 
-/* Modo impressão (item 59) – esconder navegação e mostrar só conteúdo principal */
+/* Modo impressão (Item 59) – esconder navegação e mostrar só conteúdo */
 @media print {
   .skip-link,
   aside,
+  header,
   header[class*="sticky"],
   .second-bar-nav,
+  [role="navigation"],
+  .no-print,
   [data-print-hide],
-  .fixed.z-40,
-  nav[aria-label="Menu principal"],
   button[aria-label="Voltar ao topo"] {
     display: none !important;
   }
+  main,
   main#main-content {
-    padding: 0;
+    padding: 0 !important;
   }
   body {
+    background: #fff;
+  }
+  .dark body {
     background: #fff;
   }
 }

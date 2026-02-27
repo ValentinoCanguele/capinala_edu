@@ -155,6 +155,24 @@ table tbody tr:hover {
   background-color: var(--gibbon-bg-soft);
 }
 
+/* Sticky header em tabelas com scroll (Item 53) */
+.table-scroll-container {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.table-scroll-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--studio-bg);
+  box-shadow: 0 1px 0 0 var(--studio-border);
+}
+
+.dark .table-scroll-container thead th {
+  background: var(--studio-bg);
+}
+
 /* ----- Alertas / mensagens ----- */
 .alert-info {
   padding: 0.75rem 1rem;
@@ -398,6 +416,22 @@ button:active:not(:disabled) {
 
 .animate-shake {
   animation: shake 0.2s ease-in-out infinite;
+}
+
+/* Destaque temporário (flash) em linha de tabela recém-adicionada (Item 15) */
+@keyframes tableRowFlash {
+  0% {
+    background-color: var(--studio-brand);
+    opacity: 0.35;
+  }
+  100% {
+    background-color: transparent;
+    opacity: 1;
+  }
+}
+
+.table-row-flash {
+  animation: tableRowFlash 1.2s ease-out forwards;
 }
 
 .animate-pulse {

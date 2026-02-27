@@ -87,39 +87,17 @@ export default function AlunosList({
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-4 bg-studio-bg/50 p-4 rounded-2xl border border-studio-border/30">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <Input
-            placeholder="Pesquisar por nome, email ou ID..."
-            value={filter}
-            onChange={(e) => onFilterChange(e.target.value)}
-            onClear={() => onFilterChange('')}
-            showClearButton
-            leftIcon={<Search className="h-4 w-4" />}
-            className="w-full sm:max-w-md bg-white dark:bg-studio-muted/5 border-studio-border/50 shadow-sm"
-            autoFocus
-            aria-label="Pesquisar estudantes"
-          />
-
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="flex items-center gap-2 text-sm text-studio-foreground-lighter font-medium px-3 py-2 bg-studio-muted/5 rounded-lg border border-studio-border/50">
-              <Filter className="w-4 h-4" />
-              <span>Status:</span>
-              <select className="bg-transparent outline-none cursor-pointer hover:text-studio-brand transition-colors appearance-none pr-4">
-                <option value="todos">Todos</option>
-                <option value="ativos">Matriculados</option>
-                <option value="inativos">Inativos</option>
-                <option value="concluidos">Concluídos</option>
-              </select>
-            </div>
-
-            {hasFilter && (
-              <Button variant="ghost" size="sm" onClick={() => onFilterChange('')} className="text-studio-muted hover:text-red-500 hidden sm:flex">
-                Limpar Filtros
-              </Button>
-            )}
-          </div>
-        </div>
+      <div className="mb-6">
+        <Input
+          placeholder="Pesquisar estudantes por nome ou email..."
+          value={filter}
+          onChange={(e) => onFilterChange(e.target.value)}
+          leftIcon={<Search className="h-4 w-4" />}
+          onClear={() => onFilterChange('')}
+          className="max-w-md shadow-sm"
+          autoFocus
+          aria-label="Pesquisar estudantes por nome ou email"
+        />
       </div>
 
       <Card noPadding>
@@ -141,9 +119,9 @@ export default function AlunosList({
             onAction={onCreate}
           />
         ) : (
-          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+          <div className="table-scroll-container overflow-x-auto">
             <table className="min-w-full divide-y divide-studio-border/50" aria-label="Lista de alunos">
-              <thead className="sticky top-0 z-10 bg-studio-bg">
+              <thead>
                 <tr className="bg-studio-bg/95 backdrop-blur-md border-b border-studio-border/50">
                   <th scope="col" className="sticky left-0 z-20 px-5 py-4 w-10 bg-studio-muted/5 border-r border-studio-border/30 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
                     <button

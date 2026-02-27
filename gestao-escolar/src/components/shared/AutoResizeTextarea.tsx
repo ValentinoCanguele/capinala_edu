@@ -7,7 +7,7 @@ interface Props extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 export const AutoResizeTextarea = forwardRef<HTMLTextAreaElement, Props>(
-    ({ className = '', minHeight = '80px', value, onChange, maxLength, showCharCount, ...props }, ref) => {
+    ({ className = '', minHeight = '80px', value, onChange, maxLength, showCharCount = !!maxLength, ...props }, ref) => {
         const internalRef = useRef<HTMLTextAreaElement>(null)
         const length = typeof value === 'string' ? value.length : 0
         const showCounter = (showCharCount ?? maxLength != null) && maxLength != null
@@ -35,7 +35,7 @@ export const AutoResizeTextarea = forwardRef<HTMLTextAreaElement, Props>(
                     aria-describedby={showCounter && props.id ? `${props.id}-char-count` : undefined}
                     {...props}
                 />
-                {showCounter && (
+                {showCounter && maxLength != null && (
                     <p
                         id={props.id ? `${props.id}-char-count` : undefined}
                         className="mt-1 text-right text-xs text-studio-foreground-lighter tabular-nums"

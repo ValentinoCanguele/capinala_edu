@@ -10,7 +10,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     hint?: ReactNode
     leftIcon?: ReactNode
     rightIcon?: ReactNode
-    /** Mostra botão X para limpar quando há valor (item 99 – limpar filtro). */
+    /** Mostra botão X para limpar quando há valor (item 99). Passar onClear para o callback. */
     showClearButton?: boolean
     onClear?: () => void
 }
@@ -24,7 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     ({ label, help, error, hint, leftIcon, rightIcon, showClearButton, onClear, className = '', id, value, required, ...props }, ref) => {
         const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
         const hasValue = value != null && String(value).length > 0
-        const showClear = showClearButton && hasValue && onClear
+        const showClear = (showClearButton ?? !!onClear) && hasValue && !props.disabled && onClear
 
         return (
             <div className={`w-full ${className}`}>
@@ -70,19 +70,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
                     />
 
-                    {showClear && (
-                        <button
-                            type="button"
-                            onClick={onClear}
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-studio-foreground-lighter hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-inset rounded-r-lg"
-                            title="Limpar"
-                            aria-label="Limpar campo"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    )}
-                    {!showClear && rightIcon && (
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-studio-foreground-lighter">
+                    {(rightIcon || showClear) && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1 text-studio-foreground-lighter">
+                            {showClear && onClear && (
+                                <button
+                                    type="button"
+                                    onClick={onClear}
+                                    className="p-0.5 rounded hover:bg-studio-muted hover:text-studio-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1"
+                                    title="Limpar"
+                                    aria-label="Limpar campo"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
                             {rightIcon}
                         </div>
                     )}

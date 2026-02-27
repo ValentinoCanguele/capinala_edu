@@ -40,6 +40,7 @@ import {
   Puzzle,
   Search,
   Menu,
+  Keyboard,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
@@ -70,6 +71,7 @@ import { getSidebarGroupsForRole } from '@/layout/sidebarConfig'
 import { getContextBarItems } from '@/layout/contextBarConfig'
 import { filterSecondBarByRole } from '@/layout/secondBarPermissions'
 import { getBreadcrumbs } from '@/config/routes'
+import { ScrollToTop } from '@/components/shared/ScrollToTop'
 import { getItem, setItem } from '@/lib/storage'
 import { useScrollTop } from '@/hooks/useScrollTop'
 import { BackToTop } from '@/components/shared/BackToTop'
@@ -234,6 +236,7 @@ export default function Layout() {
         setNotificationsOpen(false)
         setHelpOpen(false)
         setAcercaOpen(false)
+        setShortcutsOpen(false)
         setCommandPaletteOpen(false)
       }
 
@@ -568,13 +571,6 @@ export default function Layout() {
                       <div className="px-3 py-2 text-xs text-studio-foreground-lighter border-b border-studio-border">
                         Ajuda
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => { setHelpOpen(false); setShortcutsOpen(true) }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
-                      >
-                        Atalhos de teclado
-                      </button>
                   <a
                     href="https://github.com/ValentinoCanguele/capinala_edu/blob/main/docs/FRONTEND-NAVEGACAO-PERMISSOES.md"
                     target="_blank"
@@ -584,6 +580,14 @@ export default function Layout() {
                   >
                     Documentação
                   </a>
+                      <button
+                        type="button"
+                        onClick={() => { setHelpOpen(false); setShortcutsOpen(true) }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-studio-foreground hover:bg-studio-muted transition-colors"
+                      >
+                        <Keyboard className="w-4 h-4" />
+                        Atalhos de teclado
+                      </button>
                       <button
                         type="button"
                         onClick={() => { setHelpOpen(false); setAcercaOpen(true) }}
@@ -762,6 +766,7 @@ export default function Layout() {
         >
           <Outlet />
         </div>
+        <ScrollToTop scrollRef={mainContentRef} />
       </main>
       <BackToTop visible={showBackToTop} onClick={scrollToTop} />
       <KeyboardShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />

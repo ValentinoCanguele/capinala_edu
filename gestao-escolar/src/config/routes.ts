@@ -77,6 +77,7 @@ const segmentLabels: Record<string, string> = {
   'meus-filhos': 'Meus filhos',
   arquivos: 'Arquivos',
   utilizadores: 'Utilizadores',
+  '403': 'Acesso negado',
 }
 
 /** Second bar: path base (ou prefixo) -> tabs. Inclui sub-rotas de /financas. */

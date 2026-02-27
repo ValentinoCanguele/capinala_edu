@@ -15,7 +15,12 @@ export function SkeletonTable({ columns, rows = 5, className = '' }: SkeletonTab
     const colArray = Array.from({ length: columns })
 
     return (
-        <div className={`overflow-x-auto w-full border border-studio-border rounded-lg bg-studio-bg shadow-sm animate-fade-in ${className}`}>
+        <div
+            className={`overflow-x-auto w-full border border-studio-border rounded-lg bg-studio-bg shadow-sm animate-fade-in ${className}`}
+            role="status"
+            aria-live="polite"
+            aria-label="A carregar dados"
+        >
             <table className="min-w-full divide-y divide-studio-border/50">
                 <thead className="bg-studio-muted/50">
                     <tr>

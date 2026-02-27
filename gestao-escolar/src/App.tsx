@@ -418,6 +418,14 @@ export default function App() {
               </Suspense>
             }
           />
+          <Route
+            path="403"
+            element={
+              <Suspense fallback={<PageLoadFallback />}>
+                <Forbidden />
+              </Suspense>
+            }
+          />
         </Route>
         <Route path="*" element={
           <Suspense fallback={<PageLoadFallback />}>

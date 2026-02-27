@@ -115,7 +115,7 @@ export default function Login() {
                 />
               </div>
               {capsLockOn && (
-                <p id="login-caps-hint" className="mt-1.5 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1" role="status">
+                <p id="login-caps-hint" className="mt-1.5 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400" role="status">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
                   Caps Lock está ativado.
                 </p>

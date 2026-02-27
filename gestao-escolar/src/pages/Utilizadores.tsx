@@ -246,8 +246,6 @@ export default function Utilizadores() {
             value={filterInput}
             onChange={(e) => setFilterInput(e.target.value)}
             className="bg-transparent border-none outline-none text-sm font-medium text-studio-foreground w-full placeholder:text-studio-foreground-lighter"
-          />
-        </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-studio-foreground-lighter" />
@@ -387,6 +385,7 @@ export default function Utilizadores() {
               value={form.email}
               onChange={(e) => handleFormChange({ email: e.target.value })}
               placeholder="exemplo@escola.com"
+              autoComplete="email"
               required
               leftIcon={<Mail className="w-4 h-4 text-studio-brand" />}
             />

@@ -5,7 +5,7 @@ interface PageSkeletonProps {
 
 export default function PageSkeleton({ lines = 5, className = '' }: PageSkeletonProps) {
   return (
-    <div className={`animate-pulse space-y-3 ${className}`}>
+    <div className={`animate-pulse space-y-3 ${className}`} role="status" aria-live="polite" aria-label="A carregar página">
       <div className="h-6 w-1/3 rounded bg-studio-muted" />
       <div className="h-4 w-2/3 rounded bg-studio-muted" />
       {Array.from({ length: lines }).map((_, i) => (

@@ -104,13 +104,17 @@ export default function TurmasList({
         ) : turmas.length === 0 ? (
           <EmptyState
             title={hasFilter ? 'Nenhuma turma encontrada' : 'Nenhuma turma registada'}
-            description={hasFilter ? 'Tente outro termo de pesquisa.' : 'As turmas são o eixo central da organização escolar. Crie a primeira para começar.'}
+            description={
+              hasFilter
+                ? 'Tente outro termo de pesquisa.'
+                : 'As turmas são o eixo central da organização escolar. Crie a primeira para começar.'
+            }
             icon={<LayoutGrid className="h-12 w-12" />}
             actionLabel={hasFilter || !onCreate ? undefined : 'Criar Nova Turma'}
             onAction={hasFilter || !onCreate ? undefined : onCreate}
           />
         ) : (
-          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="table-scroll-container overflow-x-auto custom-scrollbar">
             <table className="min-w-full divide-y divide-studio-border/50" aria-label="Lista de turmas">
               <thead className="sticky top-0 z-30 bg-studio-bg">
                 <tr className="bg-studio-muted/10">
@@ -124,7 +128,10 @@ export default function TurmasList({
                     Lotação & Ocupação
                   </th>
                   {showActions && (
-                    <th scope="col" className="px-6 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">
+                    <th
+                      scope="col"
+                      className="px-6 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest"
+                    >
                       Gestão de Vagas
                     </th>
                   )}
