@@ -39,6 +39,7 @@ import {
   DollarSign,
   Puzzle,
   Search,
+  Menu,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
@@ -73,6 +74,7 @@ import { getItem, setItem } from '@/lib/storage'
 import { useScrollTop } from '@/hooks/useScrollTop'
 import { BackToTop } from '@/components/shared/BackToTop'
 import { KeyboardShortcutsModal } from '@/components/shared/KeyboardShortcutsModal'
+import { GlobalLoadingBar } from '@/components/shared/GlobalLoadingBar'
 
 const SIDEBAR_COLLAPSED_KEY_LEGACY = 'gestao-escolar-sidebar-collapsed'
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed'
@@ -181,6 +183,11 @@ export default function Layout() {
     const pageTitle = crumbs.length > 0 ? crumbs[crumbs.length - 1].label : 'Início'
     document.title = `${pageTitle} — Gestão Escolar`
   }, [location.pathname])
+
+  // Auto-fecho do menu em mobile após navegação (item 68)
+  useEffect(() => {
+    setSidebarMobileOpen(false)
+  }, [location.pathname])
   const [logoError, setLogoError] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -190,13 +197,14 @@ export default function Layout() {
 
   const [isCollapsed, setCollapsedState] = useState(getInitialSidebarCollapsed)
   const [hoverExpanded, setHoverExpanded] = useState(false)
+  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false)
 
   const setCollapsed = useCallback((value: boolean) => {
     setCollapsedState(value)
     setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, value)
   }, [])
 
-  const isSidebarNarrow = isCollapsed && !hoverExpanded
+  const isSidebarNarrow = isCollapsed && !hoverExpanded && !sidebarMobileOpen
   const sidebarWidth = isSidebarNarrow ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED
   const isSidebarHoverExpanded = isCollapsed && hoverExpanded
 
@@ -249,6 +257,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex bg-studio-bg-alt selection:bg-studio-brand/20">
+      <GlobalLoadingBar />
       {/* Skip link: acessibilidade — foco visível ao navegar por teclado */}
       <a
         href="#main-content"
@@ -256,9 +265,18 @@ export default function Layout() {
       >
         Saltar para o conteúdo
       </a>
-      {/* Sidebar: retrai para ícones; no hover expande com transition e shadow (estilo Studio) */}
+      {/* Backdrop mobile: fecha o menu ao tocar fora */}
+      {sidebarMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setSidebarMobileOpen(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setSidebarMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+      {/* Sidebar: retrai para ícones; no hover expande; em mobile vira overlay e fecha após clique (item 68) */}
       <aside
-        className={`sidebar-transition ${sidebarWidth} flex-shrink-0 bg-studio-sidebar-bg flex flex-col border-r border-studio-border overflow-hidden transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${isSidebarHoverExpanded ? 'z-20 shadow-glass' : 'z-10'}`}
+        className={`sidebar-transition ${sidebarWidth} flex-shrink-0 bg-studio-sidebar-bg flex flex-col border-r border-studio-border overflow-hidden transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${isSidebarHoverExpanded ? 'z-20 shadow-glass' : 'z-10'} max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-30 max-md:w-56 max-md:transition-transform max-md:duration-300 max-md:ease-out ${sidebarMobileOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'}`}
         onMouseEnter={() => isCollapsed && setHoverExpanded(true)}
         onMouseLeave={() => setHoverExpanded(false)}
         aria-label="Menu principal"
@@ -412,6 +430,15 @@ export default function Layout() {
       {/* Área principal */}
       <main id="main-content" className="flex-1 flex flex-col min-w-0" tabIndex={-1}>
         <header className="h-14 flex-shrink-0 bg-studio-bg/80 backdrop-blur-md border-b border-studio-border flex items-center px-4 sm:px-6 gap-3 z-10 sticky top-0">
+          {/* Hamburger: abre menu em mobile (item 68) */}
+          <button
+            type="button"
+            onClick={() => setSidebarMobileOpen(true)}
+            className="md:hidden p-2 -ml-1 rounded-lg text-studio-foreground-lighter hover:text-studio-foreground hover:bg-studio-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+            aria-label="Abrir menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           {/* Logo + Home */}
           <Link
             to="/"

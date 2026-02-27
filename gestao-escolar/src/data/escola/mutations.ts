@@ -15,6 +15,9 @@ export interface TurmaInput {
   nome: string
   anoLetivo: string
   alunoIds?: string[]
+  periodo?: string
+  sala?: string
+  capacidade?: number
 }
 
 export interface NotaBatchInput {

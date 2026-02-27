@@ -75,8 +75,8 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | 50 | Sparklines na coluna de avaliação | ⬜ | Não implementado |
 | 51 | Formatação condicional (negativas a vermelho) | 🟡 | Notas e Finanças já usam classes condicionais |
 | 52 | Headers de tabelas ordenáveis (seta subir/descer) | ⬜ | Não implementado |
-| 53 | Sticky header em tabelas com scroll | 🟡 | AlunosList, Boletim, Notas, Pautas, Frequencia; + Utilizadores, TurmasList |
-| 54 | Primeira coluna sticky em tabelas largas | ⬜ | Não implementado |
+| 53 | Sticky header em tabelas com scroll | ✅ | AlunosList, Boletim, Notas, Pautas, Frequencia, Utilizadores, TurmasList; Frequencia Relatório |
+| 54 | Primeira coluna sticky em tabelas largas | ✅ | AlunosList: checkbox + Estudante sticky; TurmasList: coluna Turma sticky; scroll horizontal |
 | 55 | Filtros em "pílulas" no topo das listas | 🟡 | Alguns filtros; não em pills |
 | 56 | Itens por página (10, 20, 50) | 🟡 | Pagination existe; verificar opções |
 | 57 | Exportar PDF (visual tabular) | ⬜ | Não implementado |
@@ -97,14 +97,14 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 |---|--------|--------|--------|
 | 66 | Breadcrumbs estruturados em cada página | ✅ | getBreadcrumbs em config/routes; Layout |
 | 67 | Colapso do menu lateral (icon-only) | ✅ | Layout: isSidebarNarrow, PanelLeftClose/PanelLeft, hover expande |
-| 68 | Auto-fecho do menu em mobile após clique | ⬜ | Não implementado |
+| 68 | Auto-fecho do menu em mobile após clique | ✅ | Layout: sidebar mobile com backdrop; fecha ao navegar (useEffect pathname) e ao clicar no backdrop; botão hamburger em md:hidden |
 | 69 | Destacar rotas ativas e rotas-pai no menu | 🟡 | navItemsConfig e active; verificar pai |
 | 70 | Botão "Voltar ao Topo" em listas longas | ✅ | BackToTop + useScrollTop; Layout com ref no content |
 | 71 | Action Bar flutuante no fundo em forms longos | ⬜ | Não implementado |
 | 72 | Context Menus (clique-direito) nas linhas de tabela | 🟡 | ContextMenu.tsx; expandir uso |
 | 73 | Bottom Navigation no telemóvel | ⬜ | Não implementado |
 | 74 | Swipe-to-Delete em touch | ⬜ | Não implementado |
-| 75 | Barra de loading global no topo (estilo Vercel) | ⬜ | Não implementado |
+| 75 | Barra de loading global no topo (estilo Vercel) | ✅ | GlobalLoadingBar em Layout; anima ao mudar pathname |
 | 76 | Página 404 personalizada | ✅ | NotFound.tsx |
 | 77 | Página 403 (Acesso Negado) | ✅ | Forbidden.tsx; rota /403 |
 | 78 | Indicador flutuante modo Offline | ✅ | OfflineIndicator; barra no topo; App.tsx |
@@ -128,7 +128,7 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 | 89 | AutoFocus no primeiro input ao abrir modal | ✅ | Modal: foco no primeiro INPUT/TEXTAREA/SELECT se existir, senão primeiro focusável |
 | 90 | Validação inline (tick verde ao digitar) | ⬜ | Não implementado |
 | 91 | Prevenção de duplo clique (Double Submit) | ✅ | Button loading; AlunoForm e outros com loading/disabled no submit |
-| 92 | "Tem alterações não guardadas!" ao fechar | ⬜ | Não implementado |
+| 92 | "Tem alterações não guardadas!" ao fechar | ✅ | AlunoForm/TurmaForm: onDirtyChange; Alunos/Turmas: confirm ao fechar modal |
 | 93 | Drag and Drop visual para anexos | ⬜ | Não implementado |
 | 94 | Preview de imagem de perfil no client | 🟡 | Perfil; verificar preview imediato |
 | 95 | Contador de caracteres regressivo em textarea | ✅ | AutoResizeTextarea: showCharCount/maxLength → "X / max" abaixo |
@@ -154,10 +154,10 @@ Legenda: ✅ Feito | 🟡 Parcial | ⬜ A fazer
 
 | # | Função | Estado | Notas |
 |---|--------|--------|--------|
-| 111 | Ícone ? com popover explicativo nas labels | ⬜ | Não implementado |
+| 111 | Ícone ? com popover explicativo nas labels | ✅ | LabelWithHelp (ícone HelpCircle + Tooltip); Input com prop help; AlunoForm: Email, Data Nascimento, BI com help |
 | 112 | Estado "Bem-vindo pela 1ª vez!" no dashboard | ✅ | Dashboard: banner com localStorage; dismissível; dica ⌘K |
 | 113 | Badge "Novo" em módulos recentes na sidebar | ⬜ | Não implementado |
-| 114 | Toast com ação "Desfazer" ao eliminar | 🟡 | Alunos: toast com action Desfazer (invalida lista); expandir a Turmas/outros |
+| 114 | Toast com ação "Desfazer" ao eliminar | ✅ | Alunos, Turmas, Disciplinas: toast com Desfazer que restaura via create (refetch) |
 | 115 | Componente Reportar Bug/Ajuda no footer | ⬜ | Não implementado |
 | 116 | Modal Cheatsheet com atalhos de teclado | ✅ | KeyboardShortcutsModal; Ajuda → Atalhos de teclado no Layout |
 | 117 | Indicador servidor saudável (pontinho verde) | ⬜ | Não implementado |

@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useQueryState } from '@/hooks/useQueryState'
 import { useAuth } from '@/contexts/AuthContext'
@@ -12,12 +13,12 @@ import {
   useDeleteDisciplina,
 } from '@/data/escola/mutations'
 import type { DisciplinaFormValues } from '@/schemas/disciplina'
-import Modal from '@/components/Modal'
-import EmptyState from '@/components/EmptyState'
-import ListResultSummary from '@/components/ListResultSummary'
-import PageHeader from '@/components/PageHeader'
 import { Input } from '@/components/shared/Input'
-import { TableSkeleton } from '@/components/PageSkeleton'
+import { SkeletonTable } from '@/components/shared/SkeletonTable'
+import { Card } from '@/components/shared/Card'
+import { Button } from '@/components/shared/Button'
+import { Badge } from '@/components/shared/Badge'
+import { BookOpen, Search, PlusCircle, Filter, Edit2, Trash2, LayoutGrid } from 'lucide-react'
 
 function DisciplinaForm({
   defaultNome,
@@ -29,8 +30,13 @@ function DisciplinaForm({
   onSubmit: (data: DisciplinaFormValues) => void
   onCancel: () => void
   isLoading: boolean
+  onDirtyChange?: (dirty: boolean) => void
 }) {
   const [nome, setNome] = useState(defaultNome)
+
+  useEffect(() => {
+    onDirtyChange?.(nome !== defaultNome)
+  }, [nome, defaultNome, onDirtyChange])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,28 +48,23 @@ function DisciplinaForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="disc-nome" className="label">
-          Nome
-        </label>
-        <input
-          id="disc-nome"
-          type="text"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          className="input w-full"
-          placeholder="Ex: Matemática"
-          autoFocus
-        />
-      </div>
-      <div className="flex gap-2 justify-end pt-4 mt-4 border-t border-studio-border">
-        <button type="button" onClick={onCancel} className="btn-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Input
+        label="Nome da Disciplina Académica"
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        placeholder="Ex: Engenharia de Software, Matemática Avançada..."
+        autoFocus
+        leftIcon={<BookOpen className="w-4 h-4" />}
+        hint="O nome deve ser curto e institucional."
+      />
+      <div className="flex gap-3 justify-end pt-5 border-t border-studio-border/50">
+        <Button variant="ghost" type="button" onClick={onCancel}>
           Cancelar
-        </button>
-        <button type="submit" className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2 disabled:opacity-50" disabled={isLoading}>
-          {isLoading ? 'A guardar...' : 'Guardar'}
-        </button>
+        </Button>
+        <Button type="submit" loading={isLoading} variant="primary">
+          {isLoading ? 'A guardar...' : 'Confirmar Disciplina'}
+        </Button>
       </div>
     </form>
   )
@@ -71,6 +72,7 @@ function DisciplinaForm({
 
 export default function Disciplinas() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -78,6 +80,7 @@ export default function Disciplinas() {
   const [filterInput, setFilterInput] = useState(() => searchParams.get('q') ?? '')
   const debouncedFilter = useDebounce(filterInput, 400)
   const [itemToDelete, setItemToDelete] = useState<{ id: string, nome: string } | null>(null)
+  const lastDeletedDisciplinaRef = useRef<{ nome: string } | null>(null)
 
   useEffect(() => {
     setFilterInput(filterFromUrl)
@@ -94,9 +97,13 @@ export default function Disciplinas() {
     }
   }, [searchParams])
 
+  const [isFormDirty, setIsFormDirty] = useState(false)
+
   const handleCloseModal = () => {
+    if (isFormDirty && !window.confirm('Existem alterações pendentes. Deseja sair?')) return
     setModalOpen(false)
     setEditingId(null)
+    setIsFormDirty(false)
     if (searchParams.get('acao') === 'novo') setSearchParams({})
   }
 
@@ -109,8 +116,8 @@ export default function Disciplinas() {
     () =>
       debouncedFilter
         ? disciplinas.filter((d) =>
-            d.nome.toLowerCase().includes(debouncedFilter.toLowerCase())
-          )
+          d.nome.toLowerCase().includes(debouncedFilter.toLowerCase())
+        )
         : disciplinas,
     [disciplinas, debouncedFilter]
   )
@@ -155,13 +162,47 @@ export default function Disciplinas() {
 
   const confirmDelete = () => {
     if (!itemToDelete) return
+    lastDeletedDisciplinaRef.current = { nome: itemToDelete.nome }
     deleteDisc.mutate(itemToDelete.id, {
       onSuccess: () => {
-        toast.success('Disciplina eliminada.')
+        queryClient.invalidateQueries({ queryKey: ['escola', 'disciplinas'] })
         setItemToDelete(null)
+        toast.success(
+          (t) => (
+            <span className="flex items-center gap-3 flex-wrap">
+              <span>Disciplina eliminada.</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const payload = lastDeletedDisciplinaRef.current
+                  if (payload) {
+                    createDisc.mutate(
+                      { nome: payload.nome },
+                      {
+                        onSuccess: () => {
+                          queryClient.invalidateQueries({ queryKey: ['escola', 'disciplinas'] })
+                          lastDeletedDisciplinaRef.current = null
+                          toast.success('Disciplina restaurada.')
+                        },
+                        onError: (err) => toast.error(err.message),
+                      }
+                    )
+                  }
+                  lastDeletedDisciplinaRef.current = null
+                  toast.dismiss(t.id)
+                }}
+                className="font-semibold text-studio-brand hover:text-studio-foreground underline focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand rounded"
+              >
+                Desfazer
+              </button>
+            </span>
+          ),
+          { duration: 6000 }
+        )
       },
       onError: (err) => {
         toast.error(err.message)
+        lastDeletedDisciplinaRef.current = null
         setItemToDelete(null)
       },
     })
@@ -193,40 +234,38 @@ export default function Disciplinas() {
       </Modal>
 
       <PageHeader
-        title="Disciplinas"
-        subtitle="Gerir disciplinas da escola."
+        title="Catálogo de Disciplinas"
+        subtitle="Estrutura académica de currículos e componentes lectivas da instituição."
         actions={
           canManageDisciplinas(user?.papel) ? (
-            <button
-              type="button"
+            <Button
               onClick={handleCreate}
-              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+              icon={<PlusCircle className="w-4 h-4" />}
             >
-              Nova disciplina
-            </button>
+              Nova Disciplina
+            </Button>
           ) : undefined
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-4">
-        <Input
-          type="search"
-          placeholder="Pesquisar por nome..."
-          value={filterInput}
-          onChange={(e) => setFilterInput(e.target.value)}
-          onClear={() => setFilterInput('')}
-          showClearButton
-          className="max-w-xs"
-          aria-label="Pesquisar disciplinas por nome"
-        />
-        <ListResultSummary
-          count={filtered.length}
-          total={disciplinas.length}
-          label="disciplina"
-          hasFilter={filterInput.length > 0}
-          onClearFilter={() => setFilterInput('')}
-          isLoading={isLoading}
-        />
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-studio-muted/10 p-4 rounded-2xl border border-studio-border/40">
+        <div className="flex items-center gap-3 w-full max-w-md">
+          <Search className="w-5 h-5 text-studio-foreground-lighter" />
+          <input
+            type="text"
+            placeholder="Filtrar por nome ou código lectivo..."
+            value={filterInput}
+            onChange={(e) => setFilterInput(e.target.value)}
+            className="bg-transparent border-none outline-none text-sm font-medium text-studio-foreground w-full placeholder:text-studio-foreground-lighter"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="h-8 w-[1px] bg-studio-border hidden md:block" />
+          <div className="flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4 text-studio-foreground-lighter" />
+            <span className="text-xs font-black uppercase text-studio-foreground-lighter tracking-widest">{disciplinas.length} Disciplinas Catálogadas</span>
+          </div>
+        </div>
       </div>
 
       <Modal
@@ -239,75 +278,83 @@ export default function Disciplinas() {
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
           isLoading={isFormLoading}
+          onDirtyChange={setIsFormDirty}
         />
       </Modal>
 
-      <div className="card overflow-hidden">
+      <Card noPadding className="overflow-hidden border-studio-border/60">
         {isLoading ? (
-          <TableSkeleton rows={5} />
+          <SkeletonTable rows={10} columns={2} />
         ) : error ? (
           <div className="p-8 text-center text-red-600 dark:text-red-400" role="alert">
-            Erro: {(error as Error).message}
+            Erro crítico de dados: {(error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState
-            title={filterInput ? 'Nenhuma disciplina encontrada' : 'Nenhuma disciplina registada'}
-            description={filterInput ? 'Tente outro termo de pesquisa.' : 'Clique em "Nova disciplina" para começar.'}
-            action={!filterInput ? (
-              <button
-                type="button"
-                onClick={handleCreate}
-                className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
-              >
-                Nova disciplina
-              </button>
-            ) : undefined}
-          />
+          <div className="p-12">
+            <EmptyState
+              title={filterInput ? 'Nenhum resultado para a busca' : 'Catálogo Vazio'}
+              description={filterInput ? 'Verifique se o nome está correto ou limpe os filtros.' : 'A sua instituição ainda não possui disciplinas registadas.'}
+              onAction={!filterInput ? handleCreate : undefined}
+              actionLabel="Registar Primeira Disciplina"
+            />
+          </div>
         ) : (
-          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de disciplinas">
-            <caption className="sr-only">Disciplinas com nome e ações</caption>
-            <thead className="bg-studio-muted">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Nome
-                </th>
-                {canManageDisciplinas(user?.papel) && (
-                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-studio-foreground-lighter uppercase">
-                  Ações
-                </th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-studio-border">
-              {filtered.map((d) => (
-                <tr key={d.id} className="hover:bg-studio-muted/50">
-                  <td className="px-4 py-3 text-sm text-studio-foreground">
-                    {d.nome}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-studio-border/20" aria-label="Lista de disciplinas">
+              <thead className="bg-studio-muted/10">
+                <tr>
+                  <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">
+                    Designação Académica
+                  </th>
                   {canManageDisciplinas(user?.papel) && (
-                  <td className="px-4 py-3 text-right text-sm">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(d.id)}
-                      className="link-action link-action-primary mr-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-1 rounded px-1"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(d.id, d.nome)}
-                      className="link-action link-action-danger focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 rounded px-1"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
+                    <th scope="col" className="px-6 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">
+                      Gestão
+                    </th>
                   )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-studio-border/10">
+                {filtered.map((d) => (
+                  <tr key={d.id} className="group hover:bg-studio-brand/[0.01] transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-studio-brand/10 flex items-center justify-center">
+                          <BookOpen className="w-4 h-4 text-studio-brand" />
+                        </div>
+                        <span className="text-sm font-black text-studio-foreground uppercase tracking-tight group-hover:text-studio-brand transition-colors">
+                          {d.nome}
+                        </span>
+                      </div>
+                    </td>
+                    {canManageDisciplinas(user?.papel) && (
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon={<Edit2 className="w-3.5 h-3.5" />}
+                            onClick={() => handleEdit(d.id)}
+                            className="text-[10px] font-black uppercase text-studio-brand"
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            icon={<Trash2 className="w-4 h-4" />}
+                            onClick={() => handleDelete(d.id, d.nome)}
+                            className="text-red-400 hover:text-red-500 hover:bg-red-50"
+                          />
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

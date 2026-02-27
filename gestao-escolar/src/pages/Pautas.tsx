@@ -208,6 +208,8 @@ export default function Pautas() {
                         title="Broadsheet de Avaliação"
                         description="Selecione a turma e o respectivo período para visualizar a matriz completa de notas e desempenho."
                         icon={<FileSpreadsheet className="w-16 h-16 text-studio-brand/40" />}
+                        tone="info"
+                        size="lg"
                         className="py-24"
                     />
                 ) : isLoading ? (
@@ -219,6 +221,8 @@ export default function Pautas() {
                         title="Nenhum Registro Encontrado"
                         description="Não existem lançamentos de notas suficientes para gerar a pauta desta turma no período selecionado."
                         icon={<AlertCircle className="w-14 h-14 text-studio-foreground-lighter" />}
+                        tone="warning"
+                        size="md"
                         className="py-20"
                     />
                 ) : (

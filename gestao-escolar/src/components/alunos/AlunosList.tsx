@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { Search, MoreVertical, Edit2, Trash2, UserSearch, Mail, Calendar, Trash, CheckSquare, Square, UserMinus, Filter, X } from 'lucide-react'
+import { Search, MoreVertical, Edit2, Trash2, Calendar, CheckSquare, Square, UserMinus, Filter, Phone, Mail, CreditCard, FileText, UserCheck, UserSearch, Trash } from 'lucide-react'
 import type { Aluno } from '@/data/escola/queries'
 import { formatAlunoDisplayId } from '@/utils/formatters'
-import EmptyState from '@/components/shared/EmptyState'
-import { SkeletonTable } from '@/components/shared/SkeletonTable'
-import { Card } from '@/components/shared/Card'
-import { Input } from '@/components/shared/Input'
-import { Avatar } from '@/components/shared/Avatar'
+import { exportCartaoEstudantePDF } from '@/utils/exportPDF'
+import toast from 'react-hot-toast'
+import { Badge } from '@/components/shared/Badge'
 import { ContextMenu, type MenuItem } from '@/components/shared/ContextMenu'
 import { Button } from '@/components/shared/Button'
 import { Tooltip } from '@/components/shared/Tooltip'
-import { Select } from '@/components/shared/Select'
+import { Avatar } from '@/components/shared/Avatar'
+import { SkeletonTable } from '@/components/shared/SkeletonTable'
+import { Card } from '@/components/shared/Card'
+import { Input } from '@/components/shared/Input'
+import EmptyState from '@/components/shared/EmptyState'
 
 interface AlunosListProps {
   alunos: Aluno[]
@@ -69,6 +71,20 @@ export default function AlunosList({
     setLastSelectedIndex(idx)
   }
 
+  const handleEmitirCartao = (a: Aluno) => {
+    try {
+      exportCartaoEstudantePDF({
+        escola: 'Instituto Capiñala',
+        alunoNome: a.nome,
+        alunoId: a.id,
+        fotoUrl: a.fotoUrl
+      })
+      toast.success('Cartão gerado com sucesso.')
+    } catch (e) {
+      toast.error('Erro ao gerar cartão.')
+    }
+  }
+
   return (
     <>
       <div className="mb-6 flex flex-col gap-4 bg-studio-bg/50 p-4 rounded-2xl border border-studio-border/30">
@@ -125,11 +141,11 @@ export default function AlunosList({
             onAction={onCreate}
           />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
             <table className="min-w-full divide-y divide-studio-border/50" aria-label="Lista de alunos">
-              <thead className="sticky top-0 z-10">
+              <thead className="sticky top-0 z-10 bg-studio-bg">
                 <tr className="bg-studio-bg/95 backdrop-blur-md border-b border-studio-border/50">
-                  <th scope="col" className="px-5 py-4 w-10 bg-studio-muted/5">
+                  <th scope="col" className="sticky left-0 z-20 px-5 py-4 w-10 bg-studio-muted/5 border-r border-studio-border/30 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
                     <button
                       onClick={toggleSelectAll}
                       className="flex items-center justify-center text-studio-muted hover:text-studio-brand transition-colors"
@@ -143,14 +159,20 @@ export default function AlunosList({
                       )}
                     </button>
                   </th>
-                  <th scope="col" className="px-5 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
-                    Identificação do Estudante
+                  <th scope="col" className="sticky left-10 z-20 px-5 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5 min-w-[200px] border-r border-studio-border/30 shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+                    Estudante
                   </th>
                   <th scope="col" className="px-5 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
-                    Contacto Institucional
+                    BI / Identificação
+                  </th>
+                  <th scope="col" className="px-5 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
+                    Contacto / Email
                   </th>
                   <th scope="col" className="px-5 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
                     Nascimento
+                  </th>
+                  <th scope="col" className="px-5 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
+                    Situação
                   </th>
                   {(canEdit || canDelete) && (
                     <th scope="col" className="px-5 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/5">
@@ -163,6 +185,8 @@ export default function AlunosList({
                 {alunos.map((a, index) => {
                   const menuItems: MenuItem[] = []
                   if (canEdit) menuItems.push({ label: 'Editar Perfil', icon: <Edit2 className="w-4 h-4" />, onClick: () => onEdit(a.id) })
+                  menuItems.push({ label: 'Histórico Financeiro', icon: <FileText className="w-4 h-4" />, onClick: () => { } })
+                  menuItems.push({ label: 'Emitir Cartão', icon: <CreditCard className="w-4 h-4" />, onClick: () => handleEmitirCartao(a) })
                   if (canEdit && canDelete) menuItems.push({ separator: true })
                   if (canDelete) menuItems.push({ label: 'Eliminar Registo', icon: <Trash2 className="w-4 h-4" />, onClick: () => onDelete(a.id), danger: true })
 
@@ -173,7 +197,7 @@ export default function AlunosList({
                       key={a.id}
                       className={`group transition-all duration-200 border-l-2 ${isSelected ? 'bg-studio-brand/[0.03] border-studio-brand' : 'hover:bg-studio-muted/5 border-transparent'}`}
                     >
-                      <td className="px-5 py-4 whitespace-nowrap">
+                      <td className="sticky left-0 z-10 px-5 py-4 whitespace-nowrap bg-studio-bg border-r border-studio-border/30 group-hover:bg-studio-muted/5">
                         <button
                           onClick={(e) => handleSelect(index, e)}
                           className={`flex items-center justify-center transition-colors ${isSelected ? 'text-studio-brand' : 'text-studio-border group-hover:text-studio-foreground-lighter'}`}
@@ -181,32 +205,47 @@ export default function AlunosList({
                           {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                         </button>
                       </td>
-                      <td className="px-5 py-4 whitespace-nowrap">
+                      <td className="sticky left-10 z-10 px-5 py-4 whitespace-nowrap bg-studio-bg min-w-[200px] border-r border-studio-border/30 group-hover:bg-studio-muted/5">
                         <div className="flex items-center gap-4">
-                          <Avatar name={a.nome} size="md" shape="square" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-bold text-studio-foreground group-hover:text-studio-brand transition-colors tracking-tight">
-                              {a.nome}
+                          <Avatar name={a.nome} size="md" shape="square" className="border border-studio-border/50 shadow-sm" />
+                          <span className="text-sm font-black text-studio-foreground group-hover:text-studio-brand transition-colors tracking-tight uppercase">
+                            {a.nome}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-bold text-studio-foreground uppercase tracking-tight">{a.bi || 'Não Consta'}</span>
+                          <Tooltip content={<span className="text-xs font-mono break-all">{a.id}</span>} position="top">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-studio-muted/60 px-1.5 py-0.5 text-[8px] font-mono font-medium text-studio-foreground-lighter tabular-nums cursor-default w-fit">
+                              {formatAlunoDisplayId(a.id)}
                             </span>
-                            <Tooltip content={<span className="text-xs font-mono break-all">{a.id}</span>} position="top">
-                              <span className="inline-flex items-center gap-1 rounded-md bg-studio-muted/70 px-1.5 py-0.5 text-[10px] font-mono font-medium text-studio-foreground-lighter tabular-nums cursor-default">
-                                {formatAlunoDisplayId(a.id)}
-                              </span>
-                            </Tooltip>
-                          </div>
+                          </Tooltip>
                         </div>
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap max-w-[200px] sm:max-w-[240px]">
-                        <div className="flex items-center gap-2 text-sm text-studio-foreground-light font-medium min-w-0">
-                          <Mail className="w-3.5 h-3.5 text-studio-muted flex-shrink-0" />
-                          <span className="truncate" title={a.email || undefined}>{a.email || '—'}</span>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 text-xs text-studio-foreground font-bold leading-none">
+                            <Phone className="w-3 h-3 text-studio-brand" />
+                            <span>{a.telefone || '—'}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-studio-foreground-lighter font-medium truncate">
+                            <Mail className="w-2.5 h-2.5" />
+                            <span className="truncate" title={a.email || undefined}>{a.email || '—'}</span>
+                          </div>
                         </div>
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-sm text-studio-foreground-lighter tabular-nums">
-                          <Calendar className="w-3.5 h-3.5 text-studio-muted" />
+                        <div className="flex items-center gap-2 text-xs text-studio-foreground-lighter tabular-nums">
+                          <Calendar className="w-3 h-3 text-studio-muted" />
                           <span>{a.dataNascimento}</span>
                         </div>
+                      </td>
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <Badge variant="success" className="text-[9px] font-black px-2 py-0.5">
+                          <UserCheck className="w-2.5 h-2.5 mr-1" />
+                          MATRICULADO
+                        </Badge>
                       </td>
                       {(canEdit || canDelete) && (
                         <td className="px-5 py-4 whitespace-nowrap text-right">

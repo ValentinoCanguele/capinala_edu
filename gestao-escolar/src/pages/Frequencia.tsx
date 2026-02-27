@@ -74,6 +74,7 @@ function FrequenciaRelatorio() {
             title="Relatório de Assiduidade"
             description="Selecione uma turma acima para gerar o relatório detalhado de presenças, faltas e alunos em risco."
             icon={<BarChart3 className="w-12 h-12 text-studio-muted" />}
+            tone="info"
           />
         </Card>
       ) : isLoading ? (
@@ -91,6 +92,7 @@ function FrequenciaRelatorio() {
             title="Sem Dados Disponíveis"
             description="Não foram encontrados registos de frequência para esta turma no período letivo atual."
             icon={<CalendarDays className="w-12 h-12 text-studio-muted" />}
+            tone="warning"
           />
         </Card>
       ) : (
@@ -120,10 +122,10 @@ function FrequenciaRelatorio() {
           </div>
 
           <Card noPadding>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
               <table className="min-w-full divide-y divide-studio-border/50" aria-label="Resumo de frequência por aluno">
-                <thead>
-                  <tr className="bg-studio-muted/10">
+                <thead className="sticky top-0 z-10 bg-studio-bg">
+                  <tr className="bg-studio-muted/10 border-b border-studio-border/50">
                     <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-studio-foreground-light uppercase tracking-widest">
                       Estudante
                     </th>

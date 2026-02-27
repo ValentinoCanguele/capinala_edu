@@ -1,8 +1,11 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react'
 import { X } from 'lucide-react'
+import { LabelWithHelp } from './LabelWithHelp'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string
+    /** Texto ou nó mostrado no tooltip do ícone ? ao lado da label (item 111). */
+    help?: ReactNode
     error?: string
     hint?: ReactNode
     leftIcon?: ReactNode
@@ -18,7 +21,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * Suporta ícones Laterais (ex: Search na esquerda), descrições Hint e Mensagens de Erro Semânticas.
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ label, error, hint, leftIcon, rightIcon, showClearButton, onClear, className = '', id, value, required, ...props }, ref) => {
+    ({ label, help, error, hint, leftIcon, rightIcon, showClearButton, onClear, className = '', id, value, required, ...props }, ref) => {
         const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
         const hasValue = value != null && String(value).length > 0
         const showClear = showClearButton && hasValue && onClear
@@ -26,10 +29,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         return (
             <div className={`w-full ${className}`}>
                 {label && (
-                    <label htmlFor={inputId} className="block text-sm font-medium text-studio-foreground mb-1">
-                        {label}
-                        {required && <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>}
-                    </label>
+                    <div className="mb-1">
+                        {help != null ? (
+                            <LabelWithHelp label={label} help={help} required={required} htmlFor={inputId} />
+                        ) : (
+                            <label htmlFor={inputId} className="block text-sm font-medium text-studio-foreground">
+                                {label}
+                                {required && <span className="text-red-500 ml-0.5" aria-hidden="true">*</span>}
+                            </label>
+                        )}
+                    </div>
                 )}
 
                 <div className="relative flex items-center">

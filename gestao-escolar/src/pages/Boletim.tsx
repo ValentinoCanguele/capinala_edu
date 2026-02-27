@@ -11,6 +11,7 @@ import EmptyState from '@/components/shared/EmptyState'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
 import { Button } from '@/components/shared/Button'
 import { printElement } from '@/utils/print'
+import { exportBoletimPDF } from '@/utils/exportPDF'
 import {
   FileText,
   User,
@@ -84,8 +85,23 @@ export default function Boletim() {
             <Button variant="secondary" size="sm" onClick={() => printElement('boletim-print-area')} icon={<Printer className="w-4 h-4" />}>
               Imprimir
             </Button>
-            <Button variant="primary" size="sm" icon={<Download className="w-4 h-4" />}>
-              Certificado Digital
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                if (!boletim) return;
+                exportBoletimPDF({
+                  escola: 'Capiñala - Complexo Escolar', // Idealmente viria do contexto ou prop
+                  alunoNome: boletim.alunoNome,
+                  alunoId: alunoId,
+                  anoLetivo: anosLetivos.find(a => a.id === anoLetivoId)?.nome || '2026/2027',
+                  stats: stats,
+                  disciplinas: boletim.disciplinas
+                });
+              }}
+              icon={<Download className="w-4 h-4" />}
+            >
+              Documento Oficial (PDF)
             </Button>
           </div>
         )}
@@ -123,6 +139,8 @@ export default function Boletim() {
           title="Central de Gestão de Resultados"
           description="Selecione um estudante para visualizar o mapa de competências, notas compostas e análise de assiduidade."
           icon={<FileText className="w-20 h-20 opacity-5" />}
+          tone="info"
+          size="lg"
           className="h-[400px]"
         />
       ) : isLoading ? (
