@@ -105,6 +105,8 @@ export default function Salas() {
     [salas, debouncedFilter]
   )
 
+  const [isFormDirty, setIsFormDirty] = useState(false)
+
   const stats = useMemo(() => {
     return {
       total: salas.length,
@@ -132,6 +134,7 @@ export default function Salas() {
         onSuccess: () => {
           toast.success('Ativo imobiliário atualizado')
           setModalOpen(false)
+          setIsFormDirty(false)
         }
       })
     } else {
@@ -139,9 +142,17 @@ export default function Salas() {
         onSuccess: () => {
           toast.success('Nova unidade registada')
           setModalOpen(false)
+          setIsFormDirty(false)
         }
       })
     }
+  }
+
+  const handleCloseMainModal = () => {
+    if (isFormDirty && !window.confirm('Existem alterações não guardadas. Deseja sair?')) return
+    setModalOpen(false)
+    setEditingSala(null)
+    setIsFormDirty(false)
   }
 
   const handleAddItem = (e: React.FormEvent<HTMLFormElement>) => {
@@ -226,7 +237,9 @@ export default function Salas() {
         <StatCard title="Laboratórios" value={stats.laboratorios} icon={<FlaskConical className="w-5 h-5 text-purple-500" />} trend={{ value: 'Especializados', direction: 'up' }} />
         <StatCard title="Lotação Nominal" value={stats.capacidadeTotal} icon={<Maximize className="w-5 h-5 text-emerald-500" />} subtitle="Alunos em simultâneo" />
         <StatCard title="Média / Sala" value={stats.mediaCapacidade} icon={<Activity className="w-5 h-5 text-studio-brand" />} subtitle="Lugares por unidade" />
-        <StatCard title="Alertas de Manut." value={stats.manutencaoPendente} icon={<AlertTriangle className="w-5 h-5 text-red-500" />} subtitle="Reparação necessária" />
+        <StatCard title="Alertas de Manut." value={stats.manutencaoPendente} icon={<AlertTriangle className="w-5 h-5 text-red-500" />} subtitle="Intervenção Necessária">
+          <button className="mt-2 text-[8px] font-black uppercase text-red-600 hover:underline">Abrir Ordem de Serviço &rarr;</button>
+        </StatCard>
       </div>
 
       <Card className="bg-studio-brand/[0.02] border-studio-brand/20">
@@ -311,13 +324,13 @@ export default function Salas() {
 
           <div className="overflow-x-auto text-[11px]">
             <table className="min-w-full divide-y divide-studio-border/30 text-left">
-              <thead className="bg-studio-muted/5 text-[9px] font-black uppercase tracking-widest text-studio-foreground-lighter">
+              <thead className="bg-studio-muted/10">
                 <tr>
-                  <th className="px-6 py-5">Unidade / Propriedades</th>
-                  <th className="px-6 py-5 text-center">Estado Técnico</th>
-                  <th className="px-6 py-5">Sumário Tecnológico</th>
-                  <th className="px-6 py-5 text-center">Inventário</th>
-                  <th className="px-6 py-5 text-right">Ações</th>
+                  <th scope="col" className="px-6 py-5 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">Unidade / Propriedades</th>
+                  <th scope="col" className="px-6 py-5 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em] text-center">Estado Técnico</th>
+                  <th scope="col" className="px-6 py-5 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">Sumário Tecnológico</th>
+                  <th scope="col" className="px-6 py-5 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em] text-center">Património</th>
+                  <th scope="col" className="px-6 py-5 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em] text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/20">
@@ -454,19 +467,27 @@ export default function Salas() {
       </Modal>
 
       {/* Modal Cadastro/Edição (Simplified as before) */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingSala ? 'Edição de Unidade' : 'Novo Ativo Imobiliário'} size="md">
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <Input name="nome" label="Nome da Sala" defaultValue={editingSala?.nome} required />
-            <Select name="tipo" label="Tipo" defaultValue={editingSala?.tipo} options={Object.keys(TIPO_LABELS).map(k => ({ value: k, label: TIPO_LABELS[k].label }))} />
+      <Modal open={modalOpen} onClose={handleCloseMainModal} title={editingSala ? 'Edição de Unidade Estrutural' : 'Novo Ativo Imobiliário'} size="md">
+        <form onSubmit={handleSave} onChange={() => setIsFormDirty(true)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input name="nome" label="Identificação da Unidade" defaultValue={editingSala?.nome} placeholder="Ex: Sala 204, Laboratório de Química" required />
+            <Select name="tipo" label="Tipologia de Espaço" defaultValue={editingSala?.tipo} options={Object.keys(TIPO_LABELS).map(k => ({ value: k, label: TIPO_LABELS[k].label }))} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input name="capacidade" type="number" label="Capacidade" defaultValue={editingSala?.capacidade ?? undefined} />
-            <Input name="area_m2" type="number" step="0.1" label="Área (m2)" defaultValue={editingSala?.area_m2} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input name="capacidade" type="number" label="Capacidade Nominal (Lugares)" defaultValue={editingSala?.capacidade ?? undefined} placeholder="0" />
+            <Input name="area_m2" type="number" step="0.1" label="Metragem (m²)" defaultValue={editingSala?.area_m2} placeholder="0.0" />
           </div>
-          <div className="flex justify-end gap-3 pt-6">
-            <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="primary">Salvar Ativo</Button>
+          <Select
+            name="estado_conservacao"
+            label="Estado Físico / Conservação"
+            defaultValue={editingSala?.estado_conservacao}
+            options={Object.keys(ESTADO_LABELS).map(k => ({ value: k, label: ESTADO_LABELS[k].label }))}
+          />
+          <div className="flex justify-end gap-3 pt-6 border-t border-studio-border/40">
+            <Button variant="ghost" type="button" onClick={handleCloseMainModal}>Cancelar Operação</Button>
+            <Button type="submit" variant="primary" loading={createSala.isPending || updateSala.mutate.isPending}>
+              {editingSala ? 'Confirmar Atualização' : 'Registar Imóvel'}
+            </Button>
           </div>
         </form>
       </Modal>

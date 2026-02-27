@@ -15,6 +15,7 @@ import {
   useDeleteLancamento,
   type LancamentoInput,
 } from '@/data/escola/financasMutations'
+import { useEffect } from 'react'
 import PageHeader from '@/components/PageHeader'
 import Modal from '@/components/Modal'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
@@ -26,7 +27,7 @@ import { Badge } from '@/components/shared/Badge'
 import EmptyState from '@/components/shared/EmptyState'
 import { formatCurrency } from '@/lib/formatCurrency'
 import { formatDateShort } from '@/utils/formatters'
-import { PlusCircle, Search, Filter, Trash2, Edit3, ArrowUpCircle, ArrowDownCircle, Info } from 'lucide-react'
+import { PlusCircle, Search, Filter, Trash2, Edit3, ArrowUpCircle, ArrowDownCircle, Info, TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
 
 function LancamentoForm({
   initial,
@@ -42,6 +43,7 @@ function LancamentoForm({
   onSubmit: (data: LancamentoInput) => void
   onCancel: () => void
   isLoading: boolean
+  onDirtyChange?: (dirty: boolean) => void
 }) {
   const [tipo, setTipo] = useState<'entrada' | 'saida'>(initial.tipo)
   const [data, setData] = useState(initial.data)
@@ -50,6 +52,19 @@ function LancamentoForm({
   const [descricao, setDescricao] = useState(initial.descricao ?? '')
   const [formaPagamento, setFormaPagamento] = useState(initial.formaPagamento ?? '')
   const [anoLetivoId, setAnoLetivoId] = useState(initial.anoLetivoId ?? '')
+
+  useEffect(() => {
+    const isDirty =
+      tipo !== initial.tipo ||
+      data !== initial.data ||
+      valor !== String(initial.valor || '') ||
+      categoriaId !== initial.categoriaId ||
+      descricao !== (initial.descricao ?? '') ||
+      formaPagamento !== (initial.formaPagamento ?? '') ||
+      anoLetivoId !== (initial.anoLetivoId ?? '')
+
+    onDirtyChange?.(isDirty)
+  }, [tipo, data, valor, categoriaId, descricao, formaPagamento, anoLetivoId, initial, onDirtyChange])
 
   const categoriasFiltradas = useMemo(
     () => categorias.filter((c) => c.tipo === (tipo === 'entrada' ? 'receita' : 'despesa')),
@@ -182,9 +197,13 @@ export default function FinancasLancamentos() {
 
   const editing = editingId ? lancamentos.find((l) => l.id === editingId) ?? null : null
 
+  const [isFormDirty, setIsFormDirty] = useState(false)
+
   const handleCloseModal = () => {
+    if (isFormDirty && !window.confirm('Existem alterações não guardadas. Deseja sair?')) return
     setModalOpen(false)
     setEditingId(null)
+    setIsFormDirty(false)
   }
 
   const handleSubmit = (data: LancamentoInput) => {
@@ -229,24 +248,63 @@ export default function FinancasLancamentos() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
-        title="Lançamentos Financeiros"
-        subtitle="Movimentação institucional de receitas e despesas operacionais."
+        title="Controlo Financeiro"
+        subtitle="Movimentação institucional de receitas, despesas operacionais e gestão de fluxo de caixa."
         actions={
           canGerirFinancas(user?.papel) ? (
             <Button
               onClick={() => { setEditingId(null); setModalOpen(true) }}
               icon={<PlusCircle className="w-4 h-4" />}
+              className="shadow-lg shadow-studio-brand/20 hover:shadow-xl transition-all rounded-xl font-black uppercase text-[10px] tracking-widest"
             >
-              Novo Lançamento
+              Registar Movimentação
             </Button>
           ) : undefined
         }
       />
 
-      <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="p-6 rounded-[2rem] bg-studio-muted/10 border border-studio-border/40 flex items-center gap-5 group hover:border-emerald-500/30 transition-all">
+          <div className="p-3.5 bg-emerald-500/10 rounded-2xl text-emerald-500 group-hover:scale-110 transition-transform">
+            <TrendingUp className="w-6 h-6" />
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-[10px] font-black text-studio-foreground-lighter uppercase tracking-[2px]">Proveitos do Período</p>
+            <h3 className="text-xl font-black text-emerald-600 tabular-nums truncate">
+              {formatCurrency(lancamentos.filter(l => l.tipo === 'entrada').reduce((acc, l) => acc + l.valor, 0))}
+            </h3>
+          </div>
+        </div>
+
+        <div className="p-6 rounded-[2rem] bg-studio-muted/10 border border-studio-border/40 flex items-center gap-5 group hover:border-red-500/30 transition-all">
+          <div className="p-3.5 bg-red-500/10 rounded-2xl text-red-500 group-hover:scale-110 transition-transform">
+            <TrendingDown className="w-6 h-6" />
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-[10px] font-black text-studio-foreground-lighter uppercase tracking-[2px]">Custos do Período</p>
+            <h3 className="text-xl font-black text-red-600 tabular-nums truncate">
+              {formatCurrency(lancamentos.filter(l => l.tipo === 'saida').reduce((acc, l) => acc + l.valor, 0))}
+            </h3>
+          </div>
+        </div>
+
+        <div className="p-6 rounded-[2rem] bg-studio-muted/10 border border-studio-border/40 flex items-center gap-5 group hover:border-studio-brand/30 transition-all">
+          <div className="p-3.5 bg-studio-brand/10 rounded-2xl text-studio-brand group-hover:scale-110 transition-transform">
+            <DollarSign className="w-6 h-6" />
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-[10px] font-black text-studio-foreground-lighter uppercase tracking-[2px]">Balanço Líquido</p>
+            <h3 className="text-xl font-black text-studio-foreground tabular-nums truncate">
+              {formatCurrency(lancamentos.reduce((acc, l) => acc + (l.tipo === 'entrada' ? l.valor : -l.valor), 0))}
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <Card className="bg-studio-muted/10 border-studio-border/40">
         <div className="flex flex-wrap gap-4 items-end">
           <Select
-            label="Fluxo"
+            label="Fluxo de Caixa"
             value={filters.tipo ?? ''}
             onChange={(e) =>
               setFilters((f) => ({
@@ -255,15 +313,16 @@ export default function FinancasLancamentos() {
               }))
             }
             options={[
-              { value: '', label: 'Todos os fluxos' },
-              { value: 'entrada', label: 'Apenas Entradas' },
-              { value: 'saida', label: 'Apenas Saídas' }
+              { value: '', label: 'Ver Todos' },
+              { value: 'entrada', label: 'Proveitos (Entradas)' },
+              { value: 'saida', label: 'Custos (Saídas)' }
             ]}
             className="flex-1 min-w-[200px]"
+            leftIcon={<Filter className="w-4 h-4 text-studio-foreground-lighter" />}
           />
 
           <Input
-            label="Início"
+            label="Período - Início"
             type="date"
             value={filters.dataInicio ?? ''}
             onChange={(e) =>
@@ -273,7 +332,7 @@ export default function FinancasLancamentos() {
           />
 
           <Input
-            label="Fim"
+            label="Período - Fim"
             type="date"
             value={filters.dataFim ?? ''}
             onChange={(e) =>
@@ -283,23 +342,32 @@ export default function FinancasLancamentos() {
           />
 
           <Select
-            label="Categoria"
+            label="Categoria Analítica"
             value={filters.categoriaId ?? ''}
             onChange={(e) =>
               setFilters((f) => ({ ...f, categoriaId: e.target.value || undefined }))
             }
             options={[
-              { value: '', label: 'Todas as categorias' },
+              { value: '', label: 'Todas as Categorias' },
               ...categorias.map((c) => ({ value: c.id, label: c.nome }))
             ]}
             className="flex-1 min-w-[240px]"
           />
 
-          <Button variant="ghost" size="icon" className="mb-0.5" title="Limpar Filtros" onClick={() => setFilters({})}>
-            <Filter className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2 mb-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Limpar Filtros"
+              onClick={() => setFilters({})}
+              className="hover:bg-studio-muted"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" />
+            </Button>
+          </div>
         </div>
       </Card>
+
       <Modal
         title={editingId ? 'Editar lançamento' : 'Novo lançamento'}
         open={modalOpen}
@@ -330,6 +398,7 @@ export default function FinancasLancamentos() {
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
           isLoading={isFormLoading}
+          onDirtyChange={setIsFormDirty}
         />
       </Modal>
       <Modal title="Eliminar Lançamento" open={!!itemToDelete} onClose={() => setItemToDelete(null)} size="sm">
@@ -368,69 +437,72 @@ export default function FinancasLancamentos() {
             <table className="w-full text-sm" aria-label="Lista de lançamentos">
               <thead>
                 <tr className="bg-studio-muted/10">
-                  <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Data</th>
-                  <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Descrição</th>
-                  <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Categoria</th>
-                  <th scope="col" className="text-right px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Montante</th>
+                  <th scope="col" className="sticky left-0 z-30 px-6 py-4 text-left text-[10px] font-black text-studio-foreground-light uppercase tracking-widest bg-studio-muted/10 border-r border-studio-border/30">Identificação Temporal</th>
+                  <th scope="col" className="text-left px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Descrição / Método</th>
+                  <th scope="col" className="text-left px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Centro de Custo</th>
+                  <th scope="col" className="text-right px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Magnitude (Kz)</th>
                   {canGerirFinancas(user?.papel) && (
-                  <th scope="col" className="w-24 px-6 py-4" aria-label="Ações" />
+                    <th scope="col" className="w-24 px-6 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Gestão</th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/20">
                 {lancamentos.map((l) => (
-                  <tr key={l.id} className="group hover:bg-studio-muted/5 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-studio-foreground-light font-medium" title={l.data}>
-                      {formatDateShort(l.data, true)}
+                  <tr key={l.id} className="group hover:bg-studio-brand/[0.01] transition-colors">
+                    <td className="sticky left-0 z-20 px-6 py-4 whitespace-nowrap bg-studio-bg border-r border-studio-border/30 group-hover:bg-studio-brand/[0.02]">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-studio-foreground uppercase tracking-tight">{formatDateShort(l.data, true)}</span>
+                        <span className="text-[10px] text-studio-foreground-lighter font-medium">Data Valor: {l.data}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-studio-foreground group-hover:text-studio-brand transition-colors">
+                        <span className="text-sm font-black text-studio-foreground group-hover:text-studio-brand transition-colors uppercase tracking-tight">
                           {l.descricao ?? 'Lançamento sem descrição'}
                         </span>
                         {l.formaPagamento && (
-                          <span className="text-[10px] text-studio-foreground-lighter uppercase font-bold tracking-tighter">
-                            via {l.formaPagamento}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Badge variant="neutral" className="px-1.5 py-0 text-[8px] font-black uppercase opacity-60">Via {l.formaPagamento}</Badge>
+                          </div>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="neutral">{l.categoriaNome}</Badge>
+                      <Badge variant="neutral" className="text-[9px] font-black uppercase border-studio-border/50">{l.categoriaNome}</Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex flex-col items-end">
-                        <span className={`tabular-nums font-bold ${l.tipo === 'entrada' ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <span className={`tabular-nums text-sm font-black ${l.tipo === 'entrada' ? 'text-emerald-600' : 'text-red-500'}`}>
                           {l.tipo === 'saida' ? '- ' : '+ '}
                           {formatCurrency(l.valor)}
                         </span>
-                        <span className="text-[10px] text-studio-foreground-lighter uppercase font-bold">
-                          {l.tipo === 'entrada' ? 'Receita' : 'Despesa'}
-                        </span>
+                        <Badge variant={l.tipo === 'entrada' ? 'success' : 'danger'} className="text-[8px] font-black uppercase mt-1 px-1.5 py-0">
+                          {l.tipo === 'entrada' ? 'Proveito' : 'Custo'}
+                        </Badge>
                       </div>
                     </td>
                     {canGerirFinancas(user?.papel) && (
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => { setEditingId(l.id); setModalOpen(true) }}
-                          title="Editar"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600"
-                          onClick={() => setItemToDelete(l)}
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-1 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => { setEditingId(l.id); setModalOpen(true) }}
+                            title="Editar"
+                          >
+                            <Edit3 className="w-4 h-4 text-studio-brand" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-400 hover:text-red-500 hover:bg-red-50"
+                            onClick={() => setItemToDelete(l)}
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
                     )}
                   </tr>
                 ))}

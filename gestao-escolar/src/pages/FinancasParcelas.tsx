@@ -25,7 +25,9 @@ import { Badge } from '@/components/shared/Badge'
 import { Avatar } from '@/components/shared/Avatar'
 import EmptyState from '@/components/shared/EmptyState'
 import { formatCurrency } from '@/lib/formatCurrency'
-import { Layers, CreditCard, Filter, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { exportReciboPDF } from '@/utils/exportPDF'
+import { api } from '@/api/client'
+import { Layers, CreditCard, Filter, AlertCircle, CheckCircle2, XCircle, Clock, FileText } from 'lucide-react'
 
 function GerarLoteForm({
   anosLetivos,
@@ -275,6 +277,30 @@ export default function FinancasParcelas() {
     )
   }
 
+  const handleEmitirRecibo = async (p: ParcelaRow) => {
+    try {
+      const { data: pagamentos, error: pError } = await api.get<any[]>(`/api/escola/financas/parcelas/${p.id}/pagamentos`)
+      if (pError) throw new Error(pError.message)
+
+      exportReciboPDF({
+        escola: 'Instituto Capiñala',
+        alunoNome: p.alunoNome,
+        alunoId: p.alunoId,
+        parcela: {
+          id: p.id,
+          categoriaNome: p.categoriaNome,
+          vencimento: p.vencimento,
+          valorOriginal: p.valorOriginal,
+          descricao: p.descricao
+        },
+        pagamentos: pagamentos || []
+      })
+      toast.success('Recibo gerado com sucesso.')
+    } catch (err: any) {
+      toast.error('Erro ao buscar pagamentos: ' + err.message)
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
@@ -381,7 +407,7 @@ export default function FinancasParcelas() {
                   <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Status / Auditoria</th>
                   <th scope="col" className="text-right px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Montante</th>
                   {canGerirFinancas(user?.papel) && (
-                  <th scope="col" className="w-28 px-6 py-4" aria-label="Ações" />
+                    <th scope="col" className="w-28 px-6 py-4" aria-label="Ações" />
                   )}
                 </tr>
               </thead>
@@ -433,20 +459,30 @@ export default function FinancasParcelas() {
                         {formatCurrency(p.valorAtualizado)}
                       </td>
                       {canGerirFinancas(user?.papel) && (
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end">
-                          {p.status !== 'paga' && p.status !== 'cancelada' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              icon={<CreditCard className="w-4 h-4" />}
-                              onClick={() => setPagamentoParcela(p)}
-                            >
-                              Liquidar
-                            </Button>
-                          )}
-                        </div>
-                      </td>
+                        <td className="px-6 py-4">
+                          <div className="flex justify-end">
+                            {p.status !== 'paga' && p.status !== 'cancelada' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                icon={<CreditCard className="w-4 h-4" />}
+                                onClick={() => setPagamentoParcela(p)}
+                              >
+                                Liquidar
+                              </Button>
+                            )}
+                            {p.status === 'paga' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                icon={<FileText className="w-4 h-4" />}
+                                onClick={() => handleEmitirRecibo(p)}
+                              >
+                                Recibo
+                              </Button>
+                            )}
+                          </div>
+                        </td>
                       )}
                     </tr>
                   )

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, ChevronDown, CheckCircle2, AlertCircle, Clock, Hash, FileSpreadsheet, FileText } from 'lucide-react'
+import { Search, CheckCircle2, AlertCircle, Clock, Hash, FileSpreadsheet, FileText } from 'lucide-react'
 import type { AlunoFinanceiro } from '@/data/escola/queries'
 import EmptyState from '@/components/shared/EmptyState'
 import { SkeletonTable } from '@/components/shared/SkeletonTable'
@@ -107,11 +107,11 @@ export default function AlunosFinanceiroList({
                         icon={<AlertCircle className="h-12 w-12 opacity-20" />}
                     />
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto max-h-[70vh] overflow-y-auto custom-scrollbar">
                         <table className="min-w-full divide-y divide-studio-border/30">
-                            <thead className="bg-studio-muted/10 border-b border-studio-border">
+                            <thead className="sticky top-0 z-30 bg-studio-bg border-b border-studio-border">
                                 <tr>
-                                    <th scope="col" className="px-6 py-4 text-left text-[10px] font-black text-studio-foreground-lighter uppercase tracking-widest">
+                                    <th scope="col" className="sticky left-0 z-40 px-6 py-4 text-left text-[10px] font-black text-studio-foreground-lighter uppercase tracking-widest bg-studio-bg border-r border-studio-border/30 shadow-[2px_0_4px_rgba(0,0,0,0.04)] min-w-[200px]">
                                         Estudante & Turma
                                     </th>
                                     <th scope="col" className="px-6 py-4 text-right text-[10px] font-black text-studio-foreground-lighter uppercase tracking-widest">
@@ -131,15 +131,15 @@ export default function AlunosFinanceiroList({
                             <tbody className="divide-y divide-studio-border/20 bg-studio-bg">
                                 {filteredAlunos.map((a) => (
                                     <tr key={a.id} className="group hover:bg-studio-muted/5 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="sticky left-0 z-20 px-6 py-4 whitespace-nowrap bg-studio-bg border-r border-studio-border/30 group-hover:bg-studio-brand/[0.02] shadow-[2px_0_4px_rgba(0,0,0,0.02)]">
                                             <div className="flex items-center gap-4">
-                                                <Avatar name={a.nome} size="md" shape="square" className="border border-studio-border/50 shadow-sm" />
+                                                <Avatar name={a.nome} size="md" shape="square" className="border border-studio-border/50 shadow-sm transition-transform group-hover:scale-105" />
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-bold text-studio-foreground group-hover:text-studio-brand transition-colors">
+                                                    <span className="text-sm font-black text-studio-foreground group-hover:text-studio-brand transition-colors uppercase tracking-tight">
                                                         {a.nome}
                                                     </span>
-                                                    <div className="flex items-center gap-2 mt-0.5 text-[10px] font-black text-studio-foreground-lighter uppercase tracking-widest">
-                                                        <span className="flex items-center gap-1"><Hash className="w-3 h-3" /> {a.turma || 'S/ Turma'}</span>
+                                                    <div className="flex items-center gap-2 mt-0.5 text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">
+                                                        <span className="flex items-center gap-1 group-hover:text-studio-brand transition-colors"><Hash className="w-3 h-3" /> {a.turma || 'S/ Turma'}</span>
                                                     </div>
                                                 </div>
                                             </div>

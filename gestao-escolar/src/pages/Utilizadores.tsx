@@ -18,12 +18,12 @@ import {
   useSetUsuarioPermissoes,
 } from '@/data/escola/mutations'
 import PageHeader from '@/components/PageHeader'
-import EmptyState from '@/components/EmptyState'
-import Modal from '@/components/Modal'
-import { TableSkeleton } from '@/components/PageSkeleton'
+import { SkeletonTable } from '@/components/shared/SkeletonTable'
+import { Card } from '@/components/shared/Card'
+import { Badge } from '@/components/shared/Badge'
+import { Button } from '@/components/shared/Button'
 import { Input } from '@/components/shared/Input'
-import ListResultSummary from '@/components/shared/ListResultSummary'
-import { User, Search } from 'lucide-react'
+import { User, Search, Shield, Key, Fingerprint, UserPlus, Mail, Phone, Building2, Edit2, ShieldCheck, ShieldAlert } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -44,6 +44,7 @@ export default function Utilizadores() {
     bi: '',
     telefone: '',
   })
+  const [isFormDirty, setIsFormDirty] = useState(false)
   const [permissoesCodigos, setPermissoesCodigos] = useState<string[]>([])
   const [filterFromUrl, setFilterFromUrl] = useQueryState('q')
   const [filterInput, setFilterInput] = useState(() => searchParams.get('q') ?? '')
@@ -64,11 +65,11 @@ export default function Utilizadores() {
     () =>
       debouncedFilter
         ? usuarios.filter(
-            (u) =>
-              (u.nome ?? '').toLowerCase().includes(debouncedFilter.toLowerCase()) ||
-              (u.email ?? '').toLowerCase().includes(debouncedFilter.toLowerCase()) ||
-              (u.papel ?? '').toLowerCase().includes(debouncedFilter.toLowerCase())
-          )
+          (u) =>
+            (u.nome ?? '').toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+            (u.email ?? '').toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+            (u.papel ?? '').toLowerCase().includes(debouncedFilter.toLowerCase())
+        )
         : usuarios,
     [usuarios, debouncedFilter]
   )
@@ -107,8 +108,10 @@ export default function Utilizadores() {
   }, [usuarioPerms])
 
   const handleCloseForm = () => {
+    if (isFormDirty && !window.confirm('Existem alterações não guardadas. Deseja sair?')) return
     setFormOpen(false)
     setEditingUserId(null)
+    setIsFormDirty(false)
     if (searchParams.get('acao') === 'novo') setSearchParams({})
   }
 
@@ -157,6 +160,11 @@ export default function Utilizadores() {
         }
       )
     }
+  }
+
+  const handleFormChange = (newValues: Partial<typeof form>) => {
+    setForm(prev => ({ ...prev, ...newValues }))
+    setIsFormDirty(true)
   }
 
   const handleResetPassword = (e: React.FormEvent) => {
@@ -211,218 +219,224 @@ export default function Utilizadores() {
   return (
     <div>
       <PageHeader
-        title="Utilizadores"
-        subtitle="Gestão de utilizadores e permissões."
+        title="Gestão de Identidades"
+        subtitle="Administração central de utilizadores, privilégios de acesso e segurança da plataforma."
         actions={
           canGerirUtilizadores(authUser?.papel) ? (
-            <button
-              type="button"
+            <Button
               onClick={() => {
                 setEditingUserId(null)
                 setForm({ nome: '', email: '', papel: 'professor', escolaId: escolaId ?? '', password: '', bi: '', telefone: '' })
                 setFormOpen(true)
               }}
-              className="btn-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-brand focus-visible:ring-offset-2"
+              icon={<UserPlus className="w-4 h-4" />}
             >
-              Novo utilizador
-            </button>
+              Novo Utilizador
+            </Button>
           ) : undefined
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-4">
-        <Input
-          placeholder="Pesquisar por nome, email ou papel..."
-          value={filterInput}
-          onChange={(e) => setFilterInput(e.target.value)}
-          onClear={() => setFilterInput('')}
-          showClearButton
-          leftIcon={<Search className="h-4 w-4" />}
-          className="max-w-md"
-          aria-label="Pesquisar utilizadores"
-        />
-        <ListResultSummary
-          count={filteredUsuarios.length}
-          total={usuarios.length}
-          label="utilizador"
-          hasFilter={filterInput.length > 0}
-          onClearFilter={() => setFilterInput('')}
-          isLoading={isLoading}
-        />
-      </div>
-
-      <div className="card overflow-hidden">
-        {isLoading ? (
-          <div role="status" aria-live="polite" aria-label="A carregar lista de utilizadores">
-            <TableSkeleton rows={8} />
-          </div>
-        ) : filteredUsuarios.length === 0 ? (
-          <EmptyState
-            title={filterInput ? 'Nenhum utilizador encontrado' : 'Nenhum utilizador'}
-            description={filterInput ? 'Tente outro termo de pesquisa.' : (canGerirUtilizadores(authUser?.papel) ? 'Crie o primeiro utilizador.' : 'Ainda não há utilizadores.')}
-            action={
-              !filterInput && canGerirUtilizadores(authUser?.papel) ? (
-                <button
-                  type="button"
-                  onClick={() => setFormOpen(true)}
-                  className="btn-primary"
-                >
-                  Novo utilizador
-                </button>
-              ) : undefined
-            }
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-studio-muted/10 p-4 rounded-2xl border border-studio-border/40">
+        <div className="flex items-center gap-3 w-full max-w-md">
+          <Search className="w-5 h-5 text-studio-foreground-lighter" />
+          <input
+            type="text"
+            placeholder="Pesquisar por nome, email ou cargo..."
+            value={filterInput}
+            onChange={(e) => setFilterInput(e.target.value)}
+            className="bg-transparent border-none outline-none text-sm font-medium text-studio-foreground w-full placeholder:text-studio-foreground-lighter"
           />
-        ) : (
-          <table className="min-w-full divide-y divide-studio-border" aria-label="Lista de utilizadores">
-            <thead className="sticky top-0 z-10 bg-studio-bg/95 backdrop-blur-sm border-b border-studio-border">
-              <tr>
-                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">ID / Foto</th>
-                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Nome</th>
-                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Email</th>
-                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Papel</th>
-                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">Escola</th>
-                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-studio-foreground-lighter uppercase">BI</th>
-                <th scope="col" className="px-4 py-2 text-right text-xs font-medium text-studio-foreground-lighter uppercase">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-studio-border">
-              {filteredUsuarios.map((u) => (
-                <tr key={u.userId} className="hover:bg-studio-muted/30">
-                  <td className="px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      {u.fotoUrl ? (
-                        <img
-                          src={`${API_BASE}${u.fotoUrl}`}
-                          alt=""
-                          className="h-8 w-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-studio-muted flex items-center justify-center">
-                          <User className="h-4 w-4 text-studio-foreground-lighter" />
-                        </div>
-                      )}
-                      <span className="text-xs font-mono text-studio-foreground-lighter truncate max-w-[80px]" title={u.userId}>
-                        {u.userId.slice(0, 8)}…
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 text-studio-foreground">{u.nome}</td>
-                  <td className="px-4 py-2 text-studio-foreground-light max-w-[200px] sm:max-w-[240px]">
-                    <span className="truncate block" title={u.email}>{u.email}</span>
-                  </td>
-                  <td className="px-4 py-2 text-studio-foreground-light">{u.papel}</td>
-                  <td className="px-4 py-2 text-studio-foreground-light">{u.escolaNome ?? '—'}</td>
-                  <td className="px-4 py-2 text-studio-foreground-light">{u.bi ?? '—'}</td>
-                  <td className="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      className="link-action link-action-primary mr-2"
-                      onClick={() => {
-                        setEditingUserId(u.userId)
-                        setFormOpen(true)
-                      }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      className="link-action link-action-primary mr-2"
-                      onClick={() => {
-                        setResetUserId(u.userId)
-                        setNovaSenha('')
-                      }}
-                    >
-                      Resetar senha
-                    </button>
-                    <button
-                      type="button"
-                      className="link-action link-action-primary"
-                      onClick={() => setPermissoesUserId(u.userId)}
-                    >
-                      Permissões
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-studio-foreground-lighter" />
+            <span className="text-xs font-black uppercase text-studio-foreground-lighter tracking-widest">{usuarios.length} Contas Registadas</span>
+          </div>
+        </div>
       </div>
 
-      <Modal open={formOpen} onClose={handleCloseForm} title={editingUserId ? 'Editar utilizador' : 'Novo utilizador'}>
-        <form onSubmit={handleSubmitForm} className="space-y-4">
-          <div>
-            <label className="label">Nome *</label>
-            <input
-              type="text"
-              value={form.nome}
-              onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-              className="input w-full"
-              required
+      <Card noPadding className="overflow-hidden border-studio-border/60 shadow-xl">
+        {isLoading ? (
+          <SkeletonTable rows={10} columns={6} />
+        ) : filteredUsuarios.length === 0 ? (
+          <div className="p-12">
+            <EmptyState
+              title={filterInput ? 'Nenhum utilizador encontrado' : 'Lista Vazia'}
+              description={filterInput ? 'Refine a sua busca ou limpe os filtros para encontrar a conta desejada.' : 'Inicie a gestão de acessos criando o primeiro utilizador da instituição.'}
+              onAction={!filterInput && canGerirUtilizadores(authUser?.papel) ? () => setFormOpen(true) : undefined}
+              actionLabel="Criar Primeiro Utilizador"
             />
           </div>
-          <div>
-            <label className="label">Email *</label>
-            <input
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-studio-border/20 text-left" aria-label="Lista de utilizadores">
+              <thead className="bg-studio-muted/10">
+                <tr>
+                  <th scope="col" className="px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Utilizador / ID</th>
+                  <th scope="col" className="px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Cargo / Role</th>
+                  <th scope="col" className="px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Contacto / Escola</th>
+                  <th scope="col" className="px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest text-center">BI / NIF</th>
+                  <th scope="col" className="px-6 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Gestão</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-studio-border/10">
+                {filteredUsuarios.map((u) => (
+                  <tr key={u.userId} className="group hover:bg-studio-brand/[0.01] transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        {u.fotoUrl ? (
+                          <img
+                            src={`${API_BASE}${u.fotoUrl}`}
+                            alt=""
+                            className="h-10 w-10 rounded-2xl object-cover ring-2 ring-studio-border group-hover:ring-studio-brand transition-all"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-2xl bg-studio-brand/10 border border-studio-brand/20 flex items-center justify-center group-hover:bg-studio-brand/20 transition-all">
+                            <User className="h-5 w-5 text-studio-brand" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-black text-studio-foreground uppercase tracking-tight group-hover:text-studio-brand transition-colors">{u.nome}</p>
+                          <span className="text-[10px] font-mono text-studio-foreground-lighter uppercase tracking-widest leading-none">
+                            {u.userId.slice(0, 8)}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge
+                        variant={u.papel === 'admin' ? 'brand' : u.papel === 'direcao' ? 'success' : 'neutral'}
+                        className="text-[9px] font-black uppercase px-2 py-0.5 border-studio-border/40"
+                      >
+                        {u.papel}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-studio-foreground-light lowercase">
+                          <Mail className="w-3 h-3 opacity-40 lowercase" />
+                          {u.email}
+                        </div>
+                        {u.escolaNome && (
+                          <div className="flex items-center gap-1.5 text-[9px] font-black text-studio-foreground-lighter uppercase tracking-tighter">
+                            <Building2 className="w-3 h-3 opacity-40" />
+                            {u.escolaNome}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="text-[11px] font-black text-studio-foreground-lighter tabular-nums">{u.bi ?? '—'}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-1 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<Edit2 className="w-3.5 h-3.5" />}
+                          onClick={() => {
+                            setEditingUserId(u.userId)
+                            setFormOpen(true)
+                          }}
+                          className="text-[10px] font-black uppercase text-studio-brand"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          icon={<Key className="w-3.5 h-3.5" />}
+                          onClick={() => {
+                            setResetUserId(u.userId)
+                            setNovaSenha('')
+                          }}
+                          title="Resetar senha"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          icon={<Fingerprint className="w-3.5 h-3.5" />}
+                          onClick={() => setPermissoesUserId(u.userId)}
+                          title="Permissões"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      <Modal open={formOpen} onClose={handleCloseForm} title={editingUserId ? 'Editar Credenciais de Acesso' : 'Registo de Nova Identidade'}>
+        <form onSubmit={handleSubmitForm} className="space-y-6">
+          <Input
+            label="Nome Completo do Utilizador"
+            value={form.nome}
+            onChange={(e) => handleFormChange({ nome: e.target.value })}
+            placeholder="Ex: João Silva"
+            required
+            leftIcon={<User className="w-4 h-4" />}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Endereço de E-mail"
               type="email"
               value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              className="input w-full"
+              onChange={(e) => handleFormChange({ email: e.target.value })}
+              placeholder="exemplo@escola.com"
               required
+              leftIcon={<Mail className="w-4 h-4 text-studio-brand" />}
             />
-          </div>
-          <div>
-            <label className="label">Papel *</label>
-            <select
+            <Select
+              label="Papel / Cargo"
               value={form.papel}
-              onChange={(e) => setForm((f) => ({ ...f, papel: e.target.value }))}
-              className="input w-full"
-            >
-              <option value="admin">Admin</option>
-              <option value="direcao">Direção</option>
-              <option value="professor">Professor</option>
-              <option value="responsavel">Responsável</option>
-              <option value="aluno">Aluno</option>
-            </select>
-          </div>
-          <div>
-            <label className="label">BI</label>
-            <input
-              type="text"
-              value={form.bi}
-              onChange={(e) => setForm((f) => ({ ...f, bi: e.target.value }))}
-              className="input w-full"
+              onChange={(e) => handleFormChange({ papel: e.target.value })}
+              options={[
+                { value: 'admin', label: 'Administrador Senior' },
+                { value: 'direcao', label: 'Direção Académica' },
+                { value: 'professor', label: 'Corpo Docente' },
+                { value: 'responsavel', label: 'Responsável (EE)' },
+                { value: 'aluno', label: 'Estudante' },
+              ]}
+              leftIcon={<Shield className="w-4 h-4" />}
             />
           </div>
-          <div>
-            <label className="label">Telefone</label>
-            <input
-              type="text"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="B.I. / NIF"
+              value={form.bi}
+              onChange={(e) => handleFormChange({ bi: e.target.value })}
+              placeholder="Nº Identification"
+              leftIcon={<Fingerprint className="w-4 h-4" />}
+            />
+            <Input
+              label="Telefone de Contacto"
               value={form.telefone}
-              onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-              className="input w-full"
+              onChange={(e) => handleFormChange({ telefone: e.target.value })}
+              placeholder="+244..."
+              leftIcon={<Phone className="w-4 h-4" />}
             />
           </div>
           {!editingUserId && (
-            <div>
-              <label className="label">Senha *</label>
-              <input
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                className="input w-full"
-                minLength={6}
-                required={!editingUserId}
-              />
-            </div>
+            <Input
+              label="Senha de Acesso Primária"
+              type="password"
+              value={form.password}
+              onChange={(e) => handleFormChange({ password: e.target.value })}
+              placeholder="Mínimo 6 caracteres"
+              required
+              leftIcon={<Key className="w-4 h-4 text-amber-500" />}
+            />
           )}
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={handleCloseForm} className="btn-secondary">
-              Cancelar
-            </button>
-            <button type="submit" className="btn-primary" disabled={createUser.isPending || updateUser.isPending}>
-              {editingUserId ? (updateUser.isPending ? 'A guardar...' : 'Guardar') : createUser.isPending ? 'A criar...' : 'Criar'}
-            </button>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-studio-border/50">
+            <Button variant="ghost" type="button" onClick={handleCloseForm}>Cancelar</Button>
+            <Button type="submit" variant="primary" loading={createUser.isPending || updateUser.isPending}>
+              {editingUserId ? 'Guardar Alterações' : 'Criar Conta de Acesso'}
+            </Button>
           </div>
         </form>
       </Modal>
@@ -451,34 +465,40 @@ export default function Utilizadores() {
         </form>
       </Modal>
 
-      <Modal open={!!permissoesUserId} onClose={() => setPermissoesUserId(null)} title="Permissões">
-        <form onSubmit={handleSavePermissoes} className="space-y-4">
-          <p className="text-sm text-studio-foreground-light">
-            Atribua permissões extras ao utilizador (o papel já define o acesso base).
-          </p>
-          <div className="max-h-64 overflow-y-auto space-y-2">
+      <Modal open={!!permissoesUserId} onClose={() => setPermissoesUserId(null)} title="Privilégios de Acesso Especializados" size="md">
+        <form onSubmit={handleSavePermissoes} className="space-y-6">
+          <div className="p-4 bg-studio-brand/5 border border-studio-brand/20 rounded-2xl flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-studio-brand mt-1" />
+            <div>
+              <p className="text-[10px] font-black text-studio-brand uppercase tracking-widest">Escala de Permissões</p>
+              <p className="text-[11px] text-studio-foreground-light font-medium leading-relaxed mt-1">
+                Atribua privilégios granulares para funcionalidades específicas. Estas permissões sobrepõem-se às restrições base do cargo.
+              </p>
+            </div>
+          </div>
+
+          <div className="max-h-80 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
             {permissoesList.map((p) => (
-              <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+              <label key={p.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-studio-muted/50 cursor-pointer transition-colors border border-transparent hover:border-studio-border/50 group">
                 <input
                   type="checkbox"
                   checked={permissoesCodigos.includes(p.codigo)}
                   onChange={() => togglePermissao(p.codigo)}
-                  className="rounded border-studio-border"
+                  className="w-4 h-4 rounded border-studio-border text-studio-brand focus:ring-studio-brand"
                 />
-                <span className="text-sm text-studio-foreground">{p.codigo}</span>
-                {p.descricao && (
-                  <span className="text-xs text-studio-foreground-lighter">— {p.descricao}</span>
-                )}
+                <div>
+                  <span className="text-xs font-black text-studio-foreground uppercase tracking-tight group-hover:text-studio-brand transition-colors">{p.codigo}</span>
+                  {p.descricao && (
+                    <p className="text-[10px] text-studio-foreground-lighter font-bold uppercase tracking-tighter mt-0.5">{p.descricao}</p>
+                  )}
+                </div>
               </label>
             ))}
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={() => setPermissoesUserId(null)} className="btn-secondary">
-              Cancelar
-            </button>
-            <button type="submit" className="btn-primary" disabled={setPerms.isPending}>
-              {setPerms.isPending ? 'A guardar...' : 'Guardar'}
-            </button>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-studio-border/50">
+            <Button variant="ghost" type="button" onClick={() => setPermissoesUserId(null)}>Cancelar</Button>
+            <Button type="submit" variant="primary" loading={setPerms.isPending}>Selar Permissões</Button>
           </div>
         </form>
       </Modal>

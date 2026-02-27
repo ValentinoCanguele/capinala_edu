@@ -63,11 +63,13 @@ export default function FinancasDashboard() {
           title="Saldo Operacional"
           value={formatCurrency(data.saldoMes)}
           icon={<Wallet className="w-5 h-5 text-studio-brand" />}
+          subtitle={<button className="mt-1 text-[10px] font-black uppercase text-studio-brand hover:underline">Conciliação Bancária &rarr;</button>}
         />
         <StatCard
-          title="Inadimplência Bruta"
+          title="Dívida Ativa"
           value={formatCurrency(data.totalInadimplencia)}
           icon={<AlertCircle className="w-5 h-5 text-amber-500" />}
+          subtitle={<button className="mt-1 text-[10px] font-black uppercase text-red-500 hover:underline">Cobrança Automática &rarr;</button>}
         />
       </div>
 
@@ -75,45 +77,53 @@ export default function FinancasDashboard() {
         <Card className="lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-studio-foreground tracking-tight">Evolução Mensal</h3>
-              <p className="text-sm text-studio-foreground-lighter">Histórico de fluxo de caixa institucional</p>
+              <h3 className="text-lg font-bold text-studio-foreground tracking-tight">Fluxo de Caixa Consolidado</h3>
+              <p className="text-sm text-studio-foreground-lighter">Histórico de rendimento institucional vs despesas</p>
             </div>
-            <Calendar className="w-5 h-5 text-studio-muted" />
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" icon={<FileText className="w-4 h-4" />}>Exportar Excel</Button>
+              <Button variant="ghost" size="sm" icon={<ArrowUpRight className="w-4 h-4" />}>Relatório PDF</Button>
+            </div>
           </div>
 
-          <div className="overflow-x-auto -mx-1">
+          <div className="overflow-x-auto">
             <table className="w-full" aria-label="Evolução mensal de receitas e despesas">
               <thead>
                 <tr className="border-b border-studio-border/50">
-                  <th scope="col" className="text-left px-4 py-3 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Mês Referência</th>
-                  <th scope="col" className="text-right px-4 py-3 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Receitas</th>
-                  <th scope="col" className="text-right px-4 py-3 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Despesas</th>
-                  <th scope="col" className="text-right px-4 py-3 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Performance</th>
+                  <th scope="col" className="text-left px-4 py-3 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">Mês</th>
+                  <th scope="col" className="text-right px-4 py-3 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">Receitas</th>
+                  <th scope="col" className="text-right px-4 py-3 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">Despesas</th>
+                  <th scope="col" className="text-right px-4 py-3 text-[10px] font-black text-studio-foreground-light uppercase tracking-[0.2em]">Balanço</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-studio-border/20">
                 {data.evolucaoMensal.map((row) => {
-                  const isPositive = row.receitas >= row.despesas
+                  const balance = row.receitas - row.despesas
+                  const isPositive = balance >= 0
+                  const maxVal = Math.max(...data.evolucaoMensal.map(r => Math.max(r.receitas, r.despesas)))
                   return (
-                    <tr key={row.mes} className="group hover:bg-studio-muted/5 transition-colors">
-                      <td className="px-4 py-4 text-sm font-bold text-studio-foreground">{row.mes}</td>
-                      <td className="px-4 py-4 text-right tabular-nums text-sm font-medium text-emerald-600">
-                        {formatCurrency(row.receitas)}
-                      </td>
-                      <td className="px-4 py-4 text-right tabular-nums text-sm font-medium text-red-600">
-                        {formatCurrency(row.despesas)}
+                    <tr key={row.mes} className="group hover:bg-studio-brand/[0.02] transition-colors">
+                      <td className="px-4 py-4 text-sm font-black text-studio-foreground uppercase tracking-tight">{row.mes}</td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-sm font-bold text-emerald-600 tabular-nums">{formatCurrency(row.receitas)}</span>
+                          <div className="w-24 h-1 bg-studio-muted/30 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500/50" style={{ width: `${(row.receitas / maxVal) * 100}%` }} />
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {isPositive ? (
-                            <ArrowUpRight className="w-4 h-4 text-emerald-500" />
-                          ) : (
-                            <ArrowDownRight className="w-4 h-4 text-red-500" />
-                          )}
-                          <span className={`text-xs font-bold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
-                            {isPositive ? 'Superávit' : 'Défice'}
-                          </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-sm font-bold text-red-600 tabular-nums">{formatCurrency(row.despesas)}</span>
+                          <div className="w-24 h-1 bg-studio-muted/30 rounded-full overflow-hidden">
+                            <div className="h-full bg-red-400/50" style={{ width: `${(row.despesas / maxVal) * 100}%` }} />
+                          </div>
                         </div>
+                      </td>
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        <Badge variant={isPositive ? 'success' : 'danger'} className="text-[10px] font-black px-2 py-1">
+                          {isPositive ? '+' : ''}{formatCurrency(balance)}
+                        </Badge>
                       </td>
                     </tr>
                   )
@@ -124,38 +134,46 @@ export default function FinancasDashboard() {
         </Card>
 
         <div className="space-y-6">
-          <Card>
-            <h4 className="text-sm font-bold text-studio-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Users className="w-4 h-4 text-studio-brand" />
-              Gestão de Devedores
+          <Card className="border-l-4 border-l-red-500">
+            <h4 className="text-[11px] font-black text-studio-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Users className="w-4 h-4 text-red-500" />
+              Risco de Inadimplência
             </h4>
             <div className="space-y-4">
               <div className="flex items-end justify-between">
-                <span className="text-xs text-studio-foreground-light">Total Inadimplentes</span>
-                <span className="text-lg font-bold text-studio-foreground">{data.quantidadeInadimplentes}</span>
+                <span className="text-xs text-studio-foreground-lighter font-medium">Estudantes Irregulares</span>
+                <span className="text-xl font-black text-studio-foreground tabular-nums">{data.quantidadeInadimplentes}</span>
               </div>
-              <div className="w-full h-1.5 bg-studio-muted rounded-full overflow-hidden">
-                <div className="h-full bg-red-500 w-1/3" />
-              </div>
+              <ProgressBar value={Math.min(100, (data.quantidadeInadimplentes / 100) * 100)} variant="error" size="sm" animated />
               <p className="text-[10px] text-studio-foreground-lighter leading-relaxed italic">
-                Representa alunos com mais de 30 dias de atraso nas propinas.
+                Cerca de {Math.round((data.quantidadeInadimplentes / 250) * 100)}% da base estudantil possui pendências críticas.
               </p>
             </div>
           </Card>
 
-          <Card>
-            <h4 className="text-sm font-bold text-studio-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-studio-brand" />
-              Alertas de Prazos
+          <Card className="bg-studio-brand/[0.03] border-studio-brand/10">
+            <h4 className="text-[11px] font-black text-studio-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+              <ArrowUpRight className="w-4 h-4 text-studio-brand" />
+              Previsão de Receita
             </h4>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/5 border border-amber-500/20">
-                <div className="text-xs font-bold text-amber-600 uppercase tracking-tight">A Vencer (7d)</div>
-                <div className="text-lg font-bold text-amber-600">{data.parcelasAVencer7Dias}</div>
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-studio-border shadow-sm">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-studio-foreground-lighter uppercase tracking-wider">A Receber (7d)</span>
+                  <span className="text-lg font-black text-studio-brand tabular-nums">{formatCurrency(data.parcelasAVencer7Dias * 25000)}</span>
+                </div>
+                <div className="p-2 rounded-xl bg-studio-brand/10">
+                  <Clock className="w-5 h-5 text-studio-brand" />
+                </div>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-red-50/5 border border-red-500/20">
-                <div className="text-xs font-bold text-red-600 uppercase tracking-tight">Parcelas Vencidas</div>
-                <div className="text-lg font-bold text-red-600">{data.parcelasVencidas}</div>
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-red-50/50 border border-red-500/10">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-red-400 uppercase tracking-wider">Total em Atraso</span>
+                  <span className="text-lg font-black text-red-600 tabular-nums">{formatCurrency(data.totalInadimplencia)}</span>
+                </div>
+                <div className="p-2 rounded-xl bg-red-500/10">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                </div>
               </div>
             </div>
           </Card>

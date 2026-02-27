@@ -17,7 +17,7 @@ import { Badge } from '@/components/shared/Badge'
 import { Card } from '@/components/shared/Card'
 import { Button } from '@/components/shared/Button'
 import { Avatar } from '@/components/shared/Avatar'
-import { BellRing, ExternalLink, Zap, X, Sparkles } from 'lucide-react'
+import { BellRing, ExternalLink, Zap, X, Sparkles, AlertCircle, CreditCard } from 'lucide-react'
 
 const navCards = [
   { to: '/alunos', title: 'Alunos', description: 'Cadastro e listagem de alunos' },
@@ -251,6 +251,38 @@ export default function Dashboard() {
               </div>
             ))}
           </Card>
+        </section>
+      )}
+
+      {/* Resumo Financeiro Rápido (apenas admin/direção) */}
+      {canViewAlertas && (
+        <section className="mb-10 animate-fade-in" aria-labelledby="secao-financas">
+          <div className="flex items-center gap-2 mb-4">
+            <CreditCard className="w-5 h-5 text-studio-brand" />
+            <h2 id="secao-financas" className="text-lg font-bold text-studio-foreground tracking-tight">
+              Monitorização Financeira
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="flex items-center justify-between p-6 bg-gradient-to-br from-studio-brand/5 to-transparent border-studio-brand/20">
+              <div>
+                <p className="text-[10px] font-black uppercase text-studio-foreground-lighter tracking-widest mb-1">Receita Mensal (Kz)</p>
+                <p className="text-2xl font-black text-studio-foreground">3.450.000,00</p>
+              </div>
+              <div className="h-12 w-12 rounded-2xl bg-studio-brand/10 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-studio-brand" />
+              </div>
+            </Card>
+            <Card className="flex items-center justify-between p-6 bg-gradient-to-br from-red-500/5 to-transparent border-red-500/10">
+              <div>
+                <p className="text-[10px] font-black uppercase text-studio-foreground-lighter tracking-widest mb-1">Inadimplência Técnica</p>
+                <p className="text-2xl font-black text-red-500">12.4%</p>
+              </div>
+              <div className="h-12 w-12 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-red-500" />
+              </div>
+            </Card>
+          </div>
         </section>
       )}
 

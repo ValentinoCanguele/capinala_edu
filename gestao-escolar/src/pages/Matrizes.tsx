@@ -215,26 +215,26 @@ export default function Matrizes() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="p-5 rounded-3xl bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
-                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Disciplinas</p>
-                                    <p className="text-xl font-black text-studio-foreground">{matrizDetalhe?.totalDisciplinas || 0}</p>
-                                    <p className="text-[8px] font-bold text-studio-brand uppercase tracking-tighter">COMPONENTES ATIVOS</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="p-5 rounded-[2rem] bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
+                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Componentes</p>
+                                    <p className="text-xl font-black text-studio-foreground tabular-nums">{matrizDetalhe?.totalDisciplinas || 0}</p>
+                                    <p className="text-[8px] font-bold text-studio-brand uppercase tracking-tighter">DISCIPLINAS ATIVAS</p>
                                 </div>
-                                <div className="p-5 rounded-3xl bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
-                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Carga Semanal</p>
-                                    <p className="text-xl font-black text-studio-foreground">{matrizDetalhe?.cargaHorariaTotal || 0}h</p>
-                                    <p className="text-[8px] font-bold text-studio-brand uppercase tracking-tighter">TEÓRICO-PRÁTICA</p>
+                                <div className="p-5 rounded-[2rem] bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
+                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Intensidade</p>
+                                    <p className="text-xl font-black text-studio-foreground tabular-nums">{matrizDetalhe?.cargaHorariaTotal || 0}h</p>
+                                    <p className="text-[8px] font-bold text-studio-brand uppercase tracking-tighter">CARGA TOTAL SEMANAL</p>
                                 </div>
-                                <div className="p-5 rounded-3xl bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
-                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Nível Alvo</p>
-                                    <p className="text-xl font-black text-studio-brand">{matrizDetalhe?.grau_escolar}</p>
-                                    <p className="text-[8px] font-bold text-studio-foreground-lighter uppercase tracking-tighter">PÚBLICO ALVO</p>
+                                <div className="p-5 rounded-[2rem] bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
+                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Nível Normativo</p>
+                                    <p className="text-xl font-black text-studio-brand uppercase">{matrizDetalhe?.grau_escolar}</p>
+                                    <p className="text-[8px] font-bold text-studio-foreground-lighter uppercase tracking-tighter">ALVO ACADÉMICO</p>
                                 </div>
-                                <div className="p-5 rounded-3xl bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
-                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Precedências</p>
-                                    <p className="text-xl font-black text-studio-foreground">{matrizDetalhe?.precedencias?.length || 0}</p>
-                                    <p className="text-[8px] font-bold text-amber-600 uppercase tracking-tighter">REGRAS DE BLOQUEIO</p>
+                                <div className="p-5 rounded-[2rem] bg-studio-muted/10 border border-studio-border/50 text-center space-y-1">
+                                    <p className="text-[9px] font-black text-studio-foreground-lighter uppercase tracking-widest">Rigor Externo</p>
+                                    <p className="text-xl font-black text-studio-foreground tabular-nums">{matrizDetalhe?.precedencias?.length || 0}</p>
+                                    <p className="text-[8px] font-bold text-amber-600 uppercase tracking-tighter">REGRAS BLOQUEANTES</p>
                                 </div>
                             </div>
 

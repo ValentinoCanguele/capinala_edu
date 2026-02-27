@@ -23,22 +23,35 @@ import { Input } from '@/components/shared/Input'
 import { Badge } from '@/components/shared/Badge'
 import EmptyState from '@/components/shared/EmptyState'
 import { PlusCircle, Edit3, Trash2, Tag, Layers, CheckCircle2, XCircle } from 'lucide-react'
+import { useEffect } from 'react'
 
 function CategoriaForm({
   initial,
   onSubmit,
   onCancel,
   isLoading,
+  onDirtyChange,
 }: {
   initial: Partial<CategoriaFinanceiraInput> & { nome: string; tipo: 'receita' | 'despesa' }
   onSubmit: (data: CategoriaFinanceiraInput) => void
   onCancel: () => void
   isLoading: boolean
+  onDirtyChange?: (dirty: boolean) => void
 }) {
   const [nome, setNome] = useState(initial.nome)
   const [tipo, setTipo] = useState<'receita' | 'despesa'>(initial.tipo)
   const [ordem, setOrdem] = useState(initial.ordem ?? 0)
   const [ativo, setAtivo] = useState(initial.ativo ?? true)
+
+  useEffect(() => {
+    const isDirty =
+      nome !== initial.nome ||
+      tipo !== initial.tipo ||
+      ordem !== (initial.ordem ?? 0) ||
+      ativo !== (initial.ativo ?? true)
+
+    onDirtyChange?.(isDirty)
+  }, [nome, tipo, ordem, ativo, initial, onDirtyChange])
 
   const doSubmit = useCallback(() => {
     if (!nome.trim()) {
@@ -130,9 +143,13 @@ export default function FinancasCategorias() {
 
   const editing = editingId ? categorias.find((c) => c.id === editingId) ?? null : null
 
+  const [isFormDirty, setIsFormDirty] = useState(false)
+
   const handleCloseModal = () => {
+    if (isFormDirty && !window.confirm('Existem alterações não guardadas. Deseja sair?')) return
     setModalOpen(false)
     setEditingId(null)
+    setIsFormDirty(false)
   }
 
   const handleSubmit = (data: CategoriaFinanceiraInput) => {
@@ -213,6 +230,7 @@ export default function FinancasCategorias() {
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
           isLoading={isFormLoading}
+          onDirtyChange={setIsFormDirty}
         />
       </Modal>
       <Modal title="Confirmar Exclusão" open={!!itemToDelete} onClose={() => setItemToDelete(null)} size="sm">
@@ -248,78 +266,97 @@ export default function FinancasCategorias() {
           />
         </Card>
       ) : (
-        <Card noPadding className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" aria-label="Lista de categorias financeiras">
-              <thead>
-                <tr className="bg-studio-muted/10">
-                  <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Nome / Designação</th>
-                  <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Tipo</th>
-                  <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Ordem</th>
-                  <th scope="col" className="text-left px-6 py-4 text-xs font-bold text-studio-foreground-light uppercase tracking-widest">Estado</th>
-                  {canGerirFinancas(user?.papel) && (
-                  <th scope="col" className="w-32 px-6 py-4" aria-label="Ações" />
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-studio-border/20">
-                {categorias.map((c) => (
-                  <tr key={c.id} className="group hover:bg-studio-muted/5 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className="font-bold text-studio-foreground group-hover:text-studio-brand transition-colors">{c.nome}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant={c.tipo === 'receita' ? 'brand' : 'neutral'}>
-                        {c.tipo === 'receita' ? 'Crédito / Receita' : 'Débito / Despesa'}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-studio-foreground-light font-medium">{c.ordem}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {c.ativo ? (
-                          <Badge variant="success">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Ativa
-                          </Badge>
-                        ) : (
-                          <Badge variant="neutral">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Inativa
-                          </Badge>
-                        )}
-                      </div>
-                    </td>
+        <Card noPadding className="overflow-hidden border-studio-border/60">
+          {isLoading ? (
+            <SkeletonTable rows={10} columns={5} />
+          ) : categorias.length === 0 ? (
+            <div className="p-12">
+              <EmptyState
+                title="Estrutura de Contas Vazia"
+                description="Defina categorias analíticas para permitir a classificação de proveitos e custos institucional."
+                onAction={() => { setEditingId(null); setModalOpen(true) }}
+                actionLabel="Criar Primeira Categoria"
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" aria-label="Lista de categorias financeiras">
+                <thead>
+                  <tr className="bg-studio-muted/10">
+                    <th scope="col" className="text-left px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Identificação / Designação</th>
+                    <th scope="col" className="text-left px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Natureza</th>
+                    <th scope="col" className="text-left px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Ordinal</th>
+                    <th scope="col" className="text-left px-6 py-4 text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Vigência</th>
                     {canGerirFinancas(user?.papel) && (
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingId(c.id)
-                            setModalOpen(true)
-                          }}
-                          title="Editar"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600"
-                          onClick={() => setItemToDelete(c)}
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
+                      <th scope="col" className="w-32 px-6 py-4 text-right text-[10px] font-black text-studio-foreground-light uppercase tracking-widest">Gestão</th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-studio-border/20">
+                  {categorias.map((c) => (
+                    <tr key={c.id} className="group hover:bg-studio-brand/[0.01] transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-studio-brand/10 flex items-center justify-center">
+                            <Tag className="w-4 h-4 text-studio-brand" />
+                          </div>
+                          <span className="text-sm font-black text-studio-foreground uppercase tracking-tight group-hover:text-studio-brand transition-colors">
+                            {c.nome}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant={c.tipo === 'receita' ? 'brand' : 'neutral'} className="text-[9px] font-black uppercase border-studio-border/50">
+                          {c.tipo === 'receita' ? 'Proveito / Crédito' : 'Custo / Débito'}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-bold text-studio-foreground-light tabular-nums">{c.ordem}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {c.ativo ? (
+                            <Badge variant="success" className="text-[9px] font-black uppercase px-2 py-0.5">
+                              Ativa
+                            </Badge>
+                          ) : (
+                            <Badge variant="neutral" className="text-[9px] font-black uppercase px-2 py-0.5 opacity-50">
+                              Suspesa
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      {canGerirFinancas(user?.papel) && (
+                        <td className="px-6 py-4">
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              icon={<Edit3 className="w-3.5 h-3.5" />}
+                              onClick={() => {
+                                setEditingId(c.id)
+                                setModalOpen(true)
+                              }}
+                              className="text-[10px] font-black uppercase text-studio-brand"
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-400 hover:text-red-500 hover:bg-red-50"
+                              onClick={() => setItemToDelete(c)}
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       )}
     </div>

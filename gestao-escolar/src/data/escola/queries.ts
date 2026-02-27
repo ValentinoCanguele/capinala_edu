@@ -8,6 +8,11 @@ export interface Aluno {
   nome: string
   email?: string
   dataNascimento?: string
+  telefone?: string
+  bi?: string
+  biEmitidoEm?: string
+  biValidoAte?: string
+  fotoUrl?: string
 }
 
 export interface AlunoFinanceiro {
@@ -25,9 +30,13 @@ export interface AlunoFinanceiro {
 export interface Turma {
   id: string
   nome: string
+  escolaId: string
   anoLetivo: string
-  anoLetivoId?: string
+  periodo?: string
+  sala?: string
+  capacidade?: number
   alunoIds: string[]
+  cor?: string
 }
 
 export interface Disciplina {
